@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GLM – optimization: where every vLLM and AITER PR sits</title>
+<style>
+/* Shared side-panel navigation for the GLM-5.2 site */
+.gnav-btn{position:fixed;top:14px;left:14px;z-index:1000;width:42px;height:42px;border-radius:10px;border:2px solid #1F2A37;background:#F7F9FB;color:#1F2A37;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.gnav-btn:hover{background:#fff}
+.gnav-btn:focus-visible{outline:3px solid #F2B632;outline-offset:2px}
+.gnav-btn svg{width:22px;height:22px}
+.gnav-overlay{position:fixed;inset:0;background:rgba(15,23,32,.45);z-index:1001;opacity:0;pointer-events:none;transition:opacity .2s}
+.gnav-panel{position:fixed;top:0;left:0;bottom:0;width:min(320px,88vw);background:#F7F9FB;color:#1F2A37;z-index:1002;transform:translateX(-102%);transition:transform .22s ease;box-shadow:4px 0 18px rgba(0,0,0,.18);font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;font-size:17px;line-height:1.5;display:flex;flex-direction:column}
+.gnav-open .gnav-panel{transform:none}
+.gnav-open .gnav-overlay{opacity:1;pointer-events:auto}
+.gnav-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:2px solid #C6D0DA}
+.gnav-head b{font-size:1.05em}
+.gnav-close{width:36px;height:36px;border-radius:8px;border:2px solid #1F2A37;background:#fff;cursor:pointer;font-size:20px;line-height:1}
+.gnav-list{list-style:none;margin:0;padding:10px}
+.gnav-list li{margin:4px 0}
+.gnav-list a{display:block;padding:12px 14px;border-radius:10px;color:#1F2A37;text-decoration:none;border-left:5px solid transparent}
+.gnav-list a:hover{background:#fff}
+.gnav-list a.now{background:#FBE6B3;border-left-color:#F2B632;color:#5C3D00}
+.gnav-list small{display:block;font-size:.78em;color:#46525F}
+.gnav-foot{margin-top:auto;padding:12px 16px 16px;font-size:.78em;color:#46525F;border-top:2px solid #C6D0DA}
+.gnav-foot a{color:#4A6FA5}
+
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#E9EEF2;--sheet:#F7F9FB;--ink:#1F2A37;--ink2:#46525F;--muted:#7D8A98;--line:#C6D0DA;--hl:#F2B632;--hl-soft:#FBE6B3;--hl-ink:#5C3D00;--done:#1E8C7A;--done-soft:#D3EEE7;--att:#4A6FA5;--att-soft:#D7E3F1;--warn:#B45309;--warn-soft:#FDE7C7}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;font-size:18px;line-height:1.65;letter-spacing:.01em}
+a{color:var(--att)}
+.wrap{max-width:840px;margin:0 auto;padding:4.4rem 1rem 5rem}
+h1{font-size:2em;line-height:1.15;margin:0 0 .3em}
+h2{font-size:1.3em;margin:2.2rem 0 .6rem}
+h3.group{font-size:1.05em;color:var(--ink2);margin:1.8rem 0 .6rem;padding-bottom:.3em;border-bottom:2px solid var(--line)}
+p{max-width:66ch;margin:0 0 1em}
+.lead{color:var(--ink2);font-size:1.05em}
+.counts{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0 1.5rem}
+.counts div{background:var(--sheet);border:2px solid var(--line);border-radius:12px;padding:.6rem .9rem;font-size:.88em}
+.counts b{display:block;font-size:1.5em;line-height:1.1}
+.stage{background:var(--sheet);border:2px solid var(--line);border-radius:14px;padding:.8rem;margin:1rem 0 1.5rem}
+.stage svg{width:100%;height:auto;display:block}
+.cap{font-size:.78em;color:var(--ink2);margin:.5rem .2rem 0}
+svg text{font-family:inherit;font-size:14px;fill:var(--ink)}
+svg text.small{font-size:12px;fill:var(--ink2)}
+svg text.bold{font-weight:700}
+svg .box{fill:#fff;stroke:var(--line);stroke-width:1.5}
+svg .box.lit{fill:var(--hl-soft);stroke:var(--hl-ink)}
+svg .arr{stroke:var(--ink2);stroke-width:1.5;fill:none}
+svg .pin{cursor:pointer}
+svg .pin .mark{stroke-width:1.5}
+svg .pin.mine .mark{fill:var(--hl);stroke:var(--hl-ink)}
+svg .pin.other .mark{fill:var(--att-soft);stroke:var(--att)}
+svg .pin.draft .mark{stroke-dasharray:3 2}
+svg .pin text{font-size:12px;font-weight:700;fill:var(--ink);pointer-events:none}
+svg .pin.lit .mark{stroke-width:3.5}
+svg .pin.pulse .mark{animation:pulse 1s ease-in-out 3}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+svg .pin .mark{transform-box:fill-box;transform-origin:center}
+svg .badge{cursor:pointer}
+svg .badge rect{fill:var(--hl-soft);stroke:var(--hl-ink);stroke-width:1.2}
+.legend{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.8em;color:var(--ink2);margin:.5rem .2rem 0;align-items:center}
+.k{display:inline-block;width:15px;height:15px;vertical-align:-3px;margin-right:5px;border:1.5px solid var(--hl-ink);background:var(--hl);border-radius:50%}
+.k.other{background:var(--att-soft);border-color:var(--att)}
+.k.sq{border-radius:3px}
+.k.draft{border-style:dashed}
+article.pr{background:var(--sheet);border:2px solid var(--line);border-radius:14px;padding:1rem 1.2rem;margin:0 0 1rem;scroll-margin-top:1rem}
+article.pr.lit{border-color:var(--hl-ink);box-shadow:0 0 0 4px var(--hl-soft)}
+article.pr header{display:flex;align-items:flex-start;gap:.8rem}
+.num{flex:none;width:36px;height:36px;border-radius:50%;background:var(--hl);border:1.5px solid var(--hl-ink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95em}
+.num.other{background:var(--att-soft);border-color:var(--att)}
+.num.sq{border-radius:6px}
+.num.draft{border-style:dashed}
+article.pr h3{font-size:1.05em;margin:.1em 0 .2em;line-height:1.3}
+.where{font-size:.85em;color:var(--ink2);margin:0 0 .5em}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin:.3rem 0 .7rem}
+.chip{font-size:.72em;padding:.15em .6em;border-radius:999px;border:1.5px solid var(--line);background:#fff;color:var(--ink2)}
+.chip.open{background:var(--done-soft);border-color:var(--done);color:#0F5D50}
+.chip.draft{background:#fff;border-color:var(--ink2);border-style:dashed;color:var(--ink2)}
+.chip.rebase{background:var(--warn-soft);border-color:var(--warn);color:#7C3A03}
+.chip.mine{background:var(--hl-soft);border-color:var(--hl-ink);color:var(--hl-ink)}
+.chip.repo{background:#fff;border-color:var(--ink);color:var(--ink)}
+article.pr p{font-size:.92em;margin:0 0 .5em}
+article.pr .result{background:#fff;border-left:5px solid var(--hl);padding:.4em .8em;border-radius:0 8px 8px 0;font-size:.9em;margin:.4em 0 .6em}
+.links{font-size:.82em;display:flex;gap:1rem;flex-wrap:wrap}
+button.map{font:inherit;font-size:.78em;padding:.25em .7em;border-radius:8px;border:1.5px solid var(--ink);background:#fff;cursor:pointer}
+button.map:hover{background:var(--hl-soft)}
+button:focus-visible,a:focus-visible,svg .pin:focus-visible .mark{outline:3px solid var(--hl);outline-offset:2px}
+.note{font-size:.85em;color:var(--ink2);background:var(--sheet);border-left:6px solid var(--att);padding:.6em 1em;border-radius:0 10px 10px 0;margin:1rem 0}
+table{border-collapse:collapse;font-size:.8em;width:100%;margin:.6rem 0 1.4rem}
+th,td{text-align:left;padding:.45em .6em;border-bottom:1.5px solid var(--line);vertical-align:top}
+th{color:var(--ink2)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}svg .pin.pulse .mark{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>GLM-5.2 on ROCm: where every vLLM and AITER PR sits</h1>
+<p class="lead">Sixteen open pull requests, pinned onto the model's dataflow. Circles are vLLM (the engine that decides what to run). Squares are AITER (the AMD kernel library that does the computing). Amber means amd-sriram's own PR; blue means someone else's. Status as of 12 September 2026.</p>
+
+<div class="stage">
+<svg viewBox="0 0 680 120" role="img" aria-label="The software stack: model design from Z.ai, vLLM engine, AITER kernels, MI355X GPU">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+  <rect class="box" x="16" y="30" width="146" height="60" rx="8"/><text x="89" y="54" text-anchor="middle" class="bold">GLM-5.2 design</text><text x="89" y="74" text-anchor="middle" class="small">Z.ai: what to compute</text>
+  <line class="arr" x1="162" y1="60" x2="182" y2="60" marker-end="url(#ah)"/>
+  <rect class="box" x="186" y="30" width="146" height="60" rx="8"/><text x="259" y="54" text-anchor="middle" class="bold">vLLM</text><text x="259" y="74" text-anchor="middle" class="small">engine: what runs, when</text>
+  <line class="arr" x1="332" y1="60" x2="352" y2="60" marker-end="url(#ah)"/>
+  <rect class="box" x="356" y="30" width="146" height="60" rx="8"/><text x="429" y="54" text-anchor="middle" class="bold">AITER</text><text x="429" y="74" text-anchor="middle" class="small">the GPU kernels</text>
+  <line class="arr" x1="502" y1="60" x2="522" y2="60" marker-end="url(#ah)"/>
+  <rect class="box" x="526" y="30" width="138" height="60" rx="8"/><text x="595" y="54" text-anchor="middle" class="bold">MI355X</text><text x="595" y="74" text-anchor="middle" class="small">gfx950, TP=4</text>
+  <text x="16" y="110" class="small">12 vLLM PRs (circles) · 4 AITER PRs (squares) · the same GLM-5.2 stage can have both, one above the other</text>
+</svg>
+</div>
+
+<div class="counts">
+  <div><b>16</b>open PRs mapped</div>
+  <div><b>12 + 4</b>vLLM + AITER</div>
+  <div><b>8</b>by amd-sriram</div>
+  <div><b>11</b>inside the DSA indexer</div>
+  <div><b>3</b>in the MoE room</div>
+  <div><b>2</b>in MLA attention</div>
+</div>
+
+<h2>The model flow, with pins</h2>
+<p>Hover or click a pin to jump to its card. The indexer holds eleven PRs, so it gets its own zoom below.</p>
+<div class="stage">
+<svg viewBox="0 0 680 990" role="img" aria-label="GLM-5.2 dataflow with numbered pins marking where each pull request applies">
+  <g id="n0"><rect class="box" x="220" y="20" width="240" height="44" rx="8"/><text x="340" y="38" text-anchor="middle" class="bold">Your words</text><text x="340" y="56" text-anchor="middle" class="small">154,880-piece dictionary</text></g>
+  <line class="arr" x1="340" y1="64" x2="340" y2="84" marker-end="url(#ah)"/>
+  <g id="n1"><rect class="box" x="220" y="88" width="240" height="48" rx="8"/><text x="340" y="107" text-anchor="middle" class="bold">embed_tokens</text><text x="340" y="126" text-anchor="middle" class="small">word → 6,144 numbers</text></g>
+  <line class="arr" x1="340" y1="136" x2="340" y2="160" marker-end="url(#ah)"/>
+  <rect x="60" y="164" width="560" height="632" rx="16" fill="none" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="340" y="188" text-anchor="middle" class="bold">Transformer layer — repeats ×78</text>
+  <g id="n2"><rect class="box" x="220" y="204" width="240" height="44" rx="8"/><text x="340" y="222" text-anchor="middle" class="bold">RMSNorm</text><text x="340" y="240" text-anchor="middle" class="small">volume stabilizer</text></g>
+  <line class="arr" x1="340" y1="248" x2="340" y2="268" marker-end="url(#ah)"/>
+  <rect x="90" y="272" width="500" height="172" rx="12" fill="none" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="340" y="298" text-anchor="middle" class="bold">MLA attention + DSA sparse attention</text>
+  <g id="n3"><rect class="box" x="104" y="330" width="146" height="88" rx="8"/><text x="177" y="356" text-anchor="middle" class="bold">kv latent proj</text><text x="177" y="378" text-anchor="middle" class="small">MLA: compress</text><text x="177" y="396" text-anchor="middle" class="small">and expand notes</text></g>
+  <g id="n4"><rect class="box" x="266" y="330" width="160" height="88" rx="8"/><text x="346" y="356" text-anchor="middle" class="bold">Indexer</text><text x="346" y="378" text-anchor="middle" class="small">picks top 2,048</text><text x="346" y="396" text-anchor="middle" class="small">exists 1 floor in 4</text></g>
+  <g id="n5"><rect class="box" x="442" y="330" width="134" height="88" rx="8"/><text x="509" y="356" text-anchor="middle" class="bold">Attention</text><text x="509" y="378" text-anchor="middle" class="small">QK-Norm, RoPE</text><text x="509" y="396" text-anchor="middle" class="small">reads 2,048 only</text></g>
+  <g class="badge" id="zoomBadge" tabindex="0" role="button" aria-label="Ten PRs inside the indexer, jump to zoom"><rect x="270" y="421" width="152" height="20" rx="10"/><text x="346" y="435" text-anchor="middle" class="small">11 PRs inside → zoom</text></g>
+  <line class="arr" x1="340" y1="444" x2="340" y2="456" marker-end="url(#ah)"/>
+  <path d="M 340 258 L 74 258 L 74 472 L 322 472" class="arr" stroke-dasharray="5 4" marker-end="url(#ah)"/>
+  <g id="n6"><circle class="box" cx="340" cy="472" r="14"/><text x="340" y="477" text-anchor="middle" class="bold">+</text></g>
+  <line class="arr" x1="340" y1="486" x2="340" y2="496" marker-end="url(#ah)"/>
+  <g id="n7"><rect class="box" x="220" y="500" width="240" height="44" rx="8"/><text x="340" y="518" text-anchor="middle" class="bold">RMSNorm</text><text x="340" y="536" text-anchor="middle" class="small">volume stabilizer again</text></g>
+  <line class="arr" x1="340" y1="544" x2="340" y2="560" marker-end="url(#ah)"/>
+  <rect x="90" y="564" width="500" height="168" rx="12" fill="none" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="340" y="590" text-anchor="middle" class="bold">Mixture of experts (SwiGLU MLPs, MXFP4)</text>
+  <g id="n8"><rect class="box" x="104" y="622" width="140" height="88" rx="8"/><text x="174" y="648" text-anchor="middle" class="bold">Router</text><text x="174" y="670" text-anchor="middle" class="small">scores 256,</text><text x="174" y="688" text-anchor="middle" class="small">keeps top 8</text></g>
+  <g id="n9"><rect class="box" x="260" y="622" width="180" height="88" rx="8"/><text x="350" y="648" text-anchor="middle" class="bold">8 of 256 experts</text><text x="350" y="670" text-anchor="middle" class="small">fused grouped GEMM</text><text x="350" y="688" text-anchor="middle" class="small">shared expert fused in</text></g>
+  <g id="n10"><rect class="box" x="456" y="622" width="120" height="88" rx="8"/><text x="516" y="648" text-anchor="middle" class="bold">Shared</text><text x="516" y="670" text-anchor="middle" class="small">always on</text></g>
+  <line class="arr" x1="340" y1="732" x2="340" y2="746" marker-end="url(#ah)"/>
+  <path d="M 340 554 L 74 554 L 74 762 L 322 762" class="arr" stroke-dasharray="5 4" marker-end="url(#ah)"/>
+  <g id="n11"><circle class="box" cx="340" cy="762" r="14"/><text x="340" y="767" text-anchor="middle" class="bold">+</text></g>
+  <text x="340" y="790" text-anchor="middle" class="small">↻ loops back to the top of the layer, 78 times</text>
+  <line class="arr" x1="340" y1="796" x2="340" y2="816" marker-end="url(#ah)"/>
+  <g id="n12"><rect class="box" x="220" y="820" width="240" height="36" rx="8"/><text x="340" y="843" text-anchor="middle" class="bold">Final RMSNorm</text></g>
+  <line class="arr" x1="340" y1="856" x2="340" y2="872" marker-end="url(#ah)"/>
+  <g id="n13"><rect class="box" x="220" y="876" width="240" height="48" rx="8"/><text x="340" y="895" text-anchor="middle" class="bold">lm_head</text><text x="340" y="914" text-anchor="middle" class="small">scores all 154,880 words</text></g>
+  <g id="n14"><rect class="box" x="478" y="872" width="160" height="56" rx="8"/><text x="558" y="894" text-anchor="middle" class="bold">MTP module</text><text x="558" y="914" text-anchor="middle" class="small">drafts ~5 ahead</text></g>
+  <line class="arr" x1="460" y1="900" x2="472" y2="900" marker-end="url(#ah)"/>
+  <line class="arr" x1="340" y1="924" x2="340" y2="944" marker-end="url(#ah)"/>
+  <text x="340" y="964" text-anchor="middle" class="small">the next word comes out</text>
+
+  <g class="pin mine draft" data-pr="v48051" data-node="n3" tabindex="0" role="button" aria-label="Pin 1, vLLM 48051, MLA weights"><circle class="mark" cx="104" cy="330" r="11"/><text x="104" y="334.5" text-anchor="middle">1</text></g>
+  <g class="pin other" data-pr="v47757" data-node="n5" tabindex="0" role="button" aria-label="Pin 2, vLLM 47757, fused RoPE, concat and cache write before attention"><circle class="mark" cx="442" cy="330" r="11"/><text x="442" y="334.5" text-anchor="middle">2</text></g>
+  <g class="pin mine" data-pr="v50535" data-node="n8" tabindex="0" role="button" aria-label="Pin 11, vLLM 50535, router"><circle class="mark" cx="104" cy="622" r="11"/><text x="104" y="626.5" text-anchor="middle">11</text></g>
+  <g class="pin other" data-pr="a4629" data-node="n9" tabindex="0" role="button" aria-label="Pin D, AITER 4629, fused MoE"><rect class="mark" x="249" y="611" width="22" height="22" rx="4"/><text x="260" y="626.5" text-anchor="middle">D</text></g>
+  <g class="pin other" data-pr="v53248" data-node="n10" tabindex="0" role="button" aria-label="Pin 12, vLLM 53248, shared expert fusion"><circle class="mark" cx="456" cy="622" r="11"/><text x="456" y="626.5" text-anchor="middle">12</text></g>
+</svg>
+<div class="legend"><span><span class="k"></span>amd-sriram, vLLM</span><span><span class="k other"></span>others, vLLM</span><span><span class="k other sq"></span>others, AITER</span><span><span class="k draft"></span>dashed = draft</span></div>
+</div>
+
+<h2 id="zoom">Zoom: inside the indexer, where eleven PRs live</h2>
+<p>The indexer is a short pipeline, run on every indexer-owning layer. vLLM pins sit above each stage (what vLLM calls, and when). AITER pins sit below (the kernel that answers the call).</p>
+<div class="stage">
+<svg viewBox="0 0 680 362" role="img" aria-label="Indexer pipeline with vLLM pins above each stage and AITER kernel pins below">
+  <path d="M 20 44 L 20 32 L 660 32 L 660 44" fill="none" stroke="var(--ink2)" stroke-width="1.5"/>
+  <text x="330" y="24" text-anchor="middle" class="small">whole module: vllm/v1/attention/ops/rocm_aiter_mla_sparse.py</text>
+  <text x="20" y="62" class="small">vLLM ↓</text>
+  <g id="z1"><rect class="box" x="20" y="80" width="118" height="96" rx="8"/><text x="79" y="106" text-anchor="middle" class="bold">Prologue</text><text x="79" y="126" text-anchor="middle" class="small">K-norm, RoPE,</text><text x="79" y="142" text-anchor="middle" class="small">FP8 quant,</text><text x="79" y="158" text-anchor="middle" class="small">K-cache write</text></g>
+  <line class="arr" x1="138" y1="128" x2="152" y2="128" marker-end="url(#ah)"/>
+  <g id="z2"><rect class="box" x="156" y="80" width="118" height="96" rx="8"/><text x="215" y="106" text-anchor="middle" class="bold">Score</text><text x="215" y="126" text-anchor="middle" class="small">MQA logits:</text><text x="215" y="142" text-anchor="middle" class="small">new word vs</text><text x="215" y="158" text-anchor="middle" class="small">every note</text></g>
+  <line class="arr" x1="274" y1="128" x2="288" y2="128" marker-end="url(#ah)"/>
+  <g id="z3"><rect class="box" x="292" y="80" width="100" height="96" rx="8"/><text x="342" y="106" text-anchor="middle" class="bold">Sanitize</text><text x="342" y="126" text-anchor="middle" class="small">NaN/Inf →</text><text x="342" y="142" text-anchor="middle" class="small">safe values</text></g>
+  <line class="arr" x1="392" y1="128" x2="406" y2="128" marker-end="url(#ah)"/>
+  <g id="z4"><rect class="box" x="410" y="80" width="100" height="96" rx="8"/><text x="460" y="106" text-anchor="middle" class="bold">Top-k</text><text x="460" y="126" text-anchor="middle" class="small">keep the best</text><text x="460" y="142" text-anchor="middle" class="small">2,048</text></g>
+  <line class="arr" x1="510" y1="128" x2="524" y2="128" marker-end="url(#ah)"/>
+  <g id="z5"><rect class="box" x="528" y="80" width="132" height="96" rx="8"/><text x="594" y="106" text-anchor="middle" class="bold">Remap</text><text x="594" y="126" text-anchor="middle" class="small">positions →</text><text x="594" y="142" text-anchor="middle" class="small">paged KV indices</text></g>
+  <text x="20" y="210" class="small">AITER ↑ kernels underneath</text>
+  <path d="M 594 176 L 594 246 L 420 246" class="arr" marker-end="url(#ah)"/>
+  <g id="z6"><rect class="box" x="212" y="226" width="204" height="44" rx="8"/><text x="314" y="246" text-anchor="middle" class="bold">Shared list → next 3 layers</text><text x="314" y="262" text-anchor="middle" class="small">IndexShare: they skip all of the above</text></g>
+  <path d="M 212 248 L 130 248 L 130 290 L 300 290" class="arr" marker-end="url(#ah)"/>
+  <g id="z7"><rect class="box" x="304" y="274" width="200" height="36" rx="8"/><text x="404" y="297" text-anchor="middle" class="bold">MLA attention reads 2,048</text></g>
+
+  <g class="pin other" data-pr="v46172" data-node="z1" tabindex="0" role="button" aria-label="Pin 3, vLLM 46172, prologue and top-k"><circle class="mark" cx="20" cy="80" r="11"/><text x="20" y="84.5" text-anchor="middle">3</text></g>
+  <g class="pin other" data-pr="v47335" data-node="z1" tabindex="0" role="button" aria-label="Pin 4, vLLM 47335, prologue query side"><circle class="mark" cx="46" cy="80" r="11"/><text x="46" y="84.5" text-anchor="middle">4</text></g>
+  <g class="pin mine" data-pr="v51315" data-node="z1" tabindex="0" role="button" aria-label="Pin 5, vLLM 51315, prologue key side"><circle class="mark" cx="72" cy="80" r="11"/><text x="72" y="84.5" text-anchor="middle">5</text></g>
+  <g class="pin mine" data-pr="v51314" data-node="z2" tabindex="0" role="button" aria-label="Pin 6, vLLM 51314, score prefill"><circle class="mark" cx="156" cy="80" r="11"/><text x="156" y="84.5" text-anchor="middle">6</text></g>
+  <g class="pin mine draft" data-pr="v50008" data-node="z2" tabindex="0" role="button" aria-label="Pin 7, vLLM 50008, score decode"><circle class="mark" cx="182" cy="80" r="11"/><text x="182" y="84.5" text-anchor="middle">7</text></g>
+  <g class="pin mine" data-pr="v53789" data-node="z3" tabindex="0" role="button" aria-label="Pin 8, vLLM 53789, sanitize"><circle class="mark" cx="292" cy="80" r="11"/><text x="292" y="84.5" text-anchor="middle">8</text></g>
+  <g class="pin other" data-pr="v46172" data-node="z4" tabindex="0" role="button" aria-label="Pin 3 again, vLLM 46172, top-k"><circle class="mark" cx="410" cy="80" r="11"/><text x="410" y="84.5" text-anchor="middle">3</text></g>
+  <g class="pin mine" data-pr="v51309" data-node="z5" tabindex="0" role="button" aria-label="Pin 9, vLLM 51309, remap"><circle class="mark" cx="528" cy="80" r="11"/><text x="528" y="84.5" text-anchor="middle">9</text></g>
+  <g class="pin mine" data-pr="v53792" data-node="z0" tabindex="0" role="button" aria-label="Pin 10, vLLM 53792, whole module"><circle class="mark" cx="660" cy="38" r="11"/><text x="660" y="42.5" text-anchor="middle">10</text></g>
+  <g class="pin other" data-pr="a4538" data-node="z2" tabindex="0" role="button" aria-label="Pin A, AITER 4538, score prefill kernel"><rect class="mark" x="145" y="165" width="22" height="22" rx="4"/><text x="156" y="180.5" text-anchor="middle">A</text></g>
+  <g class="pin other" data-pr="a4221" data-node="z2" tabindex="0" role="button" aria-label="Pin B, AITER 4221, score decode kernel"><rect class="mark" x="171" y="165" width="22" height="22" rx="4"/><text x="182" y="180.5" text-anchor="middle">B</text></g>
+  <g class="pin other" data-pr="a4355" data-node="z4" tabindex="0" role="button" aria-label="Pin C, AITER 4355, top-k kernel"><rect class="mark" x="399" y="165" width="22" height="22" rx="4"/><text x="410" y="180.5" text-anchor="middle">C</text></g>
+  <text x="20" y="318" class="small">Prologue: 3 wired the AITER kernels in (and also touches top-k).</text>
+  <text x="20" y="334" class="small">4 fuses the query side of the prologue; 5 fuses the key side and the cache write.</text>
+  <text x="20" y="350" class="small">6 and A = prefill path; 7 and B = decode path. 10 touches every function in the file.</text>
+</svg>
+</div>
+
+<h2>Status at a glance</h2>
+<table>
+<tr><th>Pin</th><th>PR</th><th>Repo</th><th>Author</th><th>Where</th><th>Status</th></tr>
+<tr><td>1</td><td>#48051</td><td>vLLM</td><td>amd-sriram</td><td>MLA kv projection weights</td><td>draft</td></tr>
+<tr><td>2</td><td>#47757</td><td>vLLM</td><td>xaguilar-amd</td><td>MLA attention: RoPE, concat and KV-cache write, fused</td><td>open</td></tr>
+<tr><td>3</td><td>#46172</td><td>vLLM</td><td>tjtanaa</td><td>indexer: prologue + top-k kernels</td><td>open</td></tr>
+<tr><td>4</td><td>#47335</td><td>vLLM</td><td>xaguilar-amd</td><td>indexer: prologue, query side</td><td>open</td></tr>
+<tr><td>5</td><td>#51315</td><td>vLLM</td><td>amd-sriram</td><td>indexer: prologue, key side + cache</td><td>open, needs rebase</td></tr>
+<tr><td>6</td><td>#51314</td><td>vLLM</td><td>amd-sriram</td><td>indexer: score buffer, prefill</td><td>open</td></tr>
+<tr><td>7</td><td>#50008</td><td>vLLM</td><td>amd-sriram</td><td>indexer: score buffer, decode</td><td>draft</td></tr>
+<tr><td>8</td><td>#53789</td><td>vLLM</td><td>amd-sriram</td><td>indexer: sanitize</td><td>open, needs rebase</td></tr>
+<tr><td>9</td><td>#51309</td><td>vLLM</td><td>amd-sriram</td><td>indexer: remap, IndexShare</td><td>open, needs rebase</td></tr>
+<tr><td>10</td><td>#53792</td><td>vLLM</td><td>amd-sriram</td><td>indexer: whole module</td><td>open, ready, needs rebase</td></tr>
+<tr><td>11</td><td>#50535</td><td>vLLM</td><td>amd-sriram</td><td>MoE router gate</td><td>open, needs rebase</td></tr>
+<tr><td>12</td><td>#53248</td><td>vLLM</td><td>xuebwang-amd</td><td>MoE shared-expert fusion check</td><td>open</td></tr>
+<tr><td>A</td><td>#4538</td><td>AITER</td><td>vpietila-amd</td><td>indexer: score kernel, prefill (FlyDSL)</td><td>open</td></tr>
+<tr><td>B</td><td>#4221</td><td>AITER</td><td>fhuizing</td><td>indexer: score kernel, decode (FlyDSL)</td><td>open</td></tr>
+<tr><td>C</td><td>#4355</td><td>AITER</td><td>JH-Leon-KIM-AMD</td><td>indexer: top-k kernel (FlyDSL)</td><td>open</td></tr>
+<tr><td>D</td><td>#4629</td><td>AITER</td><td>nholmber</td><td>MoE fused-expert kernel tuning</td><td>open</td></tr>
+</table>
+<div class="note">Result numbers below come from each PR's own description. The two xaguilar-amd PRs were measured on GLM-5.2-FP8 with MI325X (gfx942) at TP=8; all others on amd/GLM-5.2-MXFP4 with MI355X at TP=4. Statuses were read from GitHub on 12 September 2026.</div>
+
+<h2>The PRs, in model order</h2>
+
+<h3 class="group">MLA attention</h3>
+<article class="pr" id="pr-v48051">
+  <header><div class="num draft">1</div><div><h3>Don't re-quantize bf16 MLA kv_b_proj to fp4/fp8 for GLM MoE DSA</h3><div class="where">Where: MLA, the kv latent projection that expands the compressed note back into keys and values. Weight-loading step.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #48051</span><span class="chip mine">amd-sriram</span><span class="chip draft">Draft</span><span class="chip">quantization</span><span class="chip">glm</span><span class="chip">opened 8 Jul</span></div>
+  <p>The ROCm AITER MLA path assumed any bf16 kv_b_proj weight was unquantized and squeezed it to fp4/fp8. In amd/GLM-5.2-MXFP4 the MLA weights are meant to stay bf16; only the experts are MXFP4.</p>
+  <div class="result">fp4 re-quantization added about 11% error per attention layer; it stacked up across 78 layers and pushed greedy decoding into repetition loops. After the fix, "What is the capital of France?" ends with "Paris".</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/48051">PR #48051</a><button class="map" data-goto="v48051">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-v47757">
+  <header><div class="num other">2</div><div><h3>Fuse decode QK-RoPE + Q-concat + KV-concat + KV-cache write for sparse MLA</h3><div class="where">Where: the attention block itself, the per-layer query and key preparation that runs right before MLA attention reads the 2,048 notes.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #47757</span><span class="chip">xaguilar-amd</span><span class="chip open">Open</span><span class="chip">7 commits</span><span class="chip">opened 6 Jul</span></div>
+  <p>On ROCm the sparse-MLA decode path ran four back-to-back ops per layer: RoPE on the position parts of q and k, the query concat, the KV concat, and the fp8 KV-cache write. This collapses them into one AITER kernel, fused_qk_rope_concat_and_cache_mla, dispatched from the MLA layer with a clean fallback whenever the gate does not apply (non-ROCm, no AITER, non-fp8 cache). Positions travel as a real argument because a forward-context stash was not torch.compile or CUDA-graph safe.</p>
+  <div class="result">GLM-5.2-FP8 on gfx942, TP=8: TPOT and throughput about 1.02 to 1.04× across the sweep (for example +3.7% at ISL 1024 concurrency 1, +4.0% throughput at ISL 8192 concurrency 32). gsm8k 0.94, unchanged. The MTP drafters reuse the same MLA layers, so they get the fusion too.</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/47757">PR #47757</a><button class="map" data-goto="v47757">Show on map</button></div>
+</article>
+
+<h3 class="group">Indexer — vLLM side (what gets called, and when)</h3>
+<article class="pr" id="pr-v46172">
+  <header><div class="num other">3</div><div><h3>Optimize rocm aiter sparse mla indexer</h3><div class="where">Where: indexer prologue and top-k. The PR that first wired three AITER kernels into the sparse path: cp_gather_indexer_k_quant_cache, indexer_k_quant_and_cache, top_k_per_row_decode.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #46172</span><span class="chip">tjtanaa (EmbeddedLLM)</span><span class="chip open">Open</span><span class="chip">opened 19 Jun</span></div>
+  <p>Follows the "speed of light" layout from AMD's ATOM plugin for top-k 2,048, so vLLM and ATOM share the same AITER kernels going forward. It also introduced the module-level FP8_DTYPE constant that pin 10 finishes wiring up.</p>
+  <div class="result">Validated on DeepSeek-V3.2 at 1M context: gsm8k about 0.95 at block sizes 1 and 64, with performance gains from all three kernels. This is the foundation most of the amber indexer pins build on.</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/46172">PR #46172</a><button class="map" data-goto="v46172">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-v47335">
+  <header><div class="num other">4</div><div><h3>Enable fused indexer-Q RoPE+quant kernel for DeepSeek/GLM sparse attention</h3><div class="where">Where: indexer stage 1, the query side of the prologue. Pin 5 is the matching key side.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #47335</span><span class="chip">xaguilar-amd</span><span class="chip open">Open</span><span class="chip">3 commits</span><span class="chip">opened 1 Jul</span></div>
+  <p>The fused_indexer_q_rope_quant kernel already existed in vLLM and already ran on CUDA; on ROCm the same work fell back to a chain of small Triton and elementwise kernels per sparse layer per decode token. A two-line enablement turns it on for glm_moe_dsa: query-side RoPE, FP8 quantization and the weight-scale fold become one launch, four Q-side kernels → one.</p>
+  <div class="result">About 170 ms of self-GPU time reclaimed on rank 0 over a decode capture, roughly 0.7% of the total; a consistent 0.3–0.9% end-to-end improvement on GLM-5.2-FP8 at TP=8 with no credible regression. gsm8k 0.9469, unchanged.</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/47335">PR #47335</a><button class="map" data-goto="v47335">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-v51315">
+  <header><div class="num">5</div><div><h3>Fuse the DSA indexer prologue with AITER</h3><div class="where">Where: indexer stage 1, the key side of the prologue. Four kernels, K normalization, Q/K RoPE, FP8 quantization, K-cache write, become one fused AITER kernel.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #51315</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 6 Aug</span></div>
+  <p>Uses AITER's fused indexer_qk_rope_quant_and_cache kernel for the supported BF16/FP8 shape; other shapes keep the old path.</p>
+  <div class="result">Launches 4 → 1. Decode stage 17.4 µs → 5.9 µs (−66%), prefill 164 µs → 271 µs (+65%). Net prologue GPU time −4.8%; throughput +0.7%, TPOT −0.7%. Accuracy unchanged.</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/51315">PR #51315</a><button class="map" data-goto="v51315">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-v51314">
+  <header><div class="num">6</div><div><h3>Skip cleaning sparse prefill MQA logits</h3><div class="where">Where: indexer stage 2, prefill path. The buffer holding the scores of the new word against every note.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #51314</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip">opened 6 Aug</span></div>
+  <p>The scores buffer was created with torch.full(−inf), an FP32 fill before every logits kernel. The only reader never looks at the padding, so the fill is unnecessary. Passes clean_logits=False and uses torch.empty.</p>
+  <div class="result">18,162 fill launches → 0; 1.25 s of GPU time removed (0.89% of kernel time). TTFT −1.1% geomean at ISL 8192, −4.9% at concurrency 32. Throughput flat, as expected for a prefill-only change.</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/51314">PR #51314</a><button class="map" data-goto="v51314">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-v50008">
+  <header><div class="num draft">7</div><div><h3>Drop redundant −inf prefill of the decode paged MQA-logits buffer</h3><div class="where">Where: indexer stage 2, decode path. Same idea as pin 6 on the other code path.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #50008</span><span class="chip mine">amd-sriram</span><span class="chip draft">Draft</span><span class="chip">opened 27 Jul</span></div>
+  <p>Removes the full-width fill_(−inf) before the decode paged logits kernel. The decode top-k bounds its scan by seq_lens and the kernels write every column it reads, so the tail is never consumed.</p>
+  <div class="result">Saves a rows × max_model_len fp32 write per decode step. Still a draft: the FlyDSL kernel documents a −inf-prefill contract, so numeric validation across Gluon and FlyDSL paths is the exit condition. Pin B is the kernel this must agree with.</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/50008">PR #50008</a><button class="map" data-goto="v50008">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-v53789">
+  <header><div class="num">8</div><div><h3>Bound the decode paged-MQA-logits sanitize to the top-k read region</h3><div class="where">Where: indexer stage 3, between scoring and top-k, decode path.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #53789</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 25 Aug</span></div>
+  <p>Every decode step ran nan_to_num_(−inf) over the whole [rows, max_model_len] workspace, 43 µs per call at max_model_len 258,048 regardless of context. A small Triton kernel now sanitizes only the slice top-k reads.</p>
+  <div class="result">Per call 43.1 µs → 4.6 µs; 426 ms → 52 ms total on rank 0. +3.2% throughput and −3.3% TPOT at concurrency 256, geomean +0.6%. gsm8k unchanged; 9 kernel tests pass.</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/53789">PR #53789</a><button class="map" data-goto="v53789">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-v51309">
+  <header><div class="num">9</div><div><h3>Skip redundant sparse index remap on non-indexer layers</h3><div class="where">Where: indexer stage 5 and the IndexShare wire. The PR that directly reflects the "1 floor in 4" design.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #51309</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">mrv1-only</span><span class="chip">opened 6 Aug</span></div>
+  <p>With cross-layer index sharing, only indexer-owning layers update the shared top-k buffer, but the old path still remapped it on every layer. Now the remap runs only where a layer owns an indexer: 21 of 78 layers with index_topk_freq=4.</p>
+  <div class="result">Remap launches −73%, remap GPU time 2,392 ms → 646 ms. Throughput +0.6% geomean, TTFT −0.9%. Bit-identical indices, so no output change.</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/51309">PR #51309</a><button class="map" data-goto="v51309">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-v53792">
+  <header><div class="num">10</div><div><h3>Resolve the indexer fp8 cache dtype once at import</h3><div class="where">Where: every function in rocm_aiter_mla_sparse.py.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #53792</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip open">ready</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 25 Aug</span></div>
+  <p>fp8_dtype() cannot change after import but was called on every function invocation, once per DSA layer per forward pass. Pin 3 added a module constant and wired two of six call sites; this routes all of them through it.</p>
+  <div class="result">Code hygiene, no behavior change: six lookups per layer per pass → one at import. The only pin labelled "ready".</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/53792">PR #53792</a><button class="map" data-goto="v53792">Show on map</button></div>
+</article>
+
+<h3 class="group">Indexer — AITER side (the kernels underneath)</h3>
+<article class="pr" id="pr-a4538">
+  <header><div class="num other sq">A</div><div><h3>FlyDSL gfx950 FP8 MQA logits indexer kernel</h3><div class="where">Where: indexer stage 2, the scoring kernel itself, prefill shapes. Drop-in replacement for the Triton/Gluon kernel on MI355X.</div></div></header>
+  <div class="chips"><span class="chip repo">AITER #4538</span><span class="chip">vpietila-amd</span><span class="chip open">Open</span><span class="chip">32 commits</span><span class="chip">opened 3 Aug</span></div>
+  <p>Two gfx950 implementations: a direct-load kernel and an LDS-staged one that uses the async global-to-LDS DMA, XOR swizzling, and 3 LDS buffers with prefetch depth 2 so only one barrier is needed. An auto-selector picks the instance per shape.</p>
+  <div class="result">Versus Triton/Gluon on gfx950: 1.22× at 4096×4096 and 8192×8192, 3.2× at 671×131072, 10.6× at 128×32768. This is the kernel pin 6 feeds.</div>
+  <div class="links"><a href="https://github.com/ROCm/aiter/pull/4538">AITER PR #4538</a><button class="map" data-goto="a4538">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-a4221">
+  <header><div class="num other sq">B</div><div><h3>FlyDSL paged MLA indexer</h3><div class="where">Where: indexer stage 2, the scoring kernel for decode, reading K from the paged FP8 cache through a block table (block size 64).</div></div></header>
+  <div class="chips"><span class="chip repo">AITER #4221</span><span class="chip">fhuizing</span><span class="chip open">Open</span><span class="chip">52 commits</span><span class="chip">opened 13 Jul</span></div>
+  <p>Computes logits[m, n] = Σ_h ReLU(⟨Q[m,h], K[n]⟩ · kv_scale[n]) · weights[m,h] on gfx950. Its distinctive feature is a ragged per-sequence next_n, so one captured graph serves any mix of 1 to num_speculative_tokens + 1 verification tokens per request, the varlen decode that MTP's confidence-scheduled verification needs.</p>
+  <div class="result">Makes the decode indexer match what the MTP sketcher asks for: verify a different number of drafted words per request in the same step. Pins 7 and 8 operate on this kernel's output buffer.</div>
+  <div class="links"><a href="https://github.com/ROCm/aiter/pull/4221">AITER PR #4221</a><button class="map" data-goto="a4221">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-a4355">
+  <header><div class="num other sq">C</div><div><h3>Tiered persistent radix-select decode Top-K + arch/shape dispatcher</h3><div class="where">Where: indexer stage 4, the top-k kernel that picks the 2,048 notes, called about 78 times per decode step.</div></div></header>
+  <div class="chips"><span class="chip repo">AITER #4355</span><span class="chip">JH-Leon-KIM-AMD</span><span class="chip open">Open</span><span class="chip">112 commits</span><span class="chip">opened 23 Jul</span></div>
+  <p>Replaces the HIP radix sort, which grows with context length (369 µs at 8K → 1,165 µs at 120K, about 15× slower than B200's persistent kernel), with a context-length-independent radix-select that is O(topK · log topK). A dispatcher inside top_k_per_row_decode routes to it only for shapes where it measurably wins.</p>
+  <div class="result">Best cell 1.42× on gfx950 and 2.19× on gfx942 versus HIP; without the dispatcher gate it would lose on part of the grid, so the routing is as much the result as the kernel. Set-equivalent with torch.topk. Part of the GLM-5 MXFP4 MI355X perf-uplift epic.</div>
+  <div class="links"><a href="https://github.com/ROCm/aiter/pull/4355">AITER PR #4355</a><button class="map" data-goto="a4355">Show on map</button></div>
+</article>
+
+<h3 class="group">Mixture-of-experts room</h3>
+<article class="pr" id="pr-v50535">
+  <header><div class="num">11</div><div><h3>Use AITER tuned GEMM for the MoE router gate</h3><div class="where">Where: the router, its gate linear layer.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #50535</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 31 Jul</span></div>
+  <p>The gate's fast bf16×bf16→fp32 GEMM was gated to Hopper and Blackwell. On ROCm the input was cast to fp32 first, AITER found no tuned kernel and fell back to a plain matmul. Now the input stays bf16 and the cast moves to the small output.</p>
+  <div class="result">Largest win among the vLLM pins: throughput +3.1%, TPOT −3.0%, TTFT −3.9% geomean over 16 sweep points, up to +4.6% at concurrency 1. 81/81 kernel tests pass on gfx950.</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/50535">PR #50535</a><button class="map" data-goto="v50535">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-v53248">
+  <header><div class="num other">12</div><div><h3>Match Quark exclude semantics in the shared-expert FSE check</h3><div class="where">Where: the shared expert. Decides per layer whether the shared expert may be fused into the routed experts' grouped GEMM.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #53248</span><span class="chip">xuebwang-amd</span><span class="chip open">Open</span><span class="chip">opened 21 Aug</span></div>
+  <p>The check scanned the whole exclude list for the substring "shared_expert". amd/GLM-5.2-MXFP4 excludes exactly three shared-expert weights, all in the unquantized MTP layer 78, and that alone switched the fusion off for all 75 MoE layers. The fix reuses should_ignore_layer(), the same predicate Quark uses everywhere else.</p>
+  <div class="result">Re-enables fused shared experts on layers 3–77. Pin D tunes the fused kernel this unlocks: its shapes say experts 257, top-k 9, which is 256 + the shared one.</div>
+  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/53248">PR #53248</a><button class="map" data-goto="v53248">Show on map</button></div>
+</article>
+
+<article class="pr" id="pr-a4629">
+  <header><div class="num other sq">D</div><div><h3>Retune MXFP4 fused-MoE for gfx950 (TP4 + TP8)</h3><div class="where">Where: the experts' grouped GEMM kernel, MXFP4 weights, with the shared expert fused in.</div></div></header>
+  <div class="chips"><span class="chip repo">AITER #4629</span><span class="chip">nholmber</span><span class="chip open">Open</span><span class="chip">opened 7 Aug</span></div>
+  <p>Retunes glm5_fp4_tuned_fmoe.csv to use the mxmoe a4w4 decode kernels for the two GLM-5.2 fused-shared-expert shapes: model_dim 6144, experts 257, top-k 9, inter_dim 512 (TP4, 12 rows) and 256 (TP8, 8 rows).</p>
+  <div class="result">End-to-end serving throughput +4.3% mean at TP4 and +3.3% at TP8 on MI355X, peak +16.5% at ISL/OSL 1024 concurrency 32. Gains concentrate at concurrency 8–64. Largest single win on the whole map.</div>
+  <div class="links"><a href="https://github.com/ROCm/aiter/pull/4629">AITER PR #4629</a><button class="map" data-goto="a4629">Show on map</button></div>
+</article>
+
+<h2>How the pieces fit</h2>
+<p>Read the indexer zoom top to bottom and you get the division of labour. AITER PRs A, B and C build faster kernels for scoring and top-k. vLLM PR 3 wires AITER kernels in; 4 and 5 fuse the query side and the key side of the prologue; 6, 7 and 8 stop vLLM doing wasted work around the scores; 9 makes vLLM honour IndexShare; 10 is hygiene in the same file. In the attention block, 2 fuses the RoPE, concat and cache write that run before every MLA read, and 1 keeps the MLA weights in bf16 so the model stops looping. In the MoE room, 12 unlocks the fused shared expert, D tunes the fused kernel, and 11 gives the router its fast GEMM.</p>
+<p class="cap">Sources: the PR pages on GitHub, read 12 September 2026. Reload them for current status.</p>
+</div>
+<script>
+(function(){
+const pins=Array.from(document.querySelectorAll('.pin'));
+const cards=Array.from(document.querySelectorAll('article.pr'));
+function clear(){pins.forEach(p=>p.classList.remove('lit'));cards.forEach(c=>c.classList.remove('lit'));document.querySelectorAll('svg .box.lit').forEach(b=>b.classList.remove('lit'));}
+function lit(pr){clear();pins.filter(p=>p.dataset.pr===pr).forEach(p=>{p.classList.add('lit');const n=document.getElementById(p.dataset.node);if(n){const b=n.querySelector('.box');if(b)b.classList.add('lit');}});const c=document.getElementById('pr-'+pr);if(c)c.classList.add('lit');}
+pins.forEach(p=>{
+  p.addEventListener('mouseenter',()=>lit(p.dataset.pr));
+  p.addEventListener('mouseleave',clear);
+  const go=()=>{lit(p.dataset.pr);const c=document.getElementById('pr-'+p.dataset.pr);if(c)c.scrollIntoView({behavior:'smooth',block:'start'});};
+  p.addEventListener('click',go);
+  p.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+});
+cards.forEach(c=>{c.addEventListener('mouseenter',()=>lit(c.id.replace('pr-','')));c.addEventListener('mouseleave',clear);});
+document.querySelectorAll('button.map').forEach(b=>b.addEventListener('click',()=>{const pr=b.dataset.goto;lit(pr);const p=pins.find(x=>x.dataset.pr===pr);if(p){p.scrollIntoView({behavior:'smooth',block:'center'});p.classList.remove('pulse');void p.getBoundingClientRect();p.classList.add('pulse');}}));
+const badge=document.getElementById('zoomBadge');
+const toZoom=()=>document.getElementById('zoom').scrollIntoView({behavior:'smooth',block:'start'});
+badge.addEventListener('click',toZoom);badge.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toZoom();}});
+})();
+</script>
+<script data-root="../" data-here="opt">
+/* Shared side-panel navigation: burger button + slide-in panel. */
+(function(){
+  var sc=document.currentScript, root=(sc&&sc.dataset.root)||'./', here=(sc&&sc.dataset.here)||'';
+  var items=[
+    ['home','Home','GLM-5.2, explained slowly — the guided film',root+'index.html'],
+    ['opt','GLM – optimization','Where every vLLM and AITER PR sits in the model',root+'optimization/index.html'],
+    ['pr','PR review','The original review-prep page (pr-review)',root+'pr-review/index.html']
+  ];
+  var btn=document.createElement('button'); btn.className='gnav-btn'; btn.setAttribute('aria-label','Open menu'); btn.setAttribute('aria-expanded','false');
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  var ov=document.createElement('div'); ov.className='gnav-overlay';
+  var panel=document.createElement('nav'); panel.className='gnav-panel'; panel.setAttribute('aria-label','Site menu');
+  var html='<div class="gnav-head"><b>GLM-5.2 home</b><button class="gnav-close" aria-label="Close menu">×</button></div><ul class="gnav-list">';
+  items.forEach(function(it){ html+='<li><a href="'+it[3]+'"'+(it[0]===here?' class="now" aria-current="page"':'')+'>'+it[1]+'<small>'+it[2]+'</small></a></li>'; });
+  html+='</ul><div class="gnav-foot">Original host: <a href="https://skkkumar.github.io/pr-review/" target="_blank" rel="noopener">skkkumar.github.io/pr-review</a></div>';
+  panel.innerHTML=html;
+  document.body.appendChild(btn); document.body.appendChild(ov); document.body.appendChild(panel);
+  function open(){ document.documentElement.classList.add('gnav-open'); btn.setAttribute('aria-expanded','true'); panel.querySelector('a').focus(); }
+  function close(){ document.documentElement.classList.remove('gnav-open'); btn.setAttribute('aria-expanded','false'); btn.focus(); }
+  btn.addEventListener('click',function(){ document.documentElement.classList.contains('gnav-open')?close():open(); });
+  ov.addEventListener('click',close); panel.querySelector('.gnav-close').addEventListener('click',close);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.documentElement.classList.contains('gnav-open'))close(); });
+})();
+
+</script>
+</body>
+</html>
