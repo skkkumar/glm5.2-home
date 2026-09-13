@@ -10,6 +10,7 @@ Live URL once published: https://skkkumar.github.io/glm5.2-home/
 |---|---|
 | `index.html` | Home: GLM-5.2, explained slowly (guided film with narration and animations) |
 | `optimization/index.html` | GLM – optimization: where every vLLM and AITER PR sits in the model |
+| `pure-optimization/index.html` | GLM – pure optimization: only the performance PRs, same pin numbers |
 | `pr-review/index.html` | PR review: the original https://skkkumar.github.io/pr-review/ shown live inside this site |
 
 The burger menu and side panel are built into each page (no extra files needed).

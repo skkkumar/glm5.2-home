@@ -6,6 +6,14 @@
 <title>PR review — original page</title>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
 <style>
+html,body{margin:0;height:100%;background:#101418;color:#e6ebf0;font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif}
+.head{height:70px;display:flex;align-items:center;gap:1rem;padding:0 1rem 0 4.4rem;border-bottom:1px solid #2a323c;font-size:16px}
+.head a{color:#4ea1f3}
+.head .grow{flex:1}
+iframe{display:block;width:100%;height:calc(100vh - 70px);border:0;background:#101418}
+.fallback{padding:2rem;font-size:17px;line-height:1.6}
+</style>
+<style>
 /* Shared side-panel navigation for the GLM-5.2 site */
 .gnav-btn{position:fixed;top:14px;left:14px;z-index:1000;width:42px;height:42px;border-radius:10px;border:2px solid #1F2A37;background:#F7F9FB;color:#1F2A37;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
 .gnav-btn:hover{background:#fff}
@@ -28,14 +36,6 @@
 .gnav-foot a{color:#4A6FA5}
 
 </style>
-<style>
-html,body{margin:0;height:100%;background:#101418;color:#e6ebf0;font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif}
-.head{height:70px;display:flex;align-items:center;gap:1rem;padding:0 1rem 0 4.4rem;border-bottom:1px solid #2a323c;font-size:16px}
-.head a{color:#4ea1f3}
-.head .grow{flex:1}
-iframe{display:block;width:100%;height:calc(100vh - 70px);border:0;background:#101418}
-.fallback{padding:2rem;font-size:17px;line-height:1.6}
-</style>
 </head>
 <body>
 <div class="head"><b>PR review</b><span style="color:#9aa7b4">the original review-prep page, shown live</span><span class="grow"></span><a href="https://skkkumar.github.io/pr-review/" target="_blank" rel="noopener">Open in its own tab ↗</a></div>
@@ -46,8 +46,9 @@ iframe{display:block;width:100%;height:calc(100vh - 70px);border:0;background:#1
 (function(){
   var sc=document.currentScript, root=(sc&&sc.dataset.root)||'./', here=(sc&&sc.dataset.here)||'';
   var items=[
-    ['home','Home','GLM-5.2, explained slowly — the guided film',root+'index.html'],
+    ['home','Home','GLM-5.2, explained slowly',root+'index.html'],
     ['opt','GLM – optimization','Where every vLLM and AITER PR sits in the model',root+'optimization/index.html'],
+    ['pure','GLM – pure optimization','Only the performance PRs, no drafts, no fixes',root+'pure-optimization/index.html'],
     ['pr','PR review','The original review-prep page (pr-review)',root+'pr-review/index.html']
   ];
   var btn=document.createElement('button'); btn.className='gnav-btn'; btn.setAttribute('aria-label','Open menu'); btn.setAttribute('aria-expanded','false');

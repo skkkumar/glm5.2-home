@@ -4,29 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GLM-5.2 home — explained slowly, a guided film</title>
-<style>
-/* Shared side-panel navigation for the GLM-5.2 site */
-.gnav-btn{position:fixed;top:14px;left:14px;z-index:1000;width:42px;height:42px;border-radius:10px;border:2px solid #1F2A37;background:#F7F9FB;color:#1F2A37;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-.gnav-btn:hover{background:#fff}
-.gnav-btn:focus-visible{outline:3px solid #F2B632;outline-offset:2px}
-.gnav-btn svg{width:22px;height:22px}
-.gnav-overlay{position:fixed;inset:0;background:rgba(15,23,32,.45);z-index:1001;opacity:0;pointer-events:none;transition:opacity .2s}
-.gnav-panel{position:fixed;top:0;left:0;bottom:0;width:min(320px,88vw);background:#F7F9FB;color:#1F2A37;z-index:1002;transform:translateX(-102%);transition:transform .22s ease;box-shadow:4px 0 18px rgba(0,0,0,.18);font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;font-size:17px;line-height:1.5;display:flex;flex-direction:column}
-.gnav-open .gnav-panel{transform:none}
-.gnav-open .gnav-overlay{opacity:1;pointer-events:auto}
-.gnav-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:2px solid #C6D0DA}
-.gnav-head b{font-size:1.05em}
-.gnav-close{width:36px;height:36px;border-radius:8px;border:2px solid #1F2A37;background:#fff;cursor:pointer;font-size:20px;line-height:1}
-.gnav-list{list-style:none;margin:0;padding:10px}
-.gnav-list li{margin:4px 0}
-.gnav-list a{display:block;padding:12px 14px;border-radius:10px;color:#1F2A37;text-decoration:none;border-left:5px solid transparent}
-.gnav-list a:hover{background:#fff}
-.gnav-list a.now{background:#FBE6B3;border-left-color:#F2B632;color:#5C3D00}
-.gnav-list small{display:block;font-size:.78em;color:#46525F}
-.gnav-foot{margin-top:auto;padding:12px 16px 16px;font-size:.78em;color:#46525F;border-top:2px solid #C6D0DA}
-.gnav-foot a{color:#4A6FA5}
-
-</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -110,6 +87,29 @@ svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
   header.hero h1{font-size:1.8em}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+<style>
+/* Shared side-panel navigation for the GLM-5.2 site */
+.gnav-btn{position:fixed;top:14px;left:14px;z-index:1000;width:42px;height:42px;border-radius:10px;border:2px solid #1F2A37;background:#F7F9FB;color:#1F2A37;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.gnav-btn:hover{background:#fff}
+.gnav-btn:focus-visible{outline:3px solid #F2B632;outline-offset:2px}
+.gnav-btn svg{width:22px;height:22px}
+.gnav-overlay{position:fixed;inset:0;background:rgba(15,23,32,.45);z-index:1001;opacity:0;pointer-events:none;transition:opacity .2s}
+.gnav-panel{position:fixed;top:0;left:0;bottom:0;width:min(320px,88vw);background:#F7F9FB;color:#1F2A37;z-index:1002;transform:translateX(-102%);transition:transform .22s ease;box-shadow:4px 0 18px rgba(0,0,0,.18);font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;font-size:17px;line-height:1.5;display:flex;flex-direction:column}
+.gnav-open .gnav-panel{transform:none}
+.gnav-open .gnav-overlay{opacity:1;pointer-events:auto}
+.gnav-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:2px solid #C6D0DA}
+.gnav-head b{font-size:1.05em}
+.gnav-close{width:36px;height:36px;border-radius:8px;border:2px solid #1F2A37;background:#fff;cursor:pointer;font-size:20px;line-height:1}
+.gnav-list{list-style:none;margin:0;padding:10px}
+.gnav-list li{margin:4px 0}
+.gnav-list a{display:block;padding:12px 14px;border-radius:10px;color:#1F2A37;text-decoration:none;border-left:5px solid transparent}
+.gnav-list a:hover{background:#fff}
+.gnav-list a.now{background:#FBE6B3;border-left-color:#F2B632;color:#5C3D00}
+.gnav-list small{display:block;font-size:.78em;color:#46525F}
+.gnav-foot{margin-top:auto;padding:12px 16px 16px;font-size:.78em;color:#46525F;border-top:2px solid #C6D0DA}
+.gnav-foot a{color:#4A6FA5}
+
 </style>
 </head>
 <body>
@@ -884,8 +884,9 @@ window.show=show; window.listen=listen; window.stopAll=stopAll; window.playFilm=
 (function(){
   var sc=document.currentScript, root=(sc&&sc.dataset.root)||'./', here=(sc&&sc.dataset.here)||'';
   var items=[
-    ['home','Home','GLM-5.2, explained slowly — the guided film',root+'index.html'],
+    ['home','Home','GLM-5.2, explained slowly',root+'index.html'],
     ['opt','GLM – optimization','Where every vLLM and AITER PR sits in the model',root+'optimization/index.html'],
+    ['pure','GLM – pure optimization','Only the performance PRs, no drafts, no fixes',root+'pure-optimization/index.html'],
     ['pr','PR review','The original review-prep page (pr-review)',root+'pr-review/index.html']
   ];
   var btn=document.createElement('button'); btn.className='gnav-btn'; btn.setAttribute('aria-label','Open menu'); btn.setAttribute('aria-expanded','false');

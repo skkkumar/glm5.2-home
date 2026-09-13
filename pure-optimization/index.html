@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GLM – optimization: where every vLLM and AITER PR sits</title>
+<title>GLM – pure optimization: the performance-only PRs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -175,10 +175,10 @@ article.pr .body .where{margin:.8em 0 .6em}
 </style>
 </head>
 <body>
-<div class="top"><h1>GLM-5.2 on ROCm: where every vLLM and AITER PR sits</h1><span class="sub">click a pin on the left · the PR opens on the right</span><span class="grow"></span><button class="vbtn" id="fsBtn" title="Use the whole screen (Esc to leave)">⛶ Full screen</button></div>
+<div class="top"><h1>GLM-5.2 on ROCm: the pure performance PRs</h1><span class="sub">click a pin on the left · the PR opens on the right</span><span class="grow"></span><button class="vbtn" id="fsBtn" title="Use the whole screen (Esc to leave)">⛶ Full screen</button></div>
 <div class="split">
 <div class="left">
-  <div class="viewbar"><button class="vbtn on" data-view="model">Model flow</button><button class="vbtn" data-view="zoom">Indexer<span> zoom (10 PRs)</span></button><span class="grow"></span><button class="vbtn" id="focusBtn" title="Model only: hide the list and use the whole window (press again or Esc to come back)" aria-label="Model only">⤢<span> Model only</span></button></div>
+  <div class="viewbar"><button class="vbtn on" data-view="model">Model flow</button><button class="vbtn" data-view="zoom">Indexer<span> zoom (9 PRs)</span></button><span class="grow"></span><button class="vbtn" id="focusBtn" title="Model only: hide the list and use the whole window (press again or Esc to come back)" aria-label="Model only">⤢<span> Model only</span></button></div>
   <div id="view-model" class="view">
 <div class="stage">
 <svg viewBox="0 0 680 990" role="img" aria-label="GLM-5.2 dataflow with numbered pins marking where each pull request applies">
@@ -195,7 +195,7 @@ article.pr .body .where{margin:.8em 0 .6em}
   <g id="n3"><rect class="box" x="104" y="330" width="146" height="88" rx="8"/><text x="177" y="356" text-anchor="middle" class="bold">kv latent proj</text><text x="177" y="378" text-anchor="middle" class="small">MLA: compress</text><text x="177" y="396" text-anchor="middle" class="small">and expand notes</text></g>
   <g id="n4"><rect class="box" x="266" y="330" width="160" height="88" rx="8"/><text x="346" y="356" text-anchor="middle" class="bold">Indexer</text><text x="346" y="378" text-anchor="middle" class="small">picks top 2,048</text><text x="346" y="396" text-anchor="middle" class="small">exists in 1 layer in 4</text></g>
   <g id="n5"><rect class="box" x="442" y="330" width="134" height="88" rx="8"/><text x="509" y="356" text-anchor="middle" class="bold">Attention</text><text x="509" y="378" text-anchor="middle" class="small">QK-Norm, RoPE</text><text x="509" y="396" text-anchor="middle" class="small">reads 2,048 only</text></g>
-  <g class="badge" id="zoomBadge" tabindex="0" role="button" aria-label="Ten PRs inside the indexer, jump to zoom"><rect x="270" y="421" width="152" height="20" rx="10"/><text x="346" y="435" text-anchor="middle" class="small">10 PRs inside → zoom</text></g>
+  <g class="badge" id="zoomBadge" tabindex="0" role="button" aria-label="Ten PRs inside the indexer, jump to zoom"><rect x="270" y="421" width="152" height="20" rx="10"/><text x="346" y="435" text-anchor="middle" class="small">9 PRs inside → zoom</text></g>
   <line class="arr" x1="340" y1="444" x2="340" y2="456" marker-end="url(#ah)"/>
   <path d="M 340 258 L 74 258 L 74 472 L 322 472" class="arr" stroke-dasharray="5 4" marker-end="url(#ah)"/>
   <g id="n6"><circle class="box" cx="340" cy="472" r="14"/><text x="340" y="477" text-anchor="middle" class="bold">+</text></g>
@@ -222,7 +222,6 @@ article.pr .body .where{margin:.8em 0 .6em}
   <g class="pin other" data-pr="v47757" data-node="n5" tabindex="0" role="button" aria-label="Pin 1, vLLM 47757, fused RoPE, concat and cache write before attention"><circle class="mark" cx="442" cy="330" r="11"/><text x="442" y="334.5" text-anchor="middle">1</text></g>
   <g class="pin mine" data-pr="v50535" data-node="n8" tabindex="0" role="button" aria-label="Pin 9, vLLM 50535, router"><circle class="mark" cx="104" cy="622" r="11"/><text x="104" y="626.5" text-anchor="middle">9</text></g>
   <g class="pin other" data-pr="a4629" data-node="n9" tabindex="0" role="button" aria-label="Pin D, AITER 4629, fused MoE"><rect class="mark" x="249" y="611" width="22" height="22" rx="4"/><text x="260" y="626.5" text-anchor="middle">D</text></g>
-  <g class="pin other" data-pr="v53248" data-node="n10" tabindex="0" role="button" aria-label="Pin 10, vLLM 53248, shared expert fusion"><circle class="mark" cx="456" cy="622" r="11"/><text x="456" y="626.5" text-anchor="middle">10</text></g>
 </svg>
 <div class="legend"><span><span class="k"></span>amd-sriram, vLLM</span><span><span class="k other"></span>others, vLLM</span><span><span class="k other sq"></span>others, AITER</span></div>
 </div>
@@ -255,13 +254,12 @@ article.pr .body .where{margin:.8em 0 .6em}
   <g class="pin mine" data-pr="v53789" data-node="z3" tabindex="0" role="button" aria-label="Pin 6, vLLM 53789, sanitize"><circle class="mark" cx="292" cy="80" r="11"/><text x="292" y="84.5" text-anchor="middle">6</text></g>
   <g class="pin other" data-pr="v46172" data-node="z4" tabindex="0" role="button" aria-label="Pin 2 again, vLLM 46172, top-k"><circle class="mark" cx="410" cy="80" r="11"/><text x="410" y="84.5" text-anchor="middle">2</text></g>
   <g class="pin mine" data-pr="v51309" data-node="z5" tabindex="0" role="button" aria-label="Pin 7, vLLM 51309, remap"><circle class="mark" cx="528" cy="80" r="11"/><text x="528" y="84.5" text-anchor="middle">7</text></g>
-  <g class="pin mine" data-pr="v53792" data-node="z0" tabindex="0" role="button" aria-label="Pin 8, vLLM 53792, whole module"><circle class="mark" cx="660" cy="38" r="11"/><text x="660" y="42.5" text-anchor="middle">8</text></g>
   <g class="pin other" data-pr="a4538" data-node="z2" tabindex="0" role="button" aria-label="Pin A, AITER 4538, score prefill kernel"><rect class="mark" x="145" y="165" width="22" height="22" rx="4"/><text x="156" y="180.5" text-anchor="middle">A</text></g>
   <g class="pin other" data-pr="a4221" data-node="z2" tabindex="0" role="button" aria-label="Pin B, AITER 4221, score decode kernel"><rect class="mark" x="171" y="165" width="22" height="22" rx="4"/><text x="182" y="180.5" text-anchor="middle">B</text></g>
   <g class="pin other" data-pr="a4355" data-node="z4" tabindex="0" role="button" aria-label="Pin C, AITER 4355, top-k kernel"><rect class="mark" x="399" y="165" width="22" height="22" rx="4"/><text x="410" y="180.5" text-anchor="middle">C</text></g>
   <text x="20" y="318" class="small">Prologue: 2 wired the AITER kernels in (and also touches top-k).</text>
   <text x="20" y="334" class="small">3 fuses the query side of the prologue; 4 fuses the key side and the cache write.</text>
-  <text x="20" y="350" class="small">5 and A = prefill path; B = decode path. 8 touches every function in the file.</text>
+  <text x="20" y="350" class="small">5 and A = prefill path; B = decode path.</text>
 </svg>
 </div>
     <p class="fit">Press "Model flow" above to go back to the whole model.</p>
@@ -270,11 +268,11 @@ article.pr .body .where{margin:.8em 0 .6em}
 </div>
 <div class="gutter" id="gutter" role="separator" aria-orientation="vertical" aria-label="Resize panels" tabindex="0" title="Drag to resize, double-click to reset"></div>
 <div class="right">
-  <p class="hint">Click a pin on the model, or a PR below. One PR opens at a time; the pin lights up on the left. Draft PRs are not shown. Press "10 PRs inside → zoom" on the model to swap it for the indexer close-up.<br><span class="legend" style="margin-top:.4rem"><span><span class="k"></span>amd-sriram, vLLM</span><span><span class="k other"></span>others, vLLM</span><span><span class="k other sq"></span>others, AITER</span></span></p>
+  <p class="hint">Click a pin on the model, or a PR below. One PR opens at a time; the pin lights up on the left. Only pure performance PRs are shown; pin numbers match the full optimization page. Press "9 PRs inside → zoom" on the model to swap it for the indexer close-up.<br><span class="legend" style="margin-top:.4rem"><span><span class="k"></span>amd-sriram, vLLM</span><span><span class="k other"></span>others, vLLM</span><span><span class="k other sq"></span>others, AITER</span></span></p>
   <article class="pr" id="about">
     <button class="acc" aria-expanded="false"><div class="num other" style="font-size:.8em">?</div><div class="ttl"><h3>About this map: legend, counts, prefill vs decode</h3><div class="grp">open once, then close it</div></div><span class="caret" aria-hidden="true">▾</span></button>
     <div class="body">
-      <p class="lead" style="font-size:.95em">Fourteen open pull requests, pinned onto the model's dataflow. Circles are vLLM (the engine that decides what to run). Squares are AITER (the AMD kernel library that does the computing). Amber means amd-sriram's own PR; blue means someone else's. Status as of 12 September 2026.</p>
+      <p class="lead" style="font-size:.95em">Twelve open pull requests, pinned onto the model's dataflow. Circles are vLLM (the engine that decides what to run). Squares are AITER (the AMD kernel library that does the computing). Amber means amd-sriram's own PR; blue means someone else's. Status as of 12 September 2026.</p>
 <div class="stage">
 <svg viewBox="0 0 680 120" role="img" aria-label="The software stack: model design from Z.ai, vLLM engine, AITER kernels, MI355X GPU">
   <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
@@ -285,16 +283,16 @@ article.pr .body .where{margin:.8em 0 .6em}
   <rect class="box" x="356" y="30" width="146" height="60" rx="8"/><text x="429" y="54" text-anchor="middle" class="bold">AITER</text><text x="429" y="74" text-anchor="middle" class="small">the GPU kernels</text>
   <line class="arr" x1="502" y1="60" x2="522" y2="60" marker-end="url(#ah)"/>
   <rect class="box" x="526" y="30" width="138" height="60" rx="8"/><text x="595" y="54" text-anchor="middle" class="bold">MI355X</text><text x="595" y="74" text-anchor="middle" class="small">gfx950, TP=4</text>
-  <text x="16" y="110" class="small">10 vLLM PRs (circles) · 4 AITER PRs (squares) · the same GLM-5.2 stage can have both, one above the other</text>
+  <text x="16" y="110" class="small">8 vLLM PRs (circles) · 4 AITER PRs (squares) · the same GLM-5.2 stage can have both, one above the other</text>
 </svg>
 </div>
 <div class="counts">
-  <div><b>14</b>open PRs mapped</div>
-  <div><b>2 · 5 · 7</b>prefill-only · decode-only · both</div>
-  <div><b>10 + 4</b>vLLM + AITER</div>
-  <div><b>6</b>by amd-sriram</div>
-  <div><b>10</b>inside the DSA indexer</div>
-  <div><b>3</b>in the MoE block</div>
+  <div><b>12</b>open PRs mapped</div>
+  <div><b>2 · 5 · 5</b>prefill-only · decode-only · both</div>
+  <div><b>8 + 4</b>vLLM + AITER</div>
+  <div><b>5</b>by amd-sriram</div>
+  <div><b>9</b>inside the DSA indexer</div>
+  <div><b>2</b>in the MoE block</div>
   <div><b>1</b>in MLA attention</div>
 </div>
 
@@ -303,11 +301,11 @@ article.pr .body .where{margin:.8em 0 .6em}
 <p>Every pass through the model is one of two kinds. <b>Prefill</b> is the first pass: the whole prompt goes through all 78 layers at once, fills the KV cache, and produces the first token; it is compute-heavy and sets the time to first token (TTFT). <b>Decode</b> is every pass after that: one new token per sequence goes through the 78 layers, reads the cache, adds one entry; it is memory-bound and sets the time per output token (TPOT). GLM-5.2 uses different kernels for the two, so each PR below carries a phase label: <span class="chip prefill">prefill</span> <span class="chip decode">decode</span> <span class="chip both">both</span>.</p>
 
       <h2>How the pieces fit</h2>
-<p>Read the indexer zoom top to bottom and you get the division of labour. AITER PRs A, B and C build faster kernels for scoring and top-k. vLLM PR 2 wires AITER kernels in; 3 and 4 fuse the query side and the key side of the prologue; 5 and 6 stop vLLM doing wasted work around the scores; 7 makes vLLM honour IndexShare; 8 is hygiene in the same file. In the attention block, 1 fuses the RoPE, concat and cache write that run before every MLA read. In the MoE block, 10 unlocks the fused shared expert, D tunes the fused kernel, and 9 gives the router its fast GEMM.</p>
+<p>Read the indexer zoom top to bottom and you get the division of labour. AITER PRs A, B and C build faster kernels for scoring and top-k. vLLM PR 2 wires AITER kernels in; 3 and 4 fuse the query side and the key side of the prologue; 5 and 6 stop vLLM doing wasted work around the scores; 7 makes vLLM honour IndexShare. In the attention block, 1 fuses the RoPE, concat and cache write that run before every MLA read. In the MoE block, D tunes the fused expert kernel and 9 gives the router its fast GEMM.</p>
 <div class="note">Result numbers below come from each PR's own description. The two xaguilar-amd PRs were measured on GLM-5.2-FP8 with MI325X (gfx942) at TP=8; all others on amd/GLM-5.2-MXFP4 with MI355X at TP=4. Statuses were read from GitHub on 12 September 2026.</div>
     </div>
   </article>
-  <h2>The 14 PRs, in model order</h2>
+  <h2>The 12 PRs, in model order</h2>
 <article class="pr" id="pr-v47757" data-view="model">
   <button class="acc" aria-expanded="false"><div class="num other">1</div><div class="ttl"><h3>Fuse decode QK-RoPE + Q-concat + KV-concat + KV-cache write for sparse MLA</h3><div class="chips"><span class="chip repo">vLLM #47757</span><span class="chip">xaguilar-amd</span><span class="chip open">Open</span><span class="chip">7 commits</span><span class="chip">opened 6 Jul</span><span class="chip decode" title="the fused kernel lives on the sparse-MLA decode path, one token per sequence">decode</span></div><div class="grp">MLA attention</div></div><span class="caret" aria-hidden="true">▾</span></button>
   <div class="body"><div class="where">Where: the attention block itself, the per-layer query and key preparation that runs right before MLA attention reads the 2,048 notes. Phase: decode — the fused kernel lives on the sparse-MLA decode path, one token per sequence.</div>
@@ -319,7 +317,7 @@ article.pr .body .where{margin:.8em 0 .6em}
 <article class="pr" id="pr-v46172" data-view="zoom">
   <button class="acc" aria-expanded="false"><div class="num other">2</div><div class="ttl"><h3>Optimize rocm aiter sparse mla indexer</h3><div class="chips"><span class="chip repo">vLLM #46172</span><span class="chip">tjtanaa (EmbeddedLLM)</span><span class="chip open">Open</span><span class="chip">opened 19 Jun</span><span class="chip both" title="cp_gather K-quant-cache serves prefill, top_k_per_row_decode serves decode">both</span></div><div class="grp">Indexer — vLLM side (what gets called, and when)</div></div><span class="caret" aria-hidden="true">▾</span></button>
   <div class="body"><div class="where">Where: indexer prologue and top-k. The PR that first wired three AITER kernels into the sparse path: cp_gather_indexer_k_quant_cache, indexer_k_quant_and_cache, top_k_per_row_decode. Phase: both — cp_gather K-quant-cache serves prefill, top_k_per_row_decode serves decode.</div>
-  <p>Follows the "speed of light" layout from AMD's ATOM plugin for top-k 2,048, so vLLM and ATOM share the same AITER kernels going forward. It also introduced the module-level FP8_DTYPE constant that pin 8 finishes wiring up.</p>
+  <p>Follows the "speed of light" layout from AMD's ATOM plugin for top-k 2,048, so vLLM and ATOM share the same AITER kernels going forward. It also introduced the module-level FP8_DTYPE constant used across the module.</p>
   <div class="result">Validated on DeepSeek-V3.2 at 1M context: gsm8k about 0.95 at block sizes 1 and 64, with performance gains from all three kernels. This is the foundation most of the amber indexer pins build on.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/46172">PR #46172</a><button class="map" data-goto="v46172">Show on map</button></div>
 </div>
@@ -364,14 +362,6 @@ article.pr .body .where{margin:.8em 0 .6em}
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/51309">PR #51309</a><button class="map" data-goto="v51309">Show on map</button></div>
 </div>
 </article>
-<article class="pr" id="pr-v53792" data-view="zoom">
-  <button class="acc" aria-expanded="false"><div class="num">8</div><div class="ttl"><h3>Resolve the indexer fp8 cache dtype once at import</h3><div class="chips"><span class="chip repo">vLLM #53792</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip open">ready</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 25 Aug</span><span class="chip both" title="every call site in the module, every pass">both</span></div><div class="grp">Indexer — vLLM side (what gets called, and when)</div></div><span class="caret" aria-hidden="true">▾</span></button>
-  <div class="body"><div class="where">Where: every function in rocm_aiter_mla_sparse.py. Phase: both — every call site in the module, every pass.</div>
-  <p>fp8_dtype() cannot change after import but was called on every function invocation, once per DSA layer per forward pass. Pin 2 added a module constant and wired two of six call sites; this routes all of them through it.</p>
-  <div class="result">Code hygiene, no behavior change: six lookups per layer per pass → one at import. The only pin labelled "ready".</div>
-  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/53792">PR #53792</a><button class="map" data-goto="v53792">Show on map</button></div>
-</div>
-</article>
 <article class="pr" id="pr-a4538" data-view="zoom">
   <button class="acc" aria-expanded="false"><div class="num other sq">A</div><div class="ttl"><h3>FlyDSL gfx950 FP8 MQA logits indexer kernel</h3><div class="chips"><span class="chip repo">AITER #4538</span><span class="chip">vpietila-amd</span><span class="chip open">Open</span><span class="chip">32 commits</span><span class="chip">opened 3 Aug</span><span class="chip prefill" title="the dense MQA-logits kernel for prefill shapes">prefill</span></div><div class="grp">Indexer — AITER side (the kernels underneath)</div></div><span class="caret" aria-hidden="true">▾</span></button>
   <div class="body"><div class="where">Where: indexer stage 2, the scoring kernel itself, prefill shapes. Drop-in replacement for the Triton/Gluon kernel on MI355X. Phase: prefill — the dense MQA-logits kernel for prefill shapes.</div>
@@ -404,14 +394,6 @@ article.pr .body .where{margin:.8em 0 .6em}
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/50535">PR #50535</a><button class="map" data-goto="v50535">Show on map</button></div>
 </div>
 </article>
-<article class="pr" id="pr-v53248" data-view="model">
-  <button class="acc" aria-expanded="false"><div class="num other">10</div><div class="ttl"><h3>Match Quark exclude semantics in the shared-expert FSE check</h3><div class="chips"><span class="chip repo">vLLM #53248</span><span class="chip">xuebwang-amd</span><span class="chip open">Open</span><span class="chip">opened 21 Aug</span><span class="chip both" title="a load-time decision that switches the fused path on for all passes">both</span></div><div class="grp">Mixture-of-experts block</div></div><span class="caret" aria-hidden="true">▾</span></button>
-  <div class="body"><div class="where">Where: the shared expert. Decides per layer whether the shared expert may be fused into the routed experts' grouped GEMM. Phase: both — a load-time decision that switches the fused path on for all passes.</div>
-  <p>The check scanned the whole exclude list for the substring "shared_expert". amd/GLM-5.2-MXFP4 excludes exactly three shared-expert weights, all in the unquantized MTP layer 78, and that alone switched the fusion off for all 75 MoE layers. The fix reuses should_ignore_layer(), the same predicate Quark uses everywhere else.</p>
-  <div class="result">Re-enables fused shared experts on layers 3–77. Pin D tunes the fused kernel this unlocks: its shapes say experts 257, top-k 9, which is 256 + the shared one.</div>
-  <div class="links"><a href="https://github.com/vllm-project/vllm/pull/53248">PR #53248</a><button class="map" data-goto="v53248">Show on map</button></div>
-</div>
-</article>
 <article class="pr" id="pr-a4629" data-view="model">
   <button class="acc" aria-expanded="false"><div class="num other sq">D</div><div class="ttl"><h3>Retune MXFP4 fused-MoE for gfx950 (TP4 + TP8)</h3><div class="chips"><span class="chip repo">AITER #4629</span><span class="chip">nholmber</span><span class="chip open">Open</span><span class="chip">opened 7 Aug</span><span class="chip decode" title="retunes the a4w4 decode MoE kernels; gains sit at concurrency 8–64">decode</span></div><div class="grp">Mixture-of-experts block</div></div><span class="caret" aria-hidden="true">▾</span></button>
   <div class="body"><div class="where">Where: the experts' grouped GEMM kernel, MXFP4 weights, with the shared expert fused in. Phase: decode — retunes the a4w4 decode MoE kernels; gains sit at concurrency 8–64.</div>
@@ -426,7 +408,7 @@ article.pr .body .where{margin:.8em 0 .6em}
 </div>
 <script>
 (function(){
-const order=["v47757","v46172","v47335","v51315","v51314","v53789","v51309","v53792","a4538","a4221","a4355","v50535","v53248","a4629"];
+const order=["v47757","v46172","v47335","v51315","v51314","v53789","v51309","a4538","a4221","a4355","v50535","a4629"];
 const pins=Array.from(document.querySelectorAll('.pin'));
 const arts=Array.from(document.querySelectorAll('article.pr[data-view]'));
 const right=document.querySelector('.right');
@@ -489,7 +471,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.body.clas
 gutter.addEventListener('keydown',e=>{ const cur=parseFloat(getComputedStyle(split).getPropertyValue('--leftw'))||split.getBoundingClientRect().width/2; if(e.key==='ArrowLeft'){e.preventDefault();setLeft(cur-40,true);} if(e.key==='ArrowRight'){e.preventDefault();setLeft(cur+40,true);} if(e.key==='Home'){e.preventDefault();split.style.removeProperty('--leftw');localStorage.removeItem('glmSplit');} });
 })();
 </script>
-<script data-root="../" data-here="opt">
+<script data-root="../" data-here="pure">
 /* Shared side-panel navigation: burger button + slide-in panel. */
 (function(){
   var sc=document.currentScript, root=(sc&&sc.dataset.root)||'./', here=(sc&&sc.dataset.here)||'';
