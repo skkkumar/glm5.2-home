@@ -122,6 +122,18 @@ svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
   header.hero h1{font-size:1.8em}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* ---- built-for highlights ---- */
+.builtfor{margin:1.2rem 0 2.4rem;scroll-margin-top:80px}
+.builtfor .why{font-size:1.05em;background:var(--hl-soft);border-left:6px solid var(--hl);padding:.8em 1.1em;border-radius:0 12px 12px 0;max-width:62ch}
+.hl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.8rem;margin:1.1rem 0 .8rem}
+.hl{background:var(--sheet);border:2px solid var(--line);border-radius:14px;padding:.85rem 1rem}
+.hl .t{font-weight:700;margin:0 0 .3em;display:flex;align-items:baseline;gap:.45em;flex-wrap:wrap}
+.hl .big{font-size:1.5em;color:var(--hl-ink)}
+.hl p{margin:.2em 0 0;font-size:.86em;color:var(--ink2);line-height:1.55}
+.hl.star{border-color:var(--hl-ink);box-shadow:0 0 0 4px var(--hl-soft)}
+.hl.star .tag{font-size:.68em;background:var(--hl);color:var(--ink);border-radius:999px;padding:.15em .7em;font-weight:700;letter-spacing:.04em}
+.builtfor .fine{font-size:.78em;color:var(--muted);margin:.4rem 0 0}
 </style>
 </head>
 <body>
@@ -146,6 +158,21 @@ svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
   </div>
   <p class="notice">Each chapter has a Listen button (the browser reads the text aloud and highlights each sentence) and a Show button (plays the animation). The film mode does both, chapter after chapter. Works in Chrome, Edge and Safari, on Mac and Windows; pick a voice you like from the Voice menu at the top and press Test.</p>
 </header>
+
+<section class="builtfor" id="ch0">
+  <div class="num">Before we start</div>
+  <h2>What GLM-5.2 was built for</h2>
+  <p class="why"><b>One sentence:</b> GLM-5.2 is Z.ai's open-weights flagship (MIT license, June 2026), built for <b>long-horizon coding and agentic work</b> — and its whole design answers one question: <b>how do you make a 1-million-token context affordable?</b></p>
+  <div class="hl-grid">
+    <div class="hl"><div class="t"><span class="big">753B → ~40B</span></div><p><b>Mixture of Experts.</b> You download 753B parameters (1.51&nbsp;TB in BF16), but each token runs only ~40B: 8 of 256 experts plus 1 shared, across 78 layers (first 3 dense). A huge library of specialists; each word consults a small committee. <i>Chapter 5.</i></p></div>
+    <div class="hl"><div class="t"><span class="big">top 2,048</span></div><p><b>MLA + DSA attention.</b> MLA compresses the KV cache into a small latent; DSA means each query reads only the 2,048 most relevant earlier tokens instead of all million. <i>Chapters 6–7.</i></p></div>
+    <div class="hl star"><div class="t"><span class="big">2.9×</span><span class="tag">THE NEW IDEA</span></div><p><b>IndexShare.</b> The indexer that picks those 2,048 tokens used to run in every layer. GLM-5.2 runs it in 1 layer in 4 and shares the list — 75% of indexer compute gone, ~2.9× fewer per-token FLOPs at 1M context (Z.ai also reports a 1.82× prefill speedup for the cached variant). This is what makes the 1M window economically viable. <i>Chapter 8.</i></p></div>
+    <div class="hl"><div class="t"><span class="big">+20%</span></div><p><b>Faster generation (MTP).</b> A draft module guesses ~5 words ahead; the main model verifies them in one pass. KVShare and rejection sampling push the accepted length up 20% (4.56 → 5.47 tokens per round). <i>Chapter 10.</i></p></div>
+    <div class="hl"><div class="t"><span class="big">1M in / 131K out</span></div><p><b>Context.</b> 1,048,576 input tokens — about five times GLM-5.1's 200K, roughly an entire large codebase in one prompt — with up to 131,072 output tokens.</p></div>
+    <div class="hl"><div class="t"><span class="big">High / Max</span></div><p><b>Two thinking efforts, per request.</b> Max (the default) for deep multi-step work, High for faster routine generation; thinking can also be switched off entirely.</p></div>
+  </div>
+  <p class="fine">Where it lands: 62.1 on SWE-bench Pro and 81.0 on Terminal-Bench 2.1 — the strongest open-weights coding model at release, in the same conversation as the closed frontier models.</p>
+</section>
 
 <section class="ch" id="ch1" data-anim="ch1">
   <div class="num">Chapter 1</div>
@@ -653,6 +680,7 @@ const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
 /* ---- prepare page ---- */
 const sections=$$('section.ch');
+const tocSections=[$('#ch0'),...sections].filter(Boolean);
 sections.forEach(sec=>{
   $$('.say p',sec).forEach(p=>{
     const text=p.textContent.trim();let parts;
@@ -665,9 +693,9 @@ sections.forEach(sec=>{
   if(synced.includes(sec.id)){const live=document.createElement('div');live.className='live';live.id=sec.id+'live';stage.insertBefore(live,stage.firstChild);}
 });
 const toc=$('#toc');
-sections.forEach(sec=>{const li=document.createElement('li');const a=document.createElement('a');a.href='#'+sec.id;a.textContent=$('.num',sec).textContent.replace('Chapter ','')+'. '+$('h2',sec).textContent;a.id='toc-'+sec.id;li.appendChild(a);toc.appendChild(li);});
+tocSections.forEach(sec=>{const li=document.createElement('li');const a=document.createElement('a');a.href='#'+sec.id;const num=$('.num',sec).textContent.replace('Chapter ','');a.textContent=(sec.id==='ch0'?'★ '+$('h2',sec).textContent:num+'. '+$('h2',sec).textContent);a.id='toc-'+sec.id;li.appendChild(a);toc.appendChild(li);});
 const io=new IntersectionObserver(es=>{es.forEach(e=>{const a=$('#toc-'+e.target.id);if(a)a.classList.toggle('now',e.isIntersecting); if(e.isIntersecting&&typeof modelFor==='function')modelFor(e.target.id);});},{rootMargin:'-40% 0px -50% 0px'});
-sections.forEach(s=>io.observe(s));
+tocSections.forEach(s=>io.observe(s));
 
 /* ---- speech ---- */
 const synth=window.speechSynthesis; let voice=null; let rate=0.92; let voicesReady=false;
@@ -885,12 +913,12 @@ const SYNC={ch11:c11step,ch12:c12step,chnm:nmstep,chpd:pdstep};
 /* ---- side panel: the end-to-end model, highlighted per chapter ---- */
 const MODEL_ALL=['n0','n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13','n14'];
 const CH2MODEL={
-  ch1:MODEL_ALL, ch2:['n5','n4'], ch3:['n0','n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13'],
+  ch0:MODEL_ALL, ch1:MODEL_ALL, ch2:['n5','n4'], ch3:['n0','n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13'],
   ch4:['n3','n4','n5','n8','n9','n10'], ch5:['n8','n9','n10'], ch6:['n3'], ch7:['n4','n5'], ch8:['n4'],
   ch9:['n2','n6','n7','n11','n12'], ch10:['n14'], ch11:[], chpd:['n0','n1','n3','n4','n5','n8','n9','n13'],
   chnm:['n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13'], ch12:['n13','n14'], ch13:[] };
 const NODE2CH={n0:'ch3',n1:'ch3',n2:'ch9',n3:'ch6',n4:'ch7',n5:'ch7',n6:'ch9',n7:'ch9',n8:'ch5',n9:'ch5',n10:'ch5',n11:'ch9',n12:'ch9',n13:'ch3',n14:'ch10'};
-const CHNAME={ch1:'Chapter 1 · the whole model',ch2:'Chapter 2 · attention cost',ch3:'Chapter 3 · the whole flow',ch4:'Chapter 4 · the two rooms',ch5:'Chapter 5 · mixture of experts',ch6:'Chapter 6 · MLA',ch7:'Chapter 7 · the DSA indexer',ch8:'Chapter 8 · IndexShare',ch9:'Chapter 9 · glue parts',ch10:'Chapter 10 · MTP',ch11:'Chapter 11 · the blueprint',chpd:'Chapter 11b · prefill and decode',chnm:'Chapter 12 · 8 tokens, no MTP',ch12:'Chapter 13 · 8 tokens with MTP',ch13:'Chapter 14 · your talk'};
+const CHNAME={ch0:'The whole model at a glance',ch1:'Chapter 1 · the whole model',ch2:'Chapter 2 · attention cost',ch3:'Chapter 3 · the whole flow',ch4:'Chapter 4 · the two rooms',ch5:'Chapter 5 · mixture of experts',ch6:'Chapter 6 · MLA',ch7:'Chapter 7 · the DSA indexer',ch8:'Chapter 8 · IndexShare',ch9:'Chapter 9 · glue parts',ch10:'Chapter 10 · MTP',ch11:'Chapter 11 · the blueprint',chpd:'Chapter 11b · prefill and decode',chnm:'Chapter 12 · 8 tokens, no MTP',ch12:'Chapter 13 · 8 tokens with MTP',ch13:'Chapter 14 · your talk'};
 let modelCh='';
 (function buildModelPanel(){ const src=$('#ch11 .stage svg'), host=$('#modelSvg'); if(!src||!host)return;
   const c=src.cloneNode(true); c.removeAttribute('role'); c.setAttribute('aria-hidden','true');
