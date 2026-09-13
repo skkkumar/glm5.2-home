@@ -83,10 +83,28 @@ body{overflow:hidden}
 .top{height:64px;display:flex;align-items:center;gap:1rem;padding:0 1rem 0 4.4rem;border-bottom:2px solid var(--line);background:var(--paper)}
 .top h1{font-size:1.15em;margin:0;line-height:1.2}
 .top .sub{font-size:.8em;color:var(--ink2)}
-.split{display:grid;grid-template-columns:minmax(380px,50%) minmax(0,1fr);height:calc(100vh - 64px)}
+.top .grow,.viewbar .grow{flex:1}
+.top .vbtn{font-size:.78em}
+.split{display:grid;grid-template-columns:var(--leftw,50%) 10px minmax(0,1fr);height:calc(100vh - 64px)}
+.gutter{cursor:col-resize;background:var(--line);position:relative;touch-action:none}
+.gutter::after{content:"";position:absolute;top:50%;left:50%;width:4px;height:44px;margin:-22px 0 0 -2px;border-radius:2px;background:var(--ink2);opacity:.5}
+.gutter:hover,.gutter.drag{background:var(--hl)}
+.gutter:focus-visible{outline:3px solid var(--hl);outline-offset:-1px}
+body.dragging{user-select:none;cursor:col-resize}
+body.focus .top,body.focus .right,body.focus .gutter,body.focus .fit{display:none}
+body.focus .split{grid-template-columns:1fr;height:100vh}
+body.focus .left{padding:.5rem 1rem}
+body.focus .viewbar{padding-left:3.2rem}
+:fullscreen body,body:fullscreen{background:var(--paper)}
+.left{display:flex;flex-direction:column;overflow:hidden;padding:.6rem .8rem .6rem}
+.left .view{flex:1;min-height:0;display:flex;flex-direction:column}
+.left .stage{flex:1;min-height:0;display:flex;flex-direction:column;padding:.5rem}
+.left .stage svg{flex:1;min-height:0;width:100%;height:100%}
+.left .legend{flex:none;font-size:.72em;gap:.8rem;justify-content:center}
+.left .fit{font-size:.75em;color:var(--ink2);margin:.3rem 0 0;text-align:center;flex:none}
 .left,.right{overflow-y:auto;overscroll-behavior:contain;padding:1rem}
-.left{border-right:2px solid var(--line);background:var(--paper)}
-.viewbar{display:flex;gap:.5rem;align-items:center;margin:0 0 .8rem;flex-wrap:wrap}
+.left{border-right:0;background:var(--paper)}
+.viewbar{display:flex;gap:.5rem;align-items:center;margin:0 0 .5rem;flex-wrap:wrap;flex:none}
 .vbtn{font:inherit;font-size:.85em;padding:.4em .9em;border-radius:999px;border:2px solid var(--ink);background:#fff;cursor:pointer}
 .vbtn.on{background:var(--ink);color:#fff}
 .vbtn:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
@@ -116,7 +134,10 @@ article.pr .body .where{margin:.8em 0 .6em}
   body{overflow:auto}
   .split{display:block;height:auto}
   .left,.right{overflow:visible;height:auto;border-right:0}
-  .left{border-bottom:2px solid var(--line)}
+  .left{display:block;border-bottom:2px solid var(--line)}
+  .left .view,.left .stage{display:block}
+  .left .stage svg{height:auto}
+  .gutter{display:none}
 }
 </style>
 <style>
@@ -144,10 +165,10 @@ article.pr .body .where{margin:.8em 0 .6em}
 </style>
 </head>
 <body>
-<div class="top"><h1>GLM-5.2 on ROCm: where every vLLM and AITER PR sits</h1><span class="sub">click a pin on the left · the PR opens on the right</span></div>
+<div class="top"><h1>GLM-5.2 on ROCm: where every vLLM and AITER PR sits</h1><span class="sub">click a pin on the left · the PR opens on the right</span><span class="grow"></span><button class="vbtn" id="fsBtn" title="Use the whole screen (Esc to leave)">⛶ Full screen</button></div>
 <div class="split">
 <div class="left">
-  <div class="viewbar"><button class="vbtn on" data-view="model">Model flow</button><button class="vbtn" data-view="zoom">Inside the indexer (11 PRs)</button></div>
+  <div class="viewbar"><button class="vbtn on" data-view="model">Model flow</button><button class="vbtn" data-view="zoom">Inside the indexer (11 PRs)</button><span class="grow"></span><button class="vbtn" id="focusBtn" title="Hide the list and use the whole window for the model">Model only ⤢</button></div>
   <div id="view-model" class="view">
 <div class="stage">
 <svg viewBox="0 0 680 990" role="img" aria-label="GLM-5.2 dataflow with numbered pins marking where each pull request applies">
@@ -236,9 +257,11 @@ article.pr .body .where{margin:.8em 0 .6em}
   <text x="20" y="350" class="small">6 and A = prefill path; 7 and B = decode path. 10 touches every function in the file.</text>
 </svg>
 </div>
-    <p style="font-size:.8em;color:var(--ink2);margin:.6rem 0 0">Press "Model flow" above to go back to the whole model.</p>
+    <p class="fit">Press "Model flow" above to go back to the whole model.</p>
   </div>
+  <p class="fit">Drag the bar on the right to resize · double-click it to reset</p>
 </div>
+<div class="gutter" id="gutter" role="separator" aria-orientation="vertical" aria-label="Resize panels" tabindex="0" title="Drag to resize, double-click to reset"></div>
 <div class="right">
   <p class="hint">Click a pin on the model, or a PR below. One PR opens at a time; the pin lights up on the left. Press "11 PRs inside → zoom" on the model to swap it for the indexer close-up.</p>
   <article class="pr" id="about">
@@ -419,7 +442,7 @@ const pins=Array.from(document.querySelectorAll('.pin'));
 const arts=Array.from(document.querySelectorAll('article.pr[data-view]'));
 const right=document.querySelector('.right');
 let current=null, view='model';
-function setView(v){ view=v; document.getElementById('view-model').hidden=(v!=='model'); document.getElementById('view-zoom').hidden=(v!=='zoom'); document.querySelectorAll('.vbtn').forEach(b=>b.classList.toggle('on',b.dataset.view===v)); }
+function setView(v){ view=v; document.getElementById('view-model').hidden=(v!=='model'); document.getElementById('view-zoom').hidden=(v!=='zoom'); document.querySelectorAll('.vbtn[data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===v)); }
 function clearLit(){pins.forEach(p=>p.classList.remove('lit'));document.querySelectorAll('svg .box.lit').forEach(b=>b.classList.remove('lit'));}
 function lit(pr){clearLit();pins.filter(p=>p.dataset.pr===pr).forEach(p=>{p.classList.add('lit');const n=document.getElementById(p.dataset.node);if(n){const b=n.querySelector('.box');if(b)b.classList.add('lit');}});}
 function pulsePin(pr){ const p=pins.find(x=>x.dataset.pr===pr&&!x.closest('.view').hidden); if(p){p.scrollIntoView({behavior:'smooth',block:'center'});p.classList.remove('pulse');void p.getBoundingClientRect();p.classList.add('pulse');} }
@@ -430,7 +453,7 @@ function select(pr,fromPin){ current=pr;
     a.scrollIntoView({behavior:'smooth',block:'start'}); history.replaceState(null,'','#'+pr); }
   else { clearLit(); history.replaceState(null,'',location.pathname); }
 }
-document.querySelectorAll('.vbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+document.querySelectorAll('.vbtn[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 const badge=document.getElementById('zoomBadge'); if(badge){ const z=()=>{setView('zoom');document.querySelector('.left').scrollTo({top:0,behavior:'smooth'});}; badge.addEventListener('click',z); badge.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();z();}}); }
 pins.forEach(p=>{
   p.addEventListener('mouseenter',()=>{ if(!current)lit(p.dataset.pr); });
@@ -443,6 +466,25 @@ const about=document.getElementById('about'); about.querySelector('.acc').addEve
 document.querySelectorAll('button.map[data-goto]').forEach(b=>b.addEventListener('click',()=>{ const pr=b.dataset.goto; const a=document.getElementById('pr-'+pr); if(a.dataset.view!==view)setView(a.dataset.view); lit(pr); pulsePin(pr); }));
 document.addEventListener('keydown',e=>{ if(!current)return; const i=order.indexOf(current); if(e.key==='ArrowDown'||e.key==='ArrowRight'){e.preventDefault();select(order[(i+1)%order.length],false);} if(e.key==='ArrowUp'||e.key==='ArrowLeft'){e.preventDefault();select(order[(i-1+order.length)%order.length],false);} if(e.key==='Escape')select(null); });
 const h=location.hash.replace('#',''); if(order.includes(h))select(h,false);
+/* resizable split */
+const split=document.querySelector('.split'), gutter=document.getElementById('gutter');
+function setLeft(px,save){ const w=split.getBoundingClientRect().width; const v=Math.max(300,Math.min(w-360,px)); split.style.setProperty('--leftw',v+'px'); if(save)localStorage.setItem('glmSplit',String(v)); }
+const saved=parseFloat(localStorage.getItem('glmSplit')); if(saved)setLeft(saved,false);
+let dragging=false;
+gutter.addEventListener('pointerdown',e=>{dragging=true;gutter.setPointerCapture(e.pointerId);gutter.classList.add('drag');document.body.classList.add('dragging');});
+gutter.addEventListener('pointermove',e=>{ if(!dragging)return; setLeft(e.clientX-split.getBoundingClientRect().left-5,false); });
+function endDrag(e){ if(!dragging)return; dragging=false; gutter.classList.remove('drag'); document.body.classList.remove('dragging'); const cur=parseFloat(getComputedStyle(split).getPropertyValue('--leftw')); if(cur)localStorage.setItem('glmSplit',String(cur)); }
+gutter.addEventListener('pointerup',endDrag); gutter.addEventListener('pointercancel',endDrag);
+gutter.addEventListener('dblclick',()=>{split.style.removeProperty('--leftw');localStorage.removeItem('glmSplit');});
+/* model-only (focus) mode and full screen */
+const focusBtn=document.getElementById('focusBtn'), fsBtn=document.getElementById('fsBtn');
+function setFocus(on){ document.body.classList.toggle('focus',on); focusBtn.textContent=on?'Show the list ⤡':'Model only ⤢'; }
+focusBtn.addEventListener('click',()=>setFocus(!document.body.classList.contains('focus')));
+function fsOn(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
+fsBtn.addEventListener('click',()=>{ const el=document.documentElement; if(fsOn()){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); } else { (el.requestFullscreen||el.webkitRequestFullscreen).call(el).catch?.(()=>{}); } });
+document.addEventListener('fullscreenchange',()=>{ fsBtn.textContent=fsOn()?'⛶ Exit full screen':'⛶ Full screen'; });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.body.classList.contains('focus')&&!fsOn())setFocus(false); });
+gutter.addEventListener('keydown',e=>{ const cur=parseFloat(getComputedStyle(split).getPropertyValue('--leftw'))||split.getBoundingClientRect().width/2; if(e.key==='ArrowLeft'){e.preventDefault();setLeft(cur-40,true);} if(e.key==='ArrowRight'){e.preventDefault();setLeft(cur+40,true);} if(e.key==='Home'){e.preventDefault();split.style.removeProperty('--leftw');localStorage.removeItem('glmSplit');} });
 })();
 </script>
 <script data-root="../" data-here="opt">
