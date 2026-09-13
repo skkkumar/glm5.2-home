@@ -5,7 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PR review — original page</title>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../nav.css">
+<style>
+/* Shared side-panel navigation for the GLM-5.2 site */
+.gnav-btn{position:fixed;top:14px;left:14px;z-index:1000;width:42px;height:42px;border-radius:10px;border:2px solid #1F2A37;background:#F7F9FB;color:#1F2A37;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.gnav-btn:hover{background:#fff}
+.gnav-btn:focus-visible{outline:3px solid #F2B632;outline-offset:2px}
+.gnav-btn svg{width:22px;height:22px}
+.gnav-overlay{position:fixed;inset:0;background:rgba(15,23,32,.45);z-index:1001;opacity:0;pointer-events:none;transition:opacity .2s}
+.gnav-panel{position:fixed;top:0;left:0;bottom:0;width:min(320px,88vw);background:#F7F9FB;color:#1F2A37;z-index:1002;transform:translateX(-102%);transition:transform .22s ease;box-shadow:4px 0 18px rgba(0,0,0,.18);font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;font-size:17px;line-height:1.5;display:flex;flex-direction:column}
+.gnav-open .gnav-panel{transform:none}
+.gnav-open .gnav-overlay{opacity:1;pointer-events:auto}
+.gnav-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:2px solid #C6D0DA}
+.gnav-head b{font-size:1.05em}
+.gnav-close{width:36px;height:36px;border-radius:8px;border:2px solid #1F2A37;background:#fff;cursor:pointer;font-size:20px;line-height:1}
+.gnav-list{list-style:none;margin:0;padding:10px}
+.gnav-list li{margin:4px 0}
+.gnav-list a{display:block;padding:12px 14px;border-radius:10px;color:#1F2A37;text-decoration:none;border-left:5px solid transparent}
+.gnav-list a:hover{background:#fff}
+.gnav-list a.now{background:#FBE6B3;border-left-color:#F2B632;color:#5C3D00}
+.gnav-list small{display:block;font-size:.78em;color:#46525F}
+.gnav-foot{margin-top:auto;padding:12px 16px 16px;font-size:.78em;color:#46525F;border-top:2px solid #C6D0DA}
+.gnav-foot a{color:#4A6FA5}
+
+</style>
 <style>
 html,body{margin:0;height:100%;background:#101418;color:#e6ebf0;font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif}
 .head{height:70px;display:flex;align-items:center;gap:1rem;padding:0 1rem 0 4.4rem;border-bottom:1px solid #2a323c;font-size:16px}
@@ -19,6 +41,31 @@ iframe{display:block;width:100%;height:calc(100vh - 70px);border:0;background:#1
 <div class="head"><b>PR review</b><span style="color:#9aa7b4">the original review-prep page, shown live</span><span class="grow"></span><a href="https://skkkumar.github.io/pr-review/" target="_blank" rel="noopener">Open in its own tab ↗</a></div>
 <iframe src="https://skkkumar.github.io/pr-review/" title="Review prep — vLLM ROCm perf PRs" loading="eager"></iframe>
 <noscript><p class="fallback">This page embeds <a href="https://skkkumar.github.io/pr-review/">skkkumar.github.io/pr-review</a>.</p></noscript>
-<script src="../nav.js" data-root="../" data-here="pr"></script>
+<script data-root="../" data-here="pr">
+/* Shared side-panel navigation: burger button + slide-in panel. */
+(function(){
+  var sc=document.currentScript, root=(sc&&sc.dataset.root)||'./', here=(sc&&sc.dataset.here)||'';
+  var items=[
+    ['home','Home','GLM-5.2, explained slowly — the guided film',root+'index.html'],
+    ['opt','GLM – optimization','Where every vLLM and AITER PR sits in the model',root+'optimization/index.html'],
+    ['pr','PR review','The original review-prep page (pr-review)',root+'pr-review/index.html']
+  ];
+  var btn=document.createElement('button'); btn.className='gnav-btn'; btn.setAttribute('aria-label','Open menu'); btn.setAttribute('aria-expanded','false');
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  var ov=document.createElement('div'); ov.className='gnav-overlay';
+  var panel=document.createElement('nav'); panel.className='gnav-panel'; panel.setAttribute('aria-label','Site menu');
+  var html='<div class="gnav-head"><b>GLM-5.2 home</b><button class="gnav-close" aria-label="Close menu">×</button></div><ul class="gnav-list">';
+  items.forEach(function(it){ html+='<li><a href="'+it[3]+'"'+(it[0]===here?' class="now" aria-current="page"':'')+'>'+it[1]+'<small>'+it[2]+'</small></a></li>'; });
+  html+='</ul><div class="gnav-foot">Original host: <a href="https://skkkumar.github.io/pr-review/" target="_blank" rel="noopener">skkkumar.github.io/pr-review</a></div>';
+  panel.innerHTML=html;
+  document.body.appendChild(btn); document.body.appendChild(ov); document.body.appendChild(panel);
+  function open(){ document.documentElement.classList.add('gnav-open'); btn.setAttribute('aria-expanded','true'); panel.querySelector('a').focus(); }
+  function close(){ document.documentElement.classList.remove('gnav-open'); btn.setAttribute('aria-expanded','false'); btn.focus(); }
+  btn.addEventListener('click',function(){ document.documentElement.classList.contains('gnav-open')?close():open(); });
+  ov.addEventListener('click',close); panel.querySelector('.gnav-close').addEventListener('click',close);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.documentElement.classList.contains('gnav-open'))close(); });
+})();
+
+</script>
 </body>
 </html>
