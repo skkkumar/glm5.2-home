@@ -12,7 +12,7 @@ Live URL once published: https://skkkumar.github.io/glm5.2-home/
 | `optimization/index.html` | GLM – optimization: where every vLLM and AITER PR sits in the model |
 | `pr-review/index.html` | PR review: the original https://skkkumar.github.io/pr-review/ shown live inside this site |
 
-The burger menu and side panel are built into each page (no extra files needed).
+`nav.css` and `nav.js` add the burger menu and side panel to every page.
 
 ## Publish (one time)
 
