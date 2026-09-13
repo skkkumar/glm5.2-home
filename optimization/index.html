@@ -95,16 +95,18 @@ body.focus .top,body.focus .right,body.focus .gutter,body.focus .fit{display:non
 body.focus .split{grid-template-columns:1fr;height:100vh}
 body.focus .left{padding:.5rem 1rem}
 body.focus .viewbar{padding-left:3.2rem}
+body.focus #focusExit{display:inline-block!important}
 :fullscreen body,body:fullscreen{background:var(--paper)}
 .left{display:flex;flex-direction:column;overflow:hidden;padding:.6rem .8rem .6rem}
 .left .view{flex:1;min-height:0;display:flex;flex-direction:column}
 .left .stage{flex:1;min-height:0;display:flex;flex-direction:column;padding:.5rem}
 .left .stage svg{flex:1;min-height:0;width:100%;height:100%}
-.left .legend{flex:none;font-size:.72em;gap:.8rem;justify-content:center}
-.left .fit{font-size:.75em;color:var(--ink2);margin:.3rem 0 0;text-align:center;flex:none}
+.left .legend{display:none}
+.left .fit{font-size:.75em;color:var(--ink2);margin:.3rem 0 0;text-align:center;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .left,.right{overflow-y:auto;overscroll-behavior:contain;padding:1rem}
 .left{border-right:0;background:var(--paper)}
-.viewbar{display:flex;gap:.5rem;align-items:center;margin:0 0 .5rem;flex-wrap:wrap;flex:none}
+.viewbar{display:flex;gap:.5rem;align-items:center;margin:0 0 .5rem;flex-wrap:nowrap;overflow:hidden;flex:none}
+.viewbar .vbtn{white-space:nowrap}
 .vbtn{font:inherit;font-size:.85em;padding:.4em .9em;border-radius:999px;border:2px solid var(--ink);background:#fff;cursor:pointer}
 .vbtn.on{background:var(--ink);color:#fff}
 .vbtn:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
@@ -165,10 +167,11 @@ article.pr .body .where{margin:.8em 0 .6em}
 </style>
 </head>
 <body>
-<div class="top"><h1>GLM-5.2 on ROCm: where every vLLM and AITER PR sits</h1><span class="sub">click a pin on the left · the PR opens on the right</span><span class="grow"></span><button class="vbtn" id="fsBtn" title="Use the whole screen (Esc to leave)">⛶ Full screen</button></div>
+<div class="top"><h1>GLM-5.2 on ROCm: where every vLLM and AITER PR sits</h1><span class="sub">click a pin on the left · the PR opens on the right</span><span class="grow"></span><button class="vbtn" id="focusBtn" title="Hide the list and use the whole window for the model">Model only ⤢</button><button class="vbtn" id="fsBtn" title="Use the whole screen (Esc to leave)">⛶ Full screen</button></div>
+<button class="vbtn" id="focusExit" style="display:none;position:fixed;top:14px;right:14px;z-index:30">Show the list ⤡</button>
 <div class="split">
 <div class="left">
-  <div class="viewbar"><button class="vbtn on" data-view="model">Model flow</button><button class="vbtn" data-view="zoom">Inside the indexer (11 PRs)</button><span class="grow"></span><button class="vbtn" id="focusBtn" title="Hide the list and use the whole window for the model">Model only ⤢</button></div>
+  <div class="viewbar"><button class="vbtn on" data-view="model">Model flow</button><button class="vbtn" data-view="zoom">Inside the indexer (11 PRs)</button></div>
   <div id="view-model" class="view">
 <div class="stage">
 <svg viewBox="0 0 680 990" role="img" aria-label="GLM-5.2 dataflow with numbered pins marking where each pull request applies">
@@ -259,11 +262,11 @@ article.pr .body .where{margin:.8em 0 .6em}
 </div>
     <p class="fit">Press "Model flow" above to go back to the whole model.</p>
   </div>
-  <p class="fit">Drag the bar on the right to resize · double-click it to reset</p>
+  <p class="fit">Drag the bar on the right to resize · double-click it to fit the model again</p>
 </div>
 <div class="gutter" id="gutter" role="separator" aria-orientation="vertical" aria-label="Resize panels" tabindex="0" title="Drag to resize, double-click to reset"></div>
 <div class="right">
-  <p class="hint">Click a pin on the model, or a PR below. One PR opens at a time; the pin lights up on the left. Press "11 PRs inside → zoom" on the model to swap it for the indexer close-up.</p>
+  <p class="hint">Click a pin on the model, or a PR below. One PR opens at a time; the pin lights up on the left. Press "11 PRs inside → zoom" on the model to swap it for the indexer close-up.<br><span class="legend" style="margin-top:.4rem"><span><span class="k"></span>amd-sriram, vLLM</span><span><span class="k other"></span>others, vLLM</span><span><span class="k other sq"></span>others, AITER</span><span><span class="k draft"></span>dashed = draft</span></span></p>
   <article class="pr" id="about">
     <button class="acc" aria-expanded="false"><div class="num other" style="font-size:.8em">?</div><div class="ttl"><h3>About this map: legend, counts, prefill vs decode</h3><div class="grp">open once, then close it</div></div><span class="caret" aria-hidden="true">▾</span></button>
     <div class="body">
@@ -466,20 +469,28 @@ const about=document.getElementById('about'); about.querySelector('.acc').addEve
 document.querySelectorAll('button.map[data-goto]').forEach(b=>b.addEventListener('click',()=>{ const pr=b.dataset.goto; const a=document.getElementById('pr-'+pr); if(a.dataset.view!==view)setView(a.dataset.view); lit(pr); pulsePin(pr); }));
 document.addEventListener('keydown',e=>{ if(!current)return; const i=order.indexOf(current); if(e.key==='ArrowDown'||e.key==='ArrowRight'){e.preventDefault();select(order[(i+1)%order.length],false);} if(e.key==='ArrowUp'||e.key==='ArrowLeft'){e.preventDefault();select(order[(i-1+order.length)%order.length],false);} if(e.key==='Escape')select(null); });
 const h=location.hash.replace('#',''); if(order.includes(h))select(h,false);
-/* resizable split */
-const split=document.querySelector('.split'), gutter=document.getElementById('gutter');
-function setLeft(px,save){ const w=split.getBoundingClientRect().width; const v=Math.max(300,Math.min(w-360,px)); split.style.setProperty('--leftw',v+'px'); if(save)localStorage.setItem('glmSplit',String(v)); }
-const saved=parseFloat(localStorage.getItem('glmSplit')); if(saved)setLeft(saved,false);
+/* resizable split: on load the divider sits exactly at the model's edge; dragging right never enlarges the model */
+const split=document.querySelector('.split'), gutter=document.getElementById('gutter'), leftPane=document.querySelector('.left');
+function setLeft(px){ const w=split.getBoundingClientRect().width; const v=Math.max(300,Math.min(w-360,px)); split.style.setProperty('--leftw',v+'px'); }
+function fitToModel(){ if(window.innerWidth<=900||document.body.classList.contains('focus'))return;
+  const svg=document.querySelector('#view-model svg'); const r=svg.getBoundingClientRect(); if(!r.width||!r.height)return;
+  const drawn=r.height*680/990;                     /* width the model actually occupies at this height */
+  if(r.width>drawn+1) setLeft(leftPane.getBoundingClientRect().width-(r.width-drawn));
+}
+function fitTwice(){ requestAnimationFrame(()=>{fitToModel();requestAnimationFrame(fitToModel);}); }
 let dragging=false;
 gutter.addEventListener('pointerdown',e=>{dragging=true;gutter.setPointerCapture(e.pointerId);gutter.classList.add('drag');document.body.classList.add('dragging');});
-gutter.addEventListener('pointermove',e=>{ if(!dragging)return; setLeft(e.clientX-split.getBoundingClientRect().left-5,false); });
-function endDrag(e){ if(!dragging)return; dragging=false; gutter.classList.remove('drag'); document.body.classList.remove('dragging'); const cur=parseFloat(getComputedStyle(split).getPropertyValue('--leftw')); if(cur)localStorage.setItem('glmSplit',String(cur)); }
+gutter.addEventListener('pointermove',e=>{ if(!dragging)return; setLeft(e.clientX-split.getBoundingClientRect().left-5); });
+function endDrag(){ if(!dragging)return; dragging=false; gutter.classList.remove('drag'); document.body.classList.remove('dragging'); }
 gutter.addEventListener('pointerup',endDrag); gutter.addEventListener('pointercancel',endDrag);
-gutter.addEventListener('dblclick',()=>{split.style.removeProperty('--leftw');localStorage.removeItem('glmSplit');});
+gutter.addEventListener('dblclick',()=>{split.style.removeProperty('--leftw');fitTwice();});
+gutter.addEventListener('keydown',e=>{ const cur=parseFloat(getComputedStyle(split).getPropertyValue('--leftw'))||leftPane.getBoundingClientRect().width; if(e.key==='ArrowLeft'){e.preventDefault();setLeft(cur-40);} if(e.key==='ArrowRight'){e.preventDefault();setLeft(cur+40);} if(e.key==='Home'){e.preventDefault();split.style.removeProperty('--leftw');fitTwice();} });
+let rs; window.addEventListener('resize',()=>{clearTimeout(rs);rs=setTimeout(()=>{split.style.removeProperty('--leftw');fitTwice();},150);});
+window.addEventListener('load',fitTwice); fitTwice();
 /* model-only (focus) mode and full screen */
 const focusBtn=document.getElementById('focusBtn'), fsBtn=document.getElementById('fsBtn');
-function setFocus(on){ document.body.classList.toggle('focus',on); focusBtn.textContent=on?'Show the list ⤡':'Model only ⤢'; }
-focusBtn.addEventListener('click',()=>setFocus(!document.body.classList.contains('focus')));
+function setFocus(on){ document.body.classList.toggle('focus',on); if(!on)fitTwice(); }
+focusBtn.addEventListener('click',()=>setFocus(true)); document.getElementById('focusExit').addEventListener('click',()=>setFocus(false));
 function fsOn(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
 fsBtn.addEventListener('click',()=>{ const el=document.documentElement; if(fsOn()){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); } else { (el.requestFullscreen||el.webkitRequestFullscreen).call(el).catch?.(()=>{}); } });
 document.addEventListener('fullscreenchange',()=>{ fsBtn.textContent=fsOn()?'⛶ Exit full screen':'⛶ Full screen'; });
