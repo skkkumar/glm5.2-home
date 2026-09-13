@@ -86,6 +86,9 @@ article.pr h3{font-size:1.05em;margin:.1em 0 .2em;line-height:1.3}
 .chip.rebase{background:var(--warn-soft);border-color:var(--warn);color:#7C3A03}
 .chip.mine{background:var(--hl-soft);border-color:var(--hl-ink);color:var(--hl-ink)}
 .chip.repo{background:#fff;border-color:var(--ink);color:var(--ink)}
+.chip.prefill{background:#E4E8F5;border-color:#3F58A8;color:#26397A}
+.chip.decode{background:#FDE4EC;border-color:#B4345C;color:#7A1F3D}
+.chip.both{background:#EAE4F8;border-color:#6B4BB8;color:#3F2A7A}
 article.pr p{font-size:.92em;margin:0 0 .5em}
 article.pr .result{background:#fff;border-left:5px solid var(--hl);padding:.4em .8em;border-radius:0 8px 8px 0;font-size:.9em;margin:.4em 0 .6em}
 .links{font-size:.82em;display:flex;gap:1rem;flex-wrap:wrap}
@@ -118,8 +121,11 @@ th{color:var(--ink2)}
 </svg>
 </div>
 
+<h2>Prefill or decode?</h2>
+<p>Every pass through the model is one of two kinds. <b>Prefill</b> is the first pass: the whole prompt climbs the tower at once, fills the KV cache, and produces the first token; it is compute-heavy and sets the time to first token (TTFT). <b>Decode</b> is every pass after that: one new token per sequence climbs the tower, reads the cache, adds one entry; it is memory-bound and sets the time per output token (TPOT). GLM-5.2 uses different kernels for the two, so each PR below carries a phase label: <span class="chip prefill">prefill</span> <span class="chip decode">decode</span> <span class="chip both">both</span>. The film's chapter 11b shows the two phases animated.</p>
 <div class="counts">
   <div><b>16</b>open PRs mapped</div>
+  <div><b>2 · 6 · 8</b>prefill-only · decode-only · both</div>
   <div><b>12 + 4</b>vLLM + AITER</div>
   <div><b>8</b>by amd-sriram</div>
   <div><b>11</b>inside the DSA indexer</div>
@@ -220,23 +226,23 @@ th{color:var(--ink2)}
 
 <h2>Status at a glance</h2>
 <table>
-<tr><th>Pin</th><th>PR</th><th>Repo</th><th>Author</th><th>Where</th><th>Status</th></tr>
-<tr><td>1</td><td>#48051</td><td>vLLM</td><td>amd-sriram</td><td>MLA kv projection weights</td><td>draft</td></tr>
-<tr><td>2</td><td>#47757</td><td>vLLM</td><td>xaguilar-amd</td><td>MLA attention: RoPE, concat and KV-cache write, fused</td><td>open</td></tr>
-<tr><td>3</td><td>#46172</td><td>vLLM</td><td>tjtanaa</td><td>indexer: prologue + top-k kernels</td><td>open</td></tr>
-<tr><td>4</td><td>#47335</td><td>vLLM</td><td>xaguilar-amd</td><td>indexer: prologue, query side</td><td>open</td></tr>
-<tr><td>5</td><td>#51315</td><td>vLLM</td><td>amd-sriram</td><td>indexer: prologue, key side + cache</td><td>open, needs rebase</td></tr>
-<tr><td>6</td><td>#51314</td><td>vLLM</td><td>amd-sriram</td><td>indexer: score buffer, prefill</td><td>open</td></tr>
-<tr><td>7</td><td>#50008</td><td>vLLM</td><td>amd-sriram</td><td>indexer: score buffer, decode</td><td>draft</td></tr>
-<tr><td>8</td><td>#53789</td><td>vLLM</td><td>amd-sriram</td><td>indexer: sanitize</td><td>open, needs rebase</td></tr>
-<tr><td>9</td><td>#51309</td><td>vLLM</td><td>amd-sriram</td><td>indexer: remap, IndexShare</td><td>open, needs rebase</td></tr>
-<tr><td>10</td><td>#53792</td><td>vLLM</td><td>amd-sriram</td><td>indexer: whole module</td><td>open, ready, needs rebase</td></tr>
-<tr><td>11</td><td>#50535</td><td>vLLM</td><td>amd-sriram</td><td>MoE router gate</td><td>open, needs rebase</td></tr>
-<tr><td>12</td><td>#53248</td><td>vLLM</td><td>xuebwang-amd</td><td>MoE shared-expert fusion check</td><td>open</td></tr>
-<tr><td>A</td><td>#4538</td><td>AITER</td><td>vpietila-amd</td><td>indexer: score kernel, prefill (FlyDSL)</td><td>open</td></tr>
-<tr><td>B</td><td>#4221</td><td>AITER</td><td>fhuizing</td><td>indexer: score kernel, decode (FlyDSL)</td><td>open</td></tr>
-<tr><td>C</td><td>#4355</td><td>AITER</td><td>JH-Leon-KIM-AMD</td><td>indexer: top-k kernel (FlyDSL)</td><td>open</td></tr>
-<tr><td>D</td><td>#4629</td><td>AITER</td><td>nholmber</td><td>MoE fused-expert kernel tuning</td><td>open</td></tr>
+<tr><th>Pin</th><th>PR</th><th>Repo</th><th>Author</th><th>Where</th><th>Phase</th><th>Status</th></tr>
+<tr><td>1</td><td>#48051</td><td>vLLM</td><td>amd-sriram</td><td>MLA kv projection weights</td><td><span class="chip both">both</span></td><td>draft</td></tr>
+<tr><td>2</td><td>#47757</td><td>vLLM</td><td>xaguilar-amd</td><td>MLA attention: RoPE, concat and KV-cache write, fused</td><td><span class="chip decode">decode</span></td><td>open</td></tr>
+<tr><td>3</td><td>#46172</td><td>vLLM</td><td>tjtanaa</td><td>indexer: prologue + top-k kernels</td><td><span class="chip both">both</span></td><td>open</td></tr>
+<tr><td>4</td><td>#47335</td><td>vLLM</td><td>xaguilar-amd</td><td>indexer: prologue, query side</td><td><span class="chip both">both</span></td><td>open</td></tr>
+<tr><td>5</td><td>#51315</td><td>vLLM</td><td>amd-sriram</td><td>indexer: prologue, key side + cache</td><td><span class="chip both">both</span></td><td>open, needs rebase</td></tr>
+<tr><td>6</td><td>#51314</td><td>vLLM</td><td>amd-sriram</td><td>indexer: score buffer, prefill</td><td><span class="chip prefill">prefill</span></td><td>open</td></tr>
+<tr><td>7</td><td>#50008</td><td>vLLM</td><td>amd-sriram</td><td>indexer: score buffer, decode</td><td><span class="chip decode">decode</span></td><td>draft</td></tr>
+<tr><td>8</td><td>#53789</td><td>vLLM</td><td>amd-sriram</td><td>indexer: sanitize</td><td><span class="chip decode">decode</span></td><td>open, needs rebase</td></tr>
+<tr><td>9</td><td>#51309</td><td>vLLM</td><td>amd-sriram</td><td>indexer: remap, IndexShare</td><td><span class="chip both">both</span></td><td>open, needs rebase</td></tr>
+<tr><td>10</td><td>#53792</td><td>vLLM</td><td>amd-sriram</td><td>indexer: whole module</td><td><span class="chip both">both</span></td><td>open, ready, needs rebase</td></tr>
+<tr><td>11</td><td>#50535</td><td>vLLM</td><td>amd-sriram</td><td>MoE router gate</td><td><span class="chip both">both</span></td><td>open, needs rebase</td></tr>
+<tr><td>12</td><td>#53248</td><td>vLLM</td><td>xuebwang-amd</td><td>MoE shared-expert fusion check</td><td><span class="chip both">both</span></td><td>open</td></tr>
+<tr><td>A</td><td>#4538</td><td>AITER</td><td>vpietila-amd</td><td>indexer: score kernel, prefill (FlyDSL)</td><td><span class="chip prefill">prefill</span></td><td>open</td></tr>
+<tr><td>B</td><td>#4221</td><td>AITER</td><td>fhuizing</td><td>indexer: score kernel, decode (FlyDSL)</td><td><span class="chip decode">decode</span></td><td>open</td></tr>
+<tr><td>C</td><td>#4355</td><td>AITER</td><td>JH-Leon-KIM-AMD</td><td>indexer: top-k kernel (FlyDSL)</td><td><span class="chip decode">decode</span></td><td>open</td></tr>
+<tr><td>D</td><td>#4629</td><td>AITER</td><td>nholmber</td><td>MoE fused-expert kernel tuning</td><td><span class="chip decode">decode</span></td><td>open</td></tr>
 </table>
 <div class="note">Result numbers below come from each PR's own description. The two xaguilar-amd PRs were measured on GLM-5.2-FP8 with MI325X (gfx942) at TP=8; all others on amd/GLM-5.2-MXFP4 with MI355X at TP=4. Statuses were read from GitHub on 12 September 2026.</div>
 
@@ -244,16 +250,16 @@ th{color:var(--ink2)}
 
 <h3 class="group">MLA attention</h3>
 <article class="pr" id="pr-v48051">
-  <header><div class="num draft">1</div><div><h3>Don't re-quantize bf16 MLA kv_b_proj to fp4/fp8 for GLM MoE DSA</h3><div class="where">Where: MLA, the kv latent projection that expands the compressed note back into keys and values. Weight-loading step.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #48051</span><span class="chip mine">amd-sriram</span><span class="chip draft">Draft</span><span class="chip">quantization</span><span class="chip">glm</span><span class="chip">opened 8 Jul</span></div>
+  <header><div class="num draft">1</div><div><h3>Don't re-quantize bf16 MLA kv_b_proj to fp4/fp8 for GLM MoE DSA</h3><div class="where">Where: MLA, the kv latent projection that expands the compressed note back into keys and values. Weight-loading step. Phase: both — the MLA weights are used by every attention pass, prefill and decode alike.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #48051</span><span class="chip mine">amd-sriram</span><span class="chip draft">Draft</span><span class="chip">quantization</span><span class="chip">glm</span><span class="chip">opened 8 Jul</span><span class="chip both" title="the MLA weights are used by every attention pass, prefill and decode alike">both</span></div>
   <p>The ROCm AITER MLA path assumed any bf16 kv_b_proj weight was unquantized and squeezed it to fp4/fp8. In amd/GLM-5.2-MXFP4 the MLA weights are meant to stay bf16; only the experts are MXFP4.</p>
   <div class="result">fp4 re-quantization added about 11% error per attention layer; it stacked up across 78 layers and pushed greedy decoding into repetition loops. After the fix, "What is the capital of France?" ends with "Paris".</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/48051">PR #48051</a><button class="map" data-goto="v48051">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-v47757">
-  <header><div class="num other">2</div><div><h3>Fuse decode QK-RoPE + Q-concat + KV-concat + KV-cache write for sparse MLA</h3><div class="where">Where: the attention block itself, the per-layer query and key preparation that runs right before MLA attention reads the 2,048 notes.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #47757</span><span class="chip">xaguilar-amd</span><span class="chip open">Open</span><span class="chip">7 commits</span><span class="chip">opened 6 Jul</span></div>
+  <header><div class="num other">2</div><div><h3>Fuse decode QK-RoPE + Q-concat + KV-concat + KV-cache write for sparse MLA</h3><div class="where">Where: the attention block itself, the per-layer query and key preparation that runs right before MLA attention reads the 2,048 notes. Phase: decode — the fused kernel lives on the sparse-MLA decode path, one token per sequence.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #47757</span><span class="chip">xaguilar-amd</span><span class="chip open">Open</span><span class="chip">7 commits</span><span class="chip">opened 6 Jul</span><span class="chip decode" title="the fused kernel lives on the sparse-MLA decode path, one token per sequence">decode</span></div>
   <p>On ROCm the sparse-MLA decode path ran four back-to-back ops per layer: RoPE on the position parts of q and k, the query concat, the KV concat, and the fp8 KV-cache write. This collapses them into one AITER kernel, fused_qk_rope_concat_and_cache_mla, dispatched from the MLA layer with a clean fallback whenever the gate does not apply (non-ROCm, no AITER, non-fp8 cache). Positions travel as a real argument because a forward-context stash was not torch.compile or CUDA-graph safe.</p>
   <div class="result">GLM-5.2-FP8 on gfx942, TP=8: TPOT and throughput about 1.02 to 1.04× across the sweep (for example +3.7% at ISL 1024 concurrency 1, +4.0% throughput at ISL 8192 concurrency 32). gsm8k 0.94, unchanged. The MTP drafters reuse the same MLA layers, so they get the fusion too.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/47757">PR #47757</a><button class="map" data-goto="v47757">Show on map</button></div>
@@ -261,64 +267,64 @@ th{color:var(--ink2)}
 
 <h3 class="group">Indexer — vLLM side (what gets called, and when)</h3>
 <article class="pr" id="pr-v46172">
-  <header><div class="num other">3</div><div><h3>Optimize rocm aiter sparse mla indexer</h3><div class="where">Where: indexer prologue and top-k. The PR that first wired three AITER kernels into the sparse path: cp_gather_indexer_k_quant_cache, indexer_k_quant_and_cache, top_k_per_row_decode.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #46172</span><span class="chip">tjtanaa (EmbeddedLLM)</span><span class="chip open">Open</span><span class="chip">opened 19 Jun</span></div>
+  <header><div class="num other">3</div><div><h3>Optimize rocm aiter sparse mla indexer</h3><div class="where">Where: indexer prologue and top-k. The PR that first wired three AITER kernels into the sparse path: cp_gather_indexer_k_quant_cache, indexer_k_quant_and_cache, top_k_per_row_decode. Phase: both — cp_gather K-quant-cache serves prefill, top_k_per_row_decode serves decode.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #46172</span><span class="chip">tjtanaa (EmbeddedLLM)</span><span class="chip open">Open</span><span class="chip">opened 19 Jun</span><span class="chip both" title="cp_gather K-quant-cache serves prefill, top_k_per_row_decode serves decode">both</span></div>
   <p>Follows the "speed of light" layout from AMD's ATOM plugin for top-k 2,048, so vLLM and ATOM share the same AITER kernels going forward. It also introduced the module-level FP8_DTYPE constant that pin 10 finishes wiring up.</p>
   <div class="result">Validated on DeepSeek-V3.2 at 1M context: gsm8k about 0.95 at block sizes 1 and 64, with performance gains from all three kernels. This is the foundation most of the amber indexer pins build on.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/46172">PR #46172</a><button class="map" data-goto="v46172">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-v47335">
-  <header><div class="num other">4</div><div><h3>Enable fused indexer-Q RoPE+quant kernel for DeepSeek/GLM sparse attention</h3><div class="where">Where: indexer stage 1, the query side of the prologue. Pin 5 is the matching key side.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #47335</span><span class="chip">xaguilar-amd</span><span class="chip open">Open</span><span class="chip">3 commits</span><span class="chip">opened 1 Jul</span></div>
+  <header><div class="num other">4</div><div><h3>Enable fused indexer-Q RoPE+quant kernel for DeepSeek/GLM sparse attention</h3><div class="where">Where: indexer stage 1, the query side of the prologue. Pin 5 is the matching key side. Phase: both — query prep runs in every pass; the PR measured its gain on decode.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #47335</span><span class="chip">xaguilar-amd</span><span class="chip open">Open</span><span class="chip">3 commits</span><span class="chip">opened 1 Jul</span><span class="chip both" title="query prep runs in every pass; the PR measured its gain on decode">both</span></div>
   <p>The fused_indexer_q_rope_quant kernel already existed in vLLM and already ran on CUDA; on ROCm the same work fell back to a chain of small Triton and elementwise kernels per sparse layer per decode token. A two-line enablement turns it on for glm_moe_dsa: query-side RoPE, FP8 quantization and the weight-scale fold become one launch, four Q-side kernels → one.</p>
   <div class="result">About 170 ms of self-GPU time reclaimed on rank 0 over a decode capture, roughly 0.7% of the total; a consistent 0.3–0.9% end-to-end improvement on GLM-5.2-FP8 at TP=8 with no credible regression. gsm8k 0.9469, unchanged.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/47335">PR #47335</a><button class="map" data-goto="v47335">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-v51315">
-  <header><div class="num">5</div><div><h3>Fuse the DSA indexer prologue with AITER</h3><div class="where">Where: indexer stage 1, the key side of the prologue. Four kernels, K normalization, Q/K RoPE, FP8 quantization, K-cache write, become one fused AITER kernel.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #51315</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 6 Aug</span></div>
+  <header><div class="num">5</div><div><h3>Fuse the DSA indexer prologue with AITER</h3><div class="where">Where: indexer stage 1, the key side of the prologue. Four kernels, K normalization, Q/K RoPE, FP8 quantization, K-cache write, become one fused AITER kernel. Phase: both — measured on both, and they move in opposite directions: decode −66%, prefill +65%.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #51315</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 6 Aug</span><span class="chip both" title="measured on both, and they move in opposite directions: decode −66%, prefill +65%">both</span></div>
   <p>Uses AITER's fused indexer_qk_rope_quant_and_cache kernel for the supported BF16/FP8 shape; other shapes keep the old path.</p>
   <div class="result">Launches 4 → 1. Decode stage 17.4 µs → 5.9 µs (−66%), prefill 164 µs → 271 µs (+65%). Net prologue GPU time −4.8%; throughput +0.7%, TPOT −0.7%. Accuracy unchanged.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/51315">PR #51315</a><button class="map" data-goto="v51315">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-v51314">
-  <header><div class="num">6</div><div><h3>Skip cleaning sparse prefill MQA logits</h3><div class="where">Where: indexer stage 2, prefill path. The buffer holding the scores of the new word against every note.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #51314</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip">opened 6 Aug</span></div>
+  <header><div class="num">6</div><div><h3>Skip cleaning sparse prefill MQA logits</h3><div class="where">Where: indexer stage 2, prefill path. The buffer holding the scores of the new word against every note. Phase: prefill — the prefill logits buffer only; TTFT moves, throughput does not.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #51314</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip">opened 6 Aug</span><span class="chip prefill" title="the prefill logits buffer only; TTFT moves, throughput does not">prefill</span></div>
   <p>The scores buffer was created with torch.full(−inf), an FP32 fill before every logits kernel. The only reader never looks at the padding, so the fill is unnecessary. Passes clean_logits=False and uses torch.empty.</p>
   <div class="result">18,162 fill launches → 0; 1.25 s of GPU time removed (0.89% of kernel time). TTFT −1.1% geomean at ISL 8192, −4.9% at concurrency 32. Throughput flat, as expected for a prefill-only change.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/51314">PR #51314</a><button class="map" data-goto="v51314">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-v50008">
-  <header><div class="num draft">7</div><div><h3>Drop redundant −inf prefill of the decode paged MQA-logits buffer</h3><div class="where">Where: indexer stage 2, decode path. Same idea as pin 6 on the other code path.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #50008</span><span class="chip mine">amd-sriram</span><span class="chip draft">Draft</span><span class="chip">opened 27 Jul</span></div>
+  <header><div class="num draft">7</div><div><h3>Drop redundant −inf prefill of the decode paged MQA-logits buffer</h3><div class="where">Where: indexer stage 2, decode path. Same idea as pin 6 on the other code path. Phase: decode — the decode paged-logits buffer, the twin of pin 6.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #50008</span><span class="chip mine">amd-sriram</span><span class="chip draft">Draft</span><span class="chip">opened 27 Jul</span><span class="chip decode" title="the decode paged-logits buffer, the twin of pin 6">decode</span></div>
   <p>Removes the full-width fill_(−inf) before the decode paged logits kernel. The decode top-k bounds its scan by seq_lens and the kernels write every column it reads, so the tail is never consumed.</p>
   <div class="result">Saves a rows × max_model_len fp32 write per decode step. Still a draft: the FlyDSL kernel documents a −inf-prefill contract, so numeric validation across Gluon and FlyDSL paths is the exit condition. Pin B is the kernel this must agree with.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/50008">PR #50008</a><button class="map" data-goto="v50008">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-v53789">
-  <header><div class="num">8</div><div><h3>Bound the decode paged-MQA-logits sanitize to the top-k read region</h3><div class="where">Where: indexer stage 3, between scoring and top-k, decode path.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #53789</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 25 Aug</span></div>
+  <header><div class="num">8</div><div><h3>Bound the decode paged-MQA-logits sanitize to the top-k read region</h3><div class="where">Where: indexer stage 3, between scoring and top-k, decode path. Phase: decode — the decode sanitize runs every decode step; gain grows with concurrency.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #53789</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 25 Aug</span><span class="chip decode" title="the decode sanitize runs every decode step; gain grows with concurrency">decode</span></div>
   <p>Every decode step ran nan_to_num_(−inf) over the whole [rows, max_model_len] workspace, 43 µs per call at max_model_len 258,048 regardless of context. A small Triton kernel now sanitizes only the slice top-k reads.</p>
   <div class="result">Per call 43.1 µs → 4.6 µs; 426 ms → 52 ms total on rank 0. +3.2% throughput and −3.3% TPOT at concurrency 256, geomean +0.6%. gsm8k unchanged; 9 kernel tests pass.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/53789">PR #53789</a><button class="map" data-goto="v53789">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-v51309">
-  <header><div class="num">9</div><div><h3>Skip redundant sparse index remap on non-indexer layers</h3><div class="where">Where: indexer stage 5 and the IndexShare wire. The PR that directly reflects the "1 floor in 4" design.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #51309</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">mrv1-only</span><span class="chip">opened 6 Aug</span></div>
+  <header><div class="num">9</div><div><h3>Skip redundant sparse index remap on non-indexer layers</h3><div class="where">Where: indexer stage 5 and the IndexShare wire. The PR that directly reflects the "1 floor in 4" design. Phase: both — the remap ran on every layer of every pass; TTFT and throughput both improved.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #51309</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">mrv1-only</span><span class="chip">opened 6 Aug</span><span class="chip both" title="the remap ran on every layer of every pass; TTFT and throughput both improved">both</span></div>
   <p>With cross-layer index sharing, only indexer-owning layers update the shared top-k buffer, but the old path still remapped it on every layer. Now the remap runs only where a layer owns an indexer: 21 of 78 layers with index_topk_freq=4.</p>
   <div class="result">Remap launches −73%, remap GPU time 2,392 ms → 646 ms. Throughput +0.6% geomean, TTFT −0.9%. Bit-identical indices, so no output change.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/51309">PR #51309</a><button class="map" data-goto="v51309">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-v53792">
-  <header><div class="num">10</div><div><h3>Resolve the indexer fp8 cache dtype once at import</h3><div class="where">Where: every function in rocm_aiter_mla_sparse.py.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #53792</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip open">ready</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 25 Aug</span></div>
+  <header><div class="num">10</div><div><h3>Resolve the indexer fp8 cache dtype once at import</h3><div class="where">Where: every function in rocm_aiter_mla_sparse.py. Phase: both — every call site in the module, every pass.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #53792</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip open">ready</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 25 Aug</span><span class="chip both" title="every call site in the module, every pass">both</span></div>
   <p>fp8_dtype() cannot change after import but was called on every function invocation, once per DSA layer per forward pass. Pin 3 added a module constant and wired two of six call sites; this routes all of them through it.</p>
   <div class="result">Code hygiene, no behavior change: six lookups per layer per pass → one at import. The only pin labelled "ready".</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/53792">PR #53792</a><button class="map" data-goto="v53792">Show on map</button></div>
@@ -326,24 +332,24 @@ th{color:var(--ink2)}
 
 <h3 class="group">Indexer — AITER side (the kernels underneath)</h3>
 <article class="pr" id="pr-a4538">
-  <header><div class="num other sq">A</div><div><h3>FlyDSL gfx950 FP8 MQA logits indexer kernel</h3><div class="where">Where: indexer stage 2, the scoring kernel itself, prefill shapes. Drop-in replacement for the Triton/Gluon kernel on MI355X.</div></div></header>
-  <div class="chips"><span class="chip repo">AITER #4538</span><span class="chip">vpietila-amd</span><span class="chip open">Open</span><span class="chip">32 commits</span><span class="chip">opened 3 Aug</span></div>
+  <header><div class="num other sq">A</div><div><h3>FlyDSL gfx950 FP8 MQA logits indexer kernel</h3><div class="where">Where: indexer stage 2, the scoring kernel itself, prefill shapes. Drop-in replacement for the Triton/Gluon kernel on MI355X. Phase: prefill — the dense MQA-logits kernel for prefill shapes.</div></div></header>
+  <div class="chips"><span class="chip repo">AITER #4538</span><span class="chip">vpietila-amd</span><span class="chip open">Open</span><span class="chip">32 commits</span><span class="chip">opened 3 Aug</span><span class="chip prefill" title="the dense MQA-logits kernel for prefill shapes">prefill</span></div>
   <p>Two gfx950 implementations: a direct-load kernel and an LDS-staged one that uses the async global-to-LDS DMA, XOR swizzling, and 3 LDS buffers with prefetch depth 2 so only one barrier is needed. An auto-selector picks the instance per shape.</p>
   <div class="result">Versus Triton/Gluon on gfx950: 1.22× at 4096×4096 and 8192×8192, 3.2× at 671×131072, 10.6× at 128×32768. This is the kernel pin 6 feeds.</div>
   <div class="links"><a href="https://github.com/ROCm/aiter/pull/4538">AITER PR #4538</a><button class="map" data-goto="a4538">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-a4221">
-  <header><div class="num other sq">B</div><div><h3>FlyDSL paged MLA indexer</h3><div class="where">Where: indexer stage 2, the scoring kernel for decode, reading K from the paged FP8 cache through a block table (block size 64).</div></div></header>
-  <div class="chips"><span class="chip repo">AITER #4221</span><span class="chip">fhuizing</span><span class="chip open">Open</span><span class="chip">52 commits</span><span class="chip">opened 13 Jul</span></div>
+  <header><div class="num other sq">B</div><div><h3>FlyDSL paged MLA indexer</h3><div class="where">Where: indexer stage 2, the scoring kernel for decode, reading K from the paged FP8 cache through a block table (block size 64). Phase: decode — the paged decode indexer, with ragged next_n for MTP verification.</div></div></header>
+  <div class="chips"><span class="chip repo">AITER #4221</span><span class="chip">fhuizing</span><span class="chip open">Open</span><span class="chip">52 commits</span><span class="chip">opened 13 Jul</span><span class="chip decode" title="the paged decode indexer, with ragged next_n for MTP verification">decode</span></div>
   <p>Computes logits[m, n] = Σ_h ReLU(⟨Q[m,h], K[n]⟩ · kv_scale[n]) · weights[m,h] on gfx950. Its distinctive feature is a ragged per-sequence next_n, so one captured graph serves any mix of 1 to num_speculative_tokens + 1 verification tokens per request, the varlen decode that MTP's confidence-scheduled verification needs.</p>
   <div class="result">Makes the decode indexer match what the MTP sketcher asks for: verify a different number of drafted words per request in the same step. Pins 7 and 8 operate on this kernel's output buffer.</div>
   <div class="links"><a href="https://github.com/ROCm/aiter/pull/4221">AITER PR #4221</a><button class="map" data-goto="a4221">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-a4355">
-  <header><div class="num other sq">C</div><div><h3>Tiered persistent radix-select decode Top-K + arch/shape dispatcher</h3><div class="where">Where: indexer stage 4, the top-k kernel that picks the 2,048 notes, called about 78 times per decode step.</div></div></header>
-  <div class="chips"><span class="chip repo">AITER #4355</span><span class="chip">JH-Leon-KIM-AMD</span><span class="chip open">Open</span><span class="chip">112 commits</span><span class="chip">opened 23 Jul</span></div>
+  <header><div class="num other sq">C</div><div><h3>Tiered persistent radix-select decode Top-K + arch/shape dispatcher</h3><div class="where">Where: indexer stage 4, the top-k kernel that picks the 2,048 notes, called about 78 times per decode step. Phase: decode — the decode top-k, called about 78 times per decode step.</div></div></header>
+  <div class="chips"><span class="chip repo">AITER #4355</span><span class="chip">JH-Leon-KIM-AMD</span><span class="chip open">Open</span><span class="chip">112 commits</span><span class="chip">opened 23 Jul</span><span class="chip decode" title="the decode top-k, called about 78 times per decode step">decode</span></div>
   <p>Replaces the HIP radix sort, which grows with context length (369 µs at 8K → 1,165 µs at 120K, about 15× slower than B200's persistent kernel), with a context-length-independent radix-select that is O(topK · log topK). A dispatcher inside top_k_per_row_decode routes to it only for shapes where it measurably wins.</p>
   <div class="result">Best cell 1.42× on gfx950 and 2.19× on gfx942 versus HIP; without the dispatcher gate it would lose on part of the grid, so the routing is as much the result as the kernel. Set-equivalent with torch.topk. Part of the GLM-5 MXFP4 MI355X perf-uplift epic.</div>
   <div class="links"><a href="https://github.com/ROCm/aiter/pull/4355">AITER PR #4355</a><button class="map" data-goto="a4355">Show on map</button></div>
@@ -351,24 +357,24 @@ th{color:var(--ink2)}
 
 <h3 class="group">Mixture-of-experts room</h3>
 <article class="pr" id="pr-v50535">
-  <header><div class="num">11</div><div><h3>Use AITER tuned GEMM for the MoE router gate</h3><div class="where">Where: the router, its gate linear layer.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #50535</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 31 Jul</span></div>
+  <header><div class="num">11</div><div><h3>Use AITER tuned GEMM for the MoE router gate</h3><div class="where">Where: the router, its gate linear layer. Phase: both — the router gate runs in every pass; TTFT −3.9% and TPOT −3.0%.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #50535</span><span class="chip mine">amd-sriram</span><span class="chip open">Open</span><span class="chip rebase">needs-rebase</span><span class="chip">opened 31 Jul</span><span class="chip both" title="the router gate runs in every pass; TTFT −3.9% and TPOT −3.0%">both</span></div>
   <p>The gate's fast bf16×bf16→fp32 GEMM was gated to Hopper and Blackwell. On ROCm the input was cast to fp32 first, AITER found no tuned kernel and fell back to a plain matmul. Now the input stays bf16 and the cast moves to the small output.</p>
   <div class="result">Largest win among the vLLM pins: throughput +3.1%, TPOT −3.0%, TTFT −3.9% geomean over 16 sweep points, up to +4.6% at concurrency 1. 81/81 kernel tests pass on gfx950.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/50535">PR #50535</a><button class="map" data-goto="v50535">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-v53248">
-  <header><div class="num other">12</div><div><h3>Match Quark exclude semantics in the shared-expert FSE check</h3><div class="where">Where: the shared expert. Decides per layer whether the shared expert may be fused into the routed experts' grouped GEMM.</div></div></header>
-  <div class="chips"><span class="chip repo">vLLM #53248</span><span class="chip">xuebwang-amd</span><span class="chip open">Open</span><span class="chip">opened 21 Aug</span></div>
+  <header><div class="num other">12</div><div><h3>Match Quark exclude semantics in the shared-expert FSE check</h3><div class="where">Where: the shared expert. Decides per layer whether the shared expert may be fused into the routed experts' grouped GEMM. Phase: both — a load-time decision that switches the fused path on for all passes.</div></div></header>
+  <div class="chips"><span class="chip repo">vLLM #53248</span><span class="chip">xuebwang-amd</span><span class="chip open">Open</span><span class="chip">opened 21 Aug</span><span class="chip both" title="a load-time decision that switches the fused path on for all passes">both</span></div>
   <p>The check scanned the whole exclude list for the substring "shared_expert". amd/GLM-5.2-MXFP4 excludes exactly three shared-expert weights, all in the unquantized MTP layer 78, and that alone switched the fusion off for all 75 MoE layers. The fix reuses should_ignore_layer(), the same predicate Quark uses everywhere else.</p>
   <div class="result">Re-enables fused shared experts on layers 3–77. Pin D tunes the fused kernel this unlocks: its shapes say experts 257, top-k 9, which is 256 + the shared one.</div>
   <div class="links"><a href="https://github.com/vllm-project/vllm/pull/53248">PR #53248</a><button class="map" data-goto="v53248">Show on map</button></div>
 </article>
 
 <article class="pr" id="pr-a4629">
-  <header><div class="num other sq">D</div><div><h3>Retune MXFP4 fused-MoE for gfx950 (TP4 + TP8)</h3><div class="where">Where: the experts' grouped GEMM kernel, MXFP4 weights, with the shared expert fused in.</div></div></header>
-  <div class="chips"><span class="chip repo">AITER #4629</span><span class="chip">nholmber</span><span class="chip open">Open</span><span class="chip">opened 7 Aug</span></div>
+  <header><div class="num other sq">D</div><div><h3>Retune MXFP4 fused-MoE for gfx950 (TP4 + TP8)</h3><div class="where">Where: the experts' grouped GEMM kernel, MXFP4 weights, with the shared expert fused in. Phase: decode — retunes the a4w4 decode MoE kernels; gains sit at concurrency 8–64.</div></div></header>
+  <div class="chips"><span class="chip repo">AITER #4629</span><span class="chip">nholmber</span><span class="chip open">Open</span><span class="chip">opened 7 Aug</span><span class="chip decode" title="retunes the a4w4 decode MoE kernels; gains sit at concurrency 8–64">decode</span></div>
   <p>Retunes glm5_fp4_tuned_fmoe.csv to use the mxmoe a4w4 decode kernels for the two GLM-5.2 fused-shared-expert shapes: model_dim 6144, experts 257, top-k 9, inter_dim 512 (TP4, 12 rows) and 256 (TP8, 8 rows).</p>
   <div class="result">End-to-end serving throughput +4.3% mean at TP4 and +3.3% at TP8 on MI355X, peak +16.5% at ISL/OSL 1024 concurrency 32. Gains concentrate at concurrency 8–64. Largest single win on the whole map.</div>
   <div class="links"><a href="https://github.com/ROCm/aiter/pull/4629">AITER PR #4629</a><button class="map" data-goto="a4629">Show on map</button></div>
