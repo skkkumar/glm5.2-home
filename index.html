@@ -413,13 +413,56 @@ svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
 
 
 
+
+<section class="ch" id="chpd" data-anim="chpd">
+  <div class="num">Chapter 11b</div>
+  <h2>Prefill and decode: the same tower, used two ways</h2>
+  <div class="controls"><button onclick="listen('chpd')">Listen</button><button onclick="show('chpd')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
+  <p style="font-size:.85em;color:var(--ink2)">The blueprint above is the same in both phases. What changes is how many tokens climb it at once. Left: prefill. Right: decode.</p>
+  <div class="say">
+  <p>Every pass through the tower is one of two kinds: prefill or decode. Prefill happens once, at the start: all the prompt tokens climb the 78 floors together, side by side, in one big batch. On the way up, every one of them writes its sticky-note into the notebook, so after prefill the whole prompt is in memory. Only the last token's card goes to the LM head, and that gives the first output token. Prefill is heavy on arithmetic: many tokens, all 78 floors, and the indexer scoring every token against every earlier one, and this is the wait before the first word appears, called time to first token. Decode is everything after that: one new token climbs the tower alone, reads the notebook, adds one new note, and the LM head gives the next token. Decode does very little arithmetic per step, but it must read the big notebook and the expert weights every single time, so it is limited by memory speed rather than compute, and this is the time per output token. That is why the two phases get different kernels: prefill kernels work on big blocks of tokens, while decode kernels work on one token per sequence and lean on the paged notebook. In the blueprint above nothing changes between the two: same floors, same rooms, and only the shape of the batch changes, many tokens in prefill, one token in decode. Keep this in mind for the next two chapters: pass 1 is prefill, everything after it is decode, and MTP is a trick that lives only in decode.</p>
+  </div>
+  <div class="stage">
+    <svg viewBox="0 0 680 440" role="img" aria-label="Left: prefill, six prompt tokens climb the tower together and fill the notebook. Right: decode, one token climbs alone, reads the notebook and adds one note.">
+      <text x="175" y="24" text-anchor="middle" class="bold">Prefill: the prompt goes in</text>
+      <text id="pdo1" x="175" y="44" text-anchor="middle" class="small"></text>
+      <g id="pdh1"><rect class="box" x="100" y="52" width="150" height="26" rx="6"/><text x="175" y="69" text-anchor="middle" class="small">LM head</text></g>
+      <line class="arr" x1="175" y1="90" x2="175" y2="82" marker-end="url(#ah)"/>
+      <g id="pdt1"><rect class="box col" x="100" y="90" width="150" height="200" rx="10"/><text x="175" y="118" text-anchor="middle" class="bold">78 floors</text><text x="175" y="136" text-anchor="middle" class="small">many tokens at once</text></g>
+      <line class="arr" x1="175" y1="302" x2="175" y2="294" marker-end="url(#ah)"/>
+      <g id="pde1"><rect class="box" x="100" y="302" width="150" height="26" rx="6"/><text x="175" y="319" text-anchor="middle" class="small">Embedding</text></g>
+      <g id="pdtok1"><rect class="slot main" x="103" y="350" width="22" height="22" rx="4"/><rect class="slot main" x="128" y="350" width="22" height="22" rx="4"/><rect class="slot main" x="153" y="350" width="22" height="22" rx="4"/><rect class="slot main" x="178" y="350" width="22" height="22" rx="4"/><rect class="slot main" x="203" y="350" width="22" height="22" rx="4"/><rect class="slot main" x="228" y="350" width="22" height="22" rx="4"/></g>
+      <text x="175" y="390" text-anchor="middle" class="small">the prompt: 6 tokens, together</text>
+      <text x="295" y="84" text-anchor="middle" class="small">notebook</text>
+      <g id="pdn1"></g>
+      <text id="pdb1" x="175" y="412" text-anchor="middle" class="small" opacity="0">heavy arithmetic · time to first token (TTFT)</text>
+      <text id="pdk1" x="175" y="430" text-anchor="middle" class="small" opacity="0">prefill kernels: big blocks of tokens</text>
+
+      <text x="505" y="24" text-anchor="middle" class="bold">Decode: one token at a time</text>
+      <text id="pdo2" x="505" y="44" text-anchor="middle" class="small"></text>
+      <g id="pdh2"><rect class="box" x="430" y="52" width="150" height="26" rx="6"/><text x="505" y="69" text-anchor="middle" class="small">LM head</text></g>
+      <line class="arr" x1="505" y1="90" x2="505" y2="82" marker-end="url(#ah)"/>
+      <g id="pdt2"><rect class="box col" x="430" y="90" width="150" height="200" rx="10"/><text x="505" y="118" text-anchor="middle" class="bold">78 floors</text><text x="505" y="136" text-anchor="middle" class="small">one token per sequence</text></g>
+      <line class="arr" x1="505" y1="302" x2="505" y2="294" marker-end="url(#ah)"/>
+      <g id="pde2"><rect class="box" x="430" y="302" width="150" height="26" rx="6"/><text x="505" y="319" text-anchor="middle" class="small">Embedding</text></g>
+      <g id="pdtok2"><rect class="slot ok" x="494" y="350" width="22" height="22" rx="4"/></g>
+      <text x="505" y="390" text-anchor="middle" class="small">the new token, alone</text>
+      <text x="625" y="84" text-anchor="middle" class="small">notebook</text>
+      <g id="pdarr2"></g>
+      <g id="pdn2"></g>
+      <text id="pdb2" x="505" y="412" text-anchor="middle" class="small" opacity="0">memory-bound · time per output token (TPOT)</text>
+      <text id="pdk2" x="505" y="430" text-anchor="middle" class="small" opacity="0">decode kernels: one token, paged notebook</text>
+    </svg>
+  </div>
+</section>
+
 <section class="ch" id="chnm" data-anim="chnm">
   <div class="num">Chapter 12</div>
   <h2>Eight tokens without MTP: one word per pass</h2>
   <div class="controls"><button onclick="listen('chnm')">Listen</button><button onclick="show('chnm')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
   <p style="font-size:.85em;color:var(--ink2)">Same drawing as the next chapter, but the MTP modules are switched off. Watch how many times the main model has to run.</p>
   <div class="say">
-  <p>First, the same eight tokens the old way, with no MTP module at all. Pass 1: the prompt goes through all 78 floors and the LM head picks token 1: The. Pass 2: The goes back in at the bottom, climbs all 78 floors again, and out comes cat. Pass 3, all 78 floors again: sat. Pass 4: on. Pass 5: the. Pass 6: warm. Pass 7: mat. Pass 8: and, and we are done. Eight tokens, eight full passes through the main model, one word each time, and every pass has to wait for the one before it. Now compare with the next chapter: the same eight tokens in three main-model passes plus eight cheap MTP draft steps.</p>
+  <p>First, the same eight tokens the old way, with no MTP module at all. Pass 1 is the prefill: the whole prompt goes through all 78 floors together, and the LM head picks token 1: The. Pass 2 is the first decode step: The goes back in at the bottom, climbs all 78 floors alone, reads the notebook, and out comes cat. Pass 3, another decode step, all 78 floors again: sat. Pass 4: on. Pass 5: the. Pass 6: warm. Pass 7: mat. Pass 8: and, and we are done. Eight tokens: one prefill pass and seven decode passes, one word each time, and every pass has to wait for the one before it. Now compare with the next chapter: the same eight tokens in one prefill pass and two decode passes, plus eight cheap MTP draft steps.</p>
   </div>
   <div class="stage">
     <svg viewBox="-30 0 710 640" role="img" aria-label="Main model alone generating eight tokens one per pass, with the MTP modules greyed out, and a strip of eight token slots filling one at a time">
@@ -454,6 +497,7 @@ svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
 
       <text x="30" y="584" class="small">the eight tokens</text>
       <text id="nmcount" x="662" y="584" text-anchor="end" class="small">main-model passes: 0</text>
+      <text id="nmphase" x="340" y="584" text-anchor="middle" class="bold"></text>
       <g id="nmstrip"></g>
     </svg>
   </div>
@@ -465,7 +509,7 @@ svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
   <div class="controls"><button onclick="listen('ch12')">Listen</button><button onclick="show('ch12')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
   <p style="font-size:.85em;color:var(--ink2)">This is Z.ai's own architecture figure from the GLM-5.2 blog, redrawn: the main model on the left, the MTP module in the middle running its first draft step with an indexer, and the same MTP module on the right running the next draft steps without one. Each sentence lights up the part it describes, and the strip at the bottom fills up with the eight tokens.</p>
   <div class="say">
-  <p>We want eight tokens: The cat sat on the warm mat and. Pass 1: the main model reads the whole prompt through its 78 floors, and in each group of four DSA blocks the bottom one has the indexer and computes the top-k list that the three above it reuse. The LM head turns the finished card into a score for every word, and the highest score becomes token 1: The. Now the MTP module takes over: it receives the main model's hidden state through H-Norm and the embedding of The through E-Norm, and a Linear layer joins them into one card. Its DSA block has an indexer, so it computes a fresh top-k list, and it reads the shared KV cache, the very same notebook the main model uses, so nothing is copied. The shared MTP head proposes token 2 as a draft: cat. Draft step 2 runs the MTP module again but without the indexer: it reuses the top-k list from draft step 1 and the same shared cache, and proposes sat. Draft steps 3 and 4 do the same, proposing on and a, so we have four drafts from one skim. Pass 2: the main model checks all four drafts in a single pass, comparing each draft with the word it would have chosen itself. Cat, sat and on match, so they are accepted for free, while a does not match, so it is thrown away and replaced by the main model's own choice, the. That is rejection sampling: five tokens confirmed after only two passes through the main model. Round two starts from the: the MTP module drafts warm, mat, and, purred, again one skim and three reuses. Pass 3 verifies them: warm, mat and and are accepted, and our eight tokens are done. Eight tokens for three main-model passes instead of eight, and in Z.ai's coding tests the average accepted length is 5.47 tokens per round.</p>
+  <p>We want eight tokens: The cat sat on the warm mat and. Pass 1 is the prefill: the main model reads the whole prompt through its 78 floors at once, and in each group of four DSA blocks the bottom one has the indexer and computes the top-k list that the three above it reuse. The LM head turns the finished card into a score for every word, and the highest score becomes token 1: The. Now we are in decode, and the MTP module takes over: it receives the main model's hidden state through H-Norm and the embedding of The through E-Norm, and a Linear layer joins them into one card. Its DSA block has an indexer, so it computes a fresh top-k list, and it reads the shared KV cache, the very same notebook the main model uses, so nothing is copied. The shared MTP head proposes token 2 as a draft: cat. Draft step 2 runs the MTP module again but without the indexer: it reuses the top-k list from draft step 1 and the same shared cache, and proposes sat. Draft steps 3 and 4 do the same, proposing on and a, so we have four drafts from one skim. Pass 2 is a decode pass, but a wide one: the main model checks all four drafts in a single pass, comparing each draft with the word it would have chosen itself. Cat, sat and on match, so they are accepted for free, while a does not match, so it is thrown away and replaced by the main model's own choice, the. That is rejection sampling: five tokens confirmed after only two passes through the main model. Round two starts from the: the MTP module drafts warm, mat, and, purred, again one skim and three reuses. Pass 3, another wide decode pass, verifies them: warm, mat and and are accepted, and our eight tokens are done. Eight tokens for one prefill pass and two decode passes instead of one plus seven, and in Z.ai's coding tests the average accepted length is 5.47 tokens per round.</p>
   </div>
   <div class="stage">
     <svg viewBox="0 0 680 640" role="img" aria-label="Main model beside two MTP module steps, with reuse of the top-k list and a shared KV cache, and a strip of eight token slots that fill in as the animation proceeds">
@@ -528,6 +572,7 @@ svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
 
       <text x="30" y="584" class="small">the eight tokens</text>
       <text id="c12count" x="662" y="584" text-anchor="end" class="small">main-model passes: 0 · MTP draft steps: 0</text>
+      <text id="c12phase" x="340" y="584" text-anchor="middle" class="bold"></text>
       <g id="c12strip"></g>
     </svg>
   </div>
@@ -597,7 +642,7 @@ sections.forEach(sec=>{
     p.innerHTML=parts.map(s=>'<span class="s">'+esc(s)+'</span>').join(' ');
   });
   const stage=$('.stage',sec), say=$('.say',sec);
-  const synced=['ch11','ch12','chnm'];
+  const synced=['ch11','ch12','chnm','chpd'];
   if(stage&&say&&!synced.includes(sec.id)){sec.insertBefore(stage,say);stage.classList.add('pin');}
   if(synced.includes(sec.id)){const live=document.createElement('div');live.className='live';live.id=sec.id+'live';stage.insertBefore(live,stage.firstChild);}
 });
@@ -637,7 +682,7 @@ function speakSection(sec,onSentence){
     let i=0;
     function mark(k){spans.forEach((s,j)=>{s.classList.toggle('on',j===k);s.classList.toggle('did',j<k);});
       const sp=spans[k];const r=sp.getBoundingClientRect();
-      if(!['ch11','ch12','chnm'].includes(sec.id)&&(r.top<120||r.bottom>window.innerHeight-40))sp.scrollIntoView({behavior:'smooth',block:'center'});
+      if(!['ch11','ch12','chnm','chpd'].includes(sec.id)&&(r.top<120||r.bottom>window.innerHeight-40))sp.scrollIntoView({behavior:'smooth',block:'center'});
       if(onSentence)onSentence(k,sp.textContent);}
     function next(){ if(my!==RUN){return resolve();} if(i>=spans.length){spans.forEach(s=>s.classList.remove('on'));return resolve();}
       mark(i); const text=spans[i].textContent; i++;
@@ -761,6 +806,8 @@ function c12step(k,text){ const st=c12steps[Math.min(k,c12steps.length-1)];
   c12wires.forEach(id=>{const w=$('#'+id);if(w)w.classList.toggle('wlit',!!(st.w&&st.w.includes(id)));});
   st.strip.forEach((s,i)=>{const r=$('#c12s'+i),t=$('#c12t'+i);r.setAttribute('class','slot'+(s?' '+s:''));t.textContent=s?c12words[i]:'';});
   $('#c12count').textContent='main-model passes: '+st.pass+' · MTP draft steps: '+st.mtp;
+  const ph=['','phase: PREFILL','phase: PREFILL → token 1','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (wide verify pass)','phase: DECODE (wide verify pass)','phase: DECODE','phase: DECODE (MTP drafting)','phase: DECODE (wide verify pass)','1 prefill + 2 decode passes'];
+  $('#c12phase').textContent=ph[Math.min(k,ph.length-1)];
   ['c12o_m','c12o_p1','c12o_p2'].forEach((id,i)=>{$('#'+id).textContent=st.o[i];});
   ['c12i_m','c12i_p1','c12i_p2'].forEach((id,i)=>{$('#'+id).textContent=st.i[i];});
   const live=$('#ch12live'); if(live)live.textContent=(text||'');
@@ -778,6 +825,7 @@ function nmstep(k,text){ const pass=(k>=1&&k<=8)?k:(k>8?8:0); const running=(k>=
   const loop=$('#nmloop'); if(loop)loop.classList.toggle('wlit',k>=2&&k<=8);
   for(let i=0;i<8;i++){const done=i<pass;$('#nms'+i).setAttribute('class','slot'+(done?' main':''));$('#nmt'+i).textContent=done?nmwords[i]:'';}
   $('#nmcount').textContent='main-model passes: '+pass+(k>8?' — one word each':'');
+  $('#nmphase').textContent=k===1?'phase: PREFILL':(running?('phase: DECODE step '+(k-1)):(k>8?'1 prefill + 7 decode':''));
   $('#nmo_m').textContent=running?('out: '+nmwords[k-1]):(k>8?'8 tokens, 8 passes':'');
   $('#nmi_m').textContent=k===1?'in: the prompt':(running?('in: '+nmwords[k-2]):(k>8?'':'in: the prompt'));
   const live=$('#chnmlive'); if(live)live.textContent=(text||'');
@@ -786,7 +834,32 @@ function nmstep(k,text){ const pass=(k>=1&&k<=8)?k:(k>8?8:0); const running=(k>=
 A.chnm=function(){ const my=RUN; const spans=$$('#chnm .say .s'); let k=0;
   (function step(){ if(my!==RUN)return; if(k>=spans.length)return; spans.forEach((s,j)=>{s.classList.toggle('on',j===k);s.classList.toggle('did',j<k);}); nmstep(k,spans[k].textContent); k++; later(step,k<=1?4200:3000); })();
 };
-const SYNC={ch11:c11step,ch12:c12step,chnm:nmstep};
+
+/* ---- chapter 11b: prefill and decode ---- */
+(function(){ let h1='',h2=''; for(let i=0;i<8;i++){h1+='<rect id="pdn1_'+i+'" class="slot" x="272" y="'+(90+i*26)+'" width="46" height="20" rx="4"/>'; h2+='<rect id="pdn2_'+i+'" class="slot" x="602" y="'+(90+i*26)+'" width="46" height="20" rx="4"/>';} const a=$('#pdn1'),b=$('#pdn2'); if(a)a.innerHTML=h1; if(b)b.innerHTML=h2; })();
+let pdUp1=false,pdUp2=false;
+function pdstep(k,text){
+  const litT1=(k===2||k===3||k===9), litT2=(k===6||k===9);
+  [['pdt1',litT1],['pdt2',litT2],['pdh1',k===4],['pdh2',k===6]].forEach(([id,on])=>{const b=$('#'+id+' .box');if(b)b.classList.toggle('on',on);});
+  /* prefill tokens rise once, decode token rises once */
+  if(k>=2&&!pdUp1){pdUp1=true;const g=$('#pdtok1');tween(900,p=>g.setAttribute('transform','translate(0,'+(-160*ease(p)).toFixed(1)+')'));}
+  if(k<2){pdUp1=false;$('#pdtok1').removeAttribute('transform');}
+  if(k>=6&&!pdUp2){pdUp2=true;const g=$('#pdtok2');tween(900,p=>g.setAttribute('transform','translate(0,'+(-160*ease(p)).toFixed(1)+')'));}
+  if(k<6){pdUp2=false;$('#pdtok2').removeAttribute('transform');}
+  /* notebooks */
+  for(let i=0;i<8;i++){ $('#pdn1_'+i).setAttribute('class','slot'+((k>=3&&i<6)?' ok':'')); $('#pdn2_'+i).setAttribute('class','slot'+((k>=6&&i<6)?' main':'')+((k>=6&&i===6)?' ok':'')); }
+  /* decode reads the notebook */
+  const arr=$('#pdarr2'); if(k>=6){ if(!arr.children.length){let h='';for(let i=0;i<6;i++)h+='<line x1="602" y1="'+(100+i*26)+'" x2="516" y2="200" stroke="var(--att)" stroke-width="1.5" opacity="0.7"/>';arr.innerHTML=h;} } else arr.innerHTML='';
+  $('#pdo1').textContent=k>=4?'out: The (first token)':''; $('#pdo2').textContent=k>=6?'out: cat (next token)':'';
+  $('#pdb1').setAttribute('opacity',k>=5?1:0); $('#pdb2').setAttribute('opacity',k>=7?1:0);
+  $('#pdk1').setAttribute('opacity',k>=8?1:0); $('#pdk2').setAttribute('opacity',k>=8?1:0);
+  const live=$('#chpdlive'); if(live)live.textContent=(text||'');
+  const stage=$('#chpd .stage'); if(stage){const r=stage.getBoundingClientRect(); if(r.top<60||r.bottom>window.innerHeight)stage.scrollIntoView({behavior:'smooth',block:'start'});}
+}
+A.chpd=function(){ const my=RUN; const spans=$$('#chpd .say .s'); let k=0;
+  (function step(){ if(my!==RUN)return; if(k>=spans.length)return; spans.forEach((s,j)=>{s.classList.toggle('on',j===k);s.classList.toggle('did',j<k);}); pdstep(k,spans[k].textContent); k++; later(step,4200); })();
+};
+const SYNC={ch11:c11step,ch12:c12step,chnm:nmstep,chpd:pdstep};
 
 /* ---- controls ---- */
 let paused=false;
