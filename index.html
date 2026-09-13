@@ -4,6 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GLM-5.2 home — explained slowly, a guided film</title>
+<style>
+/* Shared side-panel navigation for the GLM-5.2 site */
+.gnav-btn{position:fixed;top:14px;left:14px;z-index:1000;width:42px;height:42px;border-radius:10px;border:2px solid #1F2A37;background:#F7F9FB;color:#1F2A37;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.gnav-btn:hover{background:#fff}
+.gnav-btn:focus-visible{outline:3px solid #F2B632;outline-offset:2px}
+.gnav-btn svg{width:22px;height:22px}
+.gnav-overlay{position:fixed;inset:0;background:rgba(15,23,32,.45);z-index:1001;opacity:0;pointer-events:none;transition:opacity .2s}
+.gnav-panel{position:fixed;top:0;left:0;bottom:0;width:min(320px,88vw);background:#F7F9FB;color:#1F2A37;z-index:1002;transform:translateX(-102%);transition:transform .22s ease;box-shadow:4px 0 18px rgba(0,0,0,.18);font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;font-size:17px;line-height:1.5;display:flex;flex-direction:column}
+.gnav-open .gnav-panel{transform:none}
+.gnav-open .gnav-overlay{opacity:1;pointer-events:auto}
+.gnav-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:2px solid #C6D0DA}
+.gnav-head b{font-size:1.05em}
+.gnav-close{width:36px;height:36px;border-radius:8px;border:2px solid #1F2A37;background:#fff;cursor:pointer;font-size:20px;line-height:1}
+.gnav-list{list-style:none;margin:0;padding:10px}
+.gnav-list li{margin:4px 0}
+.gnav-list a{display:block;padding:12px 14px;border-radius:10px;color:#1F2A37;text-decoration:none;border-left:5px solid transparent}
+.gnav-list a:hover{background:#fff}
+.gnav-list a.now{background:#FBE6B3;border-left-color:#F2B632;color:#5C3D00}
+.gnav-list small{display:block;font-size:.78em;color:#46525F}
+.gnav-foot{margin-top:auto;padding:12px 16px 16px;font-size:.78em;color:#46525F;border-top:2px solid #C6D0DA}
+.gnav-foot a{color:#4A6FA5}
+
+</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -28,7 +51,15 @@ button.small{font-size:.72em;padding:.35em .8em;border-width:1.5px}
 .bar{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:2px solid var(--line);padding:.6rem 1rem .6rem 4.2rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
 .bar .grow{flex:1}
 .bar .stat{font-size:.8em;color:var(--ink2)}
-.wrap{display:grid;grid-template-columns:230px minmax(0,1fr);gap:2rem;max-width:1080px;margin:0 auto;padding:0 1rem 6rem}
+.wrap{display:grid;grid-template-columns:230px minmax(0,1fr) 300px;gap:2rem;max-width:1400px;margin:0 auto;padding:0 1rem 6rem}
+aside.model{position:sticky;top:76px;align-self:start;padding-top:1.5rem;font-size:.78em}
+aside.model .mlabel{color:var(--muted);letter-spacing:.05em;text-transform:uppercase;font-size:.85em}
+aside.model .mchap{font-weight:700;margin:.2em 0 .6em;min-height:1.4em;color:var(--hl-ink)}
+aside.model svg{width:100%;height:auto;max-height:calc(100vh - 150px);display:block}
+aside.model .box.on{fill:var(--hl);stroke:var(--hl-ink)}
+aside.model .box.col.on{fill:var(--hl-soft)}
+aside.model g[data-ch]{cursor:pointer}
+aside.model .mhint{color:var(--muted);margin-top:.5em}
 nav.rail{position:sticky;top:64px;align-self:start;font-size:.78em;padding-top:1.5rem}
 nav.rail ol{list-style:none;margin:0;padding:0}
 nav.rail li{margin:.15em 0}
@@ -78,6 +109,10 @@ svg .slot.main{fill:var(--att-soft);stroke:var(--att)}
 svg .slot.draft{fill:#fff;stroke:var(--muted);stroke-dasharray:4 3}
 svg .slot.ok{fill:var(--done-soft);stroke:var(--done)}
 svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
+@media (max-width:1180px){
+  .wrap{grid-template-columns:230px minmax(0,1fr);max-width:1080px}
+  aside.model{display:none}
+}
 @media (max-width:820px){
   .wrap{grid-template-columns:1fr;gap:0}
   nav.rail{position:static;padding:1rem 0 0}
@@ -87,29 +122,6 @@ svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
   header.hero h1{font-size:1.8em}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-</style>
-<style>
-/* Shared side-panel navigation for the GLM-5.2 site */
-.gnav-btn{position:fixed;top:14px;left:14px;z-index:1000;width:42px;height:42px;border-radius:10px;border:2px solid #1F2A37;background:#F7F9FB;color:#1F2A37;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-.gnav-btn:hover{background:#fff}
-.gnav-btn:focus-visible{outline:3px solid #F2B632;outline-offset:2px}
-.gnav-btn svg{width:22px;height:22px}
-.gnav-overlay{position:fixed;inset:0;background:rgba(15,23,32,.45);z-index:1001;opacity:0;pointer-events:none;transition:opacity .2s}
-.gnav-panel{position:fixed;top:0;left:0;bottom:0;width:min(320px,88vw);background:#F7F9FB;color:#1F2A37;z-index:1002;transform:translateX(-102%);transition:transform .22s ease;box-shadow:4px 0 18px rgba(0,0,0,.18);font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;font-size:17px;line-height:1.5;display:flex;flex-direction:column}
-.gnav-open .gnav-panel{transform:none}
-.gnav-open .gnav-overlay{opacity:1;pointer-events:auto}
-.gnav-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:2px solid #C6D0DA}
-.gnav-head b{font-size:1.05em}
-.gnav-close{width:36px;height:36px;border-radius:8px;border:2px solid #1F2A37;background:#fff;cursor:pointer;font-size:20px;line-height:1}
-.gnav-list{list-style:none;margin:0;padding:10px}
-.gnav-list li{margin:4px 0}
-.gnav-list a{display:block;padding:12px 14px;border-radius:10px;color:#1F2A37;text-decoration:none;border-left:5px solid transparent}
-.gnav-list a:hover{background:#fff}
-.gnav-list a.now{background:#FBE6B3;border-left-color:#F2B632;color:#5C3D00}
-.gnav-list small{display:block;font-size:.78em;color:#46525F}
-.gnav-foot{margin-top:auto;padding:12px 16px 16px;font-size:.78em;color:#46525F;border-top:2px solid #C6D0DA}
-.gnav-foot a{color:#4A6FA5}
-
 </style>
 </head>
 <body>
@@ -617,6 +629,12 @@ svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
   <p style="font-size:.9em;color:var(--ink2)">Suggested timing for 60 minutes: intro 5, expert room 10, attention room with MLA and DSA 15, IndexShare 15, MTP 8, glue and benchmarks 7. If you must cut, cut MTP first, never IndexShare.</p>
 </section>
 </main>
+<aside class="model" id="modelAside" aria-label="Where we are in the model">
+  <div class="mlabel">Where we are in the model</div>
+  <div class="mchap" id="modelChap"></div>
+  <div id="modelSvg"></div>
+  <div class="mhint">Click any part to jump to its chapter.</div>
+</aside>
 </div>
 <style>
 @media (min-width:821px){.stage.pin{position:sticky;top:76px;z-index:5}}
@@ -648,7 +666,7 @@ sections.forEach(sec=>{
 });
 const toc=$('#toc');
 sections.forEach(sec=>{const li=document.createElement('li');const a=document.createElement('a');a.href='#'+sec.id;a.textContent=$('.num',sec).textContent.replace('Chapter ','')+'. '+$('h2',sec).textContent;a.id='toc-'+sec.id;li.appendChild(a);toc.appendChild(li);});
-const io=new IntersectionObserver(es=>{es.forEach(e=>{const a=$('#toc-'+e.target.id);if(a)a.classList.toggle('now',e.isIntersecting);});},{rootMargin:'-40% 0px -50% 0px'});
+const io=new IntersectionObserver(es=>{es.forEach(e=>{const a=$('#toc-'+e.target.id);if(a)a.classList.toggle('now',e.isIntersecting); if(e.isIntersecting&&typeof modelFor==='function')modelFor(e.target.id);});},{rootMargin:'-40% 0px -50% 0px'});
 sections.forEach(s=>io.observe(s));
 
 /* ---- speech ---- */
@@ -774,6 +792,7 @@ A.ch10=function(){ const my=RUN; const words=['The','cat','sat','on','the','warm
 };
 const c11map=[['c11n0'],['c11n1'],['c11n2'],['c11n3'],['c11n4'],['c11n5'],['c11n6'],['c11n7'],['c11n8'],['c11n9'],['c11n10'],['c11n11'],['c11n12','c11n13'],['c11n14']];
 function c11step(k,text){ c11map.forEach((ids,j)=>ids.forEach(id=>{const b=$('#'+id+' .box');b.classList.toggle('on',j===k);b.classList.toggle('done',j<k);}));
+  if(typeof modelLight==='function'){ modelLight(c11map[Math.min(k,c11map.length-1)].map(id=>id.replace(/^c11/,''))); const l=$('#modelChap'); if(l)l.textContent='Chapter 11 · part '+(Math.min(k,c11map.length-1)+1); }
   const live=$('#ch11live'); if(live)live.textContent=(text||''); const el=$('#'+c11map[Math.min(k,c11map.length-1)][0]); if(el)el.scrollIntoView({behavior:'smooth',block:'center'}); }
 A.ch11=function(){ const my=RUN; const spans=$$('#ch11 .say .s'); let k=0;
   (function step(){ if(my!==RUN)return; if(k>=c11map.length)return; spans.forEach((s,j)=>{s.classList.toggle('on',j===k);s.classList.toggle('did',j<k);}); c11step(k,spans[k]?spans[k].textContent:''); k++; later(step,4200); })();
@@ -806,6 +825,7 @@ function c12step(k,text){ const st=c12steps[Math.min(k,c12steps.length-1)];
   c12wires.forEach(id=>{const w=$('#'+id);if(w)w.classList.toggle('wlit',!!(st.w&&st.w.includes(id)));});
   st.strip.forEach((s,i)=>{const r=$('#c12s'+i),t=$('#c12t'+i);r.setAttribute('class','slot'+(s?' '+s:''));t.textContent=s?c12words[i]:'';});
   $('#c12count').textContent='main-model passes: '+st.pass+' · MTP draft steps: '+st.mtp;
+  if(typeof modelLight==='function'){ const mtp=st.lit.some(id=>/^c12p/.test(id)); modelLight(mtp?['n14']:(st.lit.length?['n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13']:[])); }
   const ph=['','phase: PREFILL','phase: PREFILL → token 1','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (wide verify pass)','phase: DECODE (wide verify pass)','phase: DECODE','phase: DECODE (MTP drafting)','phase: DECODE (wide verify pass)','1 prefill + 2 decode passes'];
   $('#c12phase').textContent=ph[Math.min(k,ph.length-1)];
   ['c12o_m','c12o_p1','c12o_p2'].forEach((id,i)=>{$('#'+id).textContent=st.o[i];});
@@ -861,14 +881,35 @@ A.chpd=function(){ const my=RUN; const spans=$$('#chpd .say .s'); let k=0;
 };
 const SYNC={ch11:c11step,ch12:c12step,chnm:nmstep,chpd:pdstep};
 
+
+/* ---- side panel: the end-to-end model, highlighted per chapter ---- */
+const MODEL_ALL=['n0','n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13','n14'];
+const CH2MODEL={
+  ch1:MODEL_ALL, ch2:['n5','n4'], ch3:['n0','n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13'],
+  ch4:['n3','n4','n5','n8','n9','n10'], ch5:['n8','n9','n10'], ch6:['n3'], ch7:['n4','n5'], ch8:['n4'],
+  ch9:['n2','n6','n7','n11','n12'], ch10:['n14'], ch11:[], chpd:['n0','n1','n3','n4','n5','n8','n9','n13'],
+  chnm:['n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13'], ch12:['n13','n14'], ch13:[] };
+const NODE2CH={n0:'ch3',n1:'ch3',n2:'ch9',n3:'ch6',n4:'ch7',n5:'ch7',n6:'ch9',n7:'ch9',n8:'ch5',n9:'ch5',n10:'ch5',n11:'ch9',n12:'ch9',n13:'ch3',n14:'ch10'};
+const CHNAME={ch1:'Chapter 1 · the whole model',ch2:'Chapter 2 · attention cost',ch3:'Chapter 3 · the whole flow',ch4:'Chapter 4 · the two rooms',ch5:'Chapter 5 · mixture of experts',ch6:'Chapter 6 · MLA',ch7:'Chapter 7 · the DSA indexer',ch8:'Chapter 8 · IndexShare',ch9:'Chapter 9 · glue parts',ch10:'Chapter 10 · MTP',ch11:'Chapter 11 · the blueprint',chpd:'Chapter 11b · prefill and decode',chnm:'Chapter 12 · 8 tokens, no MTP',ch12:'Chapter 13 · 8 tokens with MTP',ch13:'Chapter 14 · your talk'};
+let modelCh='';
+(function buildModelPanel(){ const src=$('#ch11 .stage svg'), host=$('#modelSvg'); if(!src||!host)return;
+  const c=src.cloneNode(true); c.removeAttribute('role'); c.setAttribute('aria-hidden','true');
+  c.querySelectorAll('[id]').forEach(el=>{el.id=el.id.replace(/^c11/,'mm_');});
+  c.querySelectorAll('.box').forEach(b=>b.classList.remove('on','done'));
+  MODEL_ALL.forEach(n=>{const g=c.querySelector('#mm_'+n); if(g){g.dataset.ch=NODE2CH[n]; g.addEventListener('click',()=>{const sec=$('#'+NODE2CH[n]); if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'}); modelFor(NODE2CH[n]);}});}});
+  host.appendChild(c);
+})();
+function modelLight(nodes){ MODEL_ALL.forEach(n=>{const b=$('#mm_'+n+' .box'); if(b)b.classList.toggle('on',nodes.includes(n));}); }
+function modelFor(chId){ if(!CH2MODEL[chId])return; modelCh=chId; modelLight(CH2MODEL[chId]); const l=$('#modelChap'); if(l)l.textContent=CHNAME[chId]||''; }
+
 /* ---- controls ---- */
 let paused=false;
 function resetHighlights(){ $$('.say .s').forEach(s=>s.classList.remove('on')); }
 function stopAll(){ RUN++; clearTimers(); if(synth){synth.cancel();try{synth.resume();}catch(e){}} paused=false; $('#pauseBtn').textContent='Pause'; resetHighlights(); }
-function show(id){ stopAll(); const my=RUN; const sec=$('#'+id); if(!SYNC[id])sec.scrollIntoView({behavior:'smooth',block:'start'}); if(A[id])later(()=>{if(my===RUN)A[id]();},400); }
-function listen(id){ stopAll(); unlock(); const sec=$('#'+id); if(SYNC[id]){ SYNC[id](0,''); speakSection(sec,(k,t)=>SYNC[id](k,t)); } else { speakSection(sec); } }
+function show(id){ stopAll(); modelFor(id); const my=RUN; const sec=$('#'+id); if(!SYNC[id])sec.scrollIntoView({behavior:'smooth',block:'start'}); if(A[id])later(()=>{if(my===RUN)A[id]();},400); }
+function listen(id){ stopAll(); unlock(); modelFor(id); const sec=$('#'+id); if(SYNC[id]){ SYNC[id](0,''); speakSection(sec,(k,t)=>SYNC[id](k,t)); } else { speakSection(sec); } }
 async function playFilm(){ stopAll(); unlock(); const my=RUN;
-  for(const sec of sections){ if(my!==RUN)return; sec.scrollIntoView({behavior:'smooth',block:'start'}); await new Promise(r=>later(r,900)); if(my!==RUN)return;
+  for(const sec of sections){ if(my!==RUN)return; modelFor(sec.id); sec.scrollIntoView({behavior:'smooth',block:'start'}); await new Promise(r=>later(r,900)); if(my!==RUN)return;
     if(SYNC[sec.id]){ SYNC[sec.id](0,''); await speakSection(sec,(k,t)=>SYNC[sec.id](k,t)); } else { if(A[sec.id])A[sec.id](); await speakSection(sec); }
     if(my!==RUN)return; await new Promise(r=>later(r,1200)); }
 }
