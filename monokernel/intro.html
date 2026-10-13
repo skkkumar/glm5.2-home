@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MonoKernel — a short intro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* Shared side-panel navigation for the GLM-5.2 site */
+.gnav-btn{position:fixed;top:14px;left:14px;z-index:1000;width:42px;height:42px;border-radius:10px;border:2px solid #1F2A37;background:#F7F9FB;color:#1F2A37;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.gnav-btn:hover{background:#fff}
+.gnav-btn:focus-visible{outline:3px solid #F2B632;outline-offset:2px}
+.gnav-btn svg{width:22px;height:22px}
+.gnav-overlay{position:fixed;inset:0;background:rgba(15,23,32,.45);z-index:1001;opacity:0;pointer-events:none;transition:opacity .2s}
+.gnav-panel{position:fixed;top:0;left:0;bottom:0;width:min(320px,88vw);background:#F7F9FB;color:#1F2A37;z-index:1002;transform:translateX(-102%);transition:transform .22s ease;box-shadow:4px 0 18px rgba(0,0,0,.18);font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;font-size:17px;line-height:1.5;display:flex;flex-direction:column}
+.gnav-open .gnav-panel{transform:none}
+.gnav-open .gnav-overlay{opacity:1;pointer-events:auto}
+.gnav-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:2px solid #C6D0DA}
+.gnav-head b{font-size:1.05em}
+.gnav-close{width:36px;height:36px;border-radius:8px;border:2px solid #1F2A37;background:#fff;cursor:pointer;font-size:20px;line-height:1}
+.gnav-list{list-style:none;margin:0;padding:10px}
+.gnav-list li{margin:4px 0}
+.gnav-list a{display:block;padding:12px 14px;border-radius:10px;color:#1F2A37;text-decoration:none;border-left:5px solid transparent}
+.gnav-list a:hover{background:#fff}
+.gnav-list a.now{background:#FBE6B3;border-left-color:#F2B632;color:#5C3D00}
+.gnav-list small{display:block;font-size:.78em;color:#46525F}
+.gnav-foot{margin-top:auto;padding:12px 16px 16px;font-size:.78em;color:#46525F;border-top:2px solid #C6D0DA}
+.gnav-foot a{color:#4A6FA5}
+
+:root{
+  --paper:#E9EEF2; --sheet:#F7F9FB; --ink:#1F2A37; --ink2:#46525F; --muted:#7D8A98;
+  --line:#C6D0DA; --hl:#F2B632; --hl-soft:#FBE6B3; --hl-ink:#5C3D00;
+  --done:#1E8C7A; --done-soft:#D3EEE7; --att:#4A6FA5; --att-soft:#D7E3F1; --idle:#FFFFFF;
+  --attn:#534AB7; --attn-bg:#EEEDFE; --idx:#BA7517; --idx-bg:#FAEEDA; --mla:#0F6E56; --mla-bg:#E1F5EE; --moe:#D85A30; --moe-bg:#FAECE7; --red:#8A94A0; --red-bg:#E3E7EB; --hbm:#B23A3A; --hbm-bg:#F6DADA;
+  --fs:20px; --lh:1.75;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;font-size:var(--fs);line-height:var(--lh);letter-spacing:.012em;word-spacing:.06em}
+body.big{--fs:24px;--lh:1.9}
+a{color:var(--att)}
+button{font:inherit;font-size:.85em;padding:.5em 1em;border-radius:10px;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);cursor:pointer}
+button:hover{background:#fff}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--hl);outline-offset:3px}
+button.primary{background:var(--ink);color:#fff}
+button.primary:hover{background:#0F1720}
+button.small{font-size:.72em;padding:.35em .8em;border-width:1.5px}
+button[aria-pressed="true"]{background:var(--hl-soft);border-color:var(--hl-ink);color:var(--hl-ink)}
+.bar{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:2px solid var(--line);padding:.6rem 1rem .6rem 4.2rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.bar .grow{flex:1}
+.bar .stat{font-size:.8em;color:var(--ink2)}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1.6rem;max-width:1180px;margin:0 auto;padding:0 1rem 6rem}
+nav.rail{position:sticky;top:64px;align-self:start;font-size:.74em;padding-top:1.5rem;width:230px}
+nav.rail ol{list-style:none;margin:0;padding:0}
+nav.rail li{margin:.15em 0}
+nav.rail a{display:block;padding:.35em .6em;border-radius:8px;color:var(--ink2);text-decoration:none;border-left:4px solid transparent}
+nav.rail a.now{background:var(--hl-soft);color:var(--hl-ink);border-left-color:var(--hl)}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}nav.rail{display:none}.bar .stat{display:none}}
+main{max-width:760px;min-width:0}
+header.hero{padding:3rem 0 1rem}
+header.hero h1{font-size:2.2em;line-height:1.15;margin:0 0 .4em;font-weight:700}
+header.hero p.lead{font-size:1.1em;color:var(--ink2);max-width:34ch;margin:0 0 1.2rem}
+.notice{font-size:.8em;color:var(--ink2);background:var(--sheet);border-left:6px solid var(--hl);padding:.6em 1em;border-radius:0 10px 10px 0;margin:1rem 0}
+section.ch{padding:3rem 0 1rem;border-top:2px solid var(--line);scroll-margin-top:70px}
+section.ch h2{font-size:1.55em;line-height:1.2;margin:0 0 .2em}
+section.ch h3{font-size:1.1em;margin:1.6em 0 .4em}
+section.ch .num{font-size:.7em;color:var(--muted);letter-spacing:.05em}
+p{margin:0 0 1em;max-width:62ch}
+ul,ol{max-width:62ch}
+li{margin:.3em 0}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:var(--sheet);padding:.05em .3em;border-radius:5px}
+pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78em;line-height:1.5;background:var(--sheet);border:2px solid var(--line);border-radius:12px;padding:.9em 1em;overflow-x:auto;max-width:100%}
+.stage{background:var(--sheet);border:2px solid var(--line);border-radius:14px;padding:.9rem;margin:1.2rem 0 1.6rem;scroll-margin-top:84px}
+.stage svg{width:100%;height:auto;display:block}
+.stage .cap{font-size:.75em;color:var(--ink2);margin:.6rem .2rem 0}
+.numcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin:1rem 0 1.5rem}
+.numcard{background:var(--sheet);border:2px solid var(--line);border-radius:12px;padding:.7em .9em}
+.numcard b{display:block;font-size:1.5em;line-height:1.1}
+.numcard span{font-size:.75em;color:var(--ink2)}
+table{border-collapse:collapse;width:100%;font-size:.78em;margin:1rem 0 1.5rem;background:var(--sheet);border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.tbl{overflow-x:auto;margin:1rem 0 1.5rem}
+.tbl table{margin:0}
+th,td{text-align:left;padding:.55em .7em;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--att-soft);color:var(--ink);font-weight:700}
+tr:last-child td{border-bottom:0}
+td code{white-space:nowrap}
+.key{display:inline-block;padding:.05em .5em;border-radius:6px;font-size:.85em;border:1.5px solid}
+.k-a{background:var(--attn-bg);border-color:var(--attn);color:#3C3489}
+.k-i{background:var(--idx-bg);border-color:var(--idx);color:#633806}
+.k-m{background:var(--mla-bg);border-color:var(--mla);color:#085041}
+.k-e{background:var(--moe-bg);border-color:var(--moe);color:#712B13}
+.legend{display:flex;flex-wrap:wrap;gap:.5em 1.2em;font-size:.75em;color:var(--ink2);margin:.6em 0}
+.legend span{display:inline-flex;align-items:center;gap:.4em}
+.sw{width:14px;height:14px;border-radius:3px;border:1.5px solid;display:inline-block}
+/* widgets */
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem .9rem;margin:.4rem 0 .8rem}
+.scrub{display:flex;align-items:center;gap:.6rem;flex:1 1 220px;min-width:200px}
+input[type=range]{flex:1;accent-color:var(--ink)}
+.tv{min-width:4.2em;text-align:right;font-weight:700;font-size:.85em;font-family:ui-monospace,Menlo,monospace}
+.grid16{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px}
+.cell{aspect-ratio:1;border-radius:4px;border:1.5px solid var(--line);background:transparent;padding:0;min-height:0;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--ink2)}
+.cell[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:-3px}
+.two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:1rem}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.panel{background:#fff;border:2px solid var(--line);border-radius:12px;padding:.8rem}
+.panel h4{margin:0 0 .5rem;font-size:.8em;color:var(--ink2);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;margin-top:.8rem}
+.stat2{border-top:3px solid var(--line);padding-top:.3em}
+.stat2 b{font-size:1.4em;line-height:1.1;display:block}
+.stat2 span{font-size:.7em;color:var(--ink2)}
+.now{min-height:1.5em;font-size:.85em;color:var(--ink2);margin:.2em 0 .6em}
+.now b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:.4em;margin-bottom:.6em}
+.chips button{font-size:.72em;padding:.3em .7em;border-width:1.5px;font-family:ui-monospace,Menlo,monospace}
+.walk{display:flex;flex-wrap:wrap;gap:.35em;align-items:center;font-size:.75em}
+.tk{display:inline-flex;align-items:center;height:1.9em;padding:0 .6em;border-radius:6px;border:1.5px solid;font-family:ui-monospace,Menlo,monospace}
+.gwrap{overflow-x:auto}
+.seg{display:flex;gap:.4em;flex-wrap:wrap}
+.seg button{font-size:.75em;padding:.3em .7em}
+.lbl{font-size:.8em;color:var(--ink2);min-width:4.2em}
+.rowctl{display:flex;align-items:center;gap:.6em;margin:.3em 0}
+.mrow{display:grid;grid-template-columns:12px minmax(0,1fr) 70px;gap:.6em;align-items:center;padding:.3em 0;border-bottom:1px solid var(--line);font-size:.78em}
+.mrow .nm{font-family:ui-monospace,Menlo,monospace}
+.mrow .fl{font-size:.85em;color:var(--ink2)}
+.mrow .sz{text-align:right}
+.ph{font-size:.85em;font-weight:700;margin:.9em 0 .3em}
+.barscale{display:flex;height:26px;border-radius:8px;overflow:hidden;border:1.5px solid var(--line)}
+footer{font-size:.75em;color:var(--ink2);padding:2rem 0;border-top:2px solid var(--line);margin-top:2rem}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="grow"><b>MonoKernel intro</b> <span class="stat">· the short version · <a href="index.html">full explainer →</a></span></div>
+  <button class="small" onclick="document.body.classList.toggle('big')">Bigger text</button>
+</div>
+<div class="wrap">
+<main>
+<header class="hero">
+  <h1>MonoKernel: the short version</h1>
+  <p class="lead">Seven questions and their answers. The <a href="index.html">full explainer</a> has the animations, tables and the worked q_b example behind each of these.</p>
+</header>
+
+<section class="ch" id="q1">
+<div class="num">01</div><h2>What is the issue at low concurrency, low context?</h2>
+<p>We are <b>launch bound</b>: the launch and drain time of each kernel is bigger than the time to transfer the weights and inputs and do the computation.</p>
+<p>At decode with 1–8 tokens, one GLM-5 layer used to be about nineteen kernels. Each one is launched, fills the GPU, writes its result to HBM, and ends. The useful part of each kernel, streaming a few MB of weights and doing a few MFLOP of math, takes well under a microsecond. The fixed cost around it is several microseconds. So the chip spends most of its time between kernels, not in them.</p>
+<div class="stage">
+<svg viewBox="0 0 380 300" role="img" aria-label="Roofline with a latency-bound point far below the roof">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#46525F" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+<line x1="50" y1="230" x2="50" y2="50" stroke="#46525F" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="50" y1="230" x2="345" y2="230" stroke="#46525F" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="58" y="44" font-size="12" fill="#46525F">Speed (FLOPs/s)</text>
+<text x="195" y="258" font-size="12" fill="#46525F" text-anchor="middle">Math per byte loaded</text>
+<path d="M50 230 L200 80" fill="none" stroke="#0F6E56" stroke-width="3"/>
+<path d="M200 80 L335 80" fill="none" stroke="#D85A30" stroke-width="3"/>
+<text x="118" y="140" font-size="12" fill="#085041" text-anchor="middle">Memory roof</text>
+<text x="268" y="66" font-size="12" fill="#712B13" text-anchor="middle">Compute roof</text>
+<circle cx="110" cy="170" r="6" fill="#0F6E56"/><text x="122" y="166" font-size="12" fill="#1F2A37">decode, fused: on the roof</text>
+<line x1="110" y1="178" x2="110" y2="208" stroke="#7D8A98" stroke-dasharray="3 3"/>
+<circle cx="110" cy="214" r="6" fill="#D85A30"/><text x="122" y="218" font-size="12" fill="#1F2A37">same math, nineteen tiny kernels</text>
+<text x="56" y="286" font-size="13" font-weight="700" fill="#1F2A37">Gap under the roof = launch / latency bound</text>
+</svg>
+<div class="cap">Roofline plot. Decode is memory bound on paper (far left of the ridge), but the kernel chain never reaches the memory roof because each kernel is too small to keep HBM busy. The MonoKernel pushes the point up, not sideways.</div>
+</div>
+</section>
+
+<section class="ch" id="q2">
+<div class="num">02</div><h2>What to do if you are launch bound? Fuse, then use waves to hide latency</h2>
+<p>Two different problems, two different tools.</p>
+<ul>
+<li><b>Launch cost</b> is removed by fusing: one launch per layer instead of nineteen. Nothing inside a kernel can hide a launch gap; only not launching does.</li>
+<li><b>Memory latency</b> (hundreds of cycles per HBM load) is hidden by keeping other work in flight. A SIMD can hold several resident waves, each with its own program state, and switch between them for free. While one wave waits for its data, another computes.</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>Time →</th><th></th><th></th><th></th></tr>
+<tr><td>Wave 1</td><td>load data</td><td style="background:var(--mla-bg)">compute</td><td>load next</td></tr>
+<tr><td>Wave 2</td><td></td><td>load data</td><td style="background:var(--mla-bg)">compute</td></tr>
+</table></div>
+<p>The MonoKernel runs <b>2 waves per SIMD</b>, 8 per CU. That's low occupancy on purpose. Resident waves that are not computing still hold their registers, so more waves means fewer registers each. We trade for the minimum occupancy that still hides latency, and make up the rest with ILP inside each wave: every wave issues its weight loads <i>before</i> it waits for its inputs, so the loads overlap the wait. See AMD's <a href="https://rocm.blogs.amd.com/software-tools-optimization/occupancy-math-mi355x/README.html">occupancy math guide</a> for the budget arithmetic, and <a href="index.html#occupancy">section 03 of the full page</a> for how it applies here.</p>
+</section>
+
+<section class="ch" id="q3">
+<div class="num">03</div><h2>Why are we limited to 12 tokens?</h2>
+<p>Physical limits of LDS, registers and waves.</p>
+<ul>
+<li>A SIMD holds at most 8 waves; a CU at most 32.</li>
+<li>The MFMA tile is 16 columns wide, so one accumulator naturally carries up to 16 rows (tokens). That would allow 16.</li>
+<li>Each CU has <b>160 KB of LDS</b>.</li>
+</ul>
+<p>In the MonoKernel, LDS holds the <b>inputs</b> of the current stage and the processed tile that goes to the next mailbox. The <b>weights are streamed from HBM straight into registers</b> and never touch LDS. So the LDS footprint scales with rows × input width, not with weight size.</p>
+<p>For GLM-5 the widest input is the layer's hidden state, 6144 wide in bf16, staged by the first stage (<code>qkv_a</code>):</p>
+<div class="tbl"><table>
+<tr><th>Rows</th><th>Input staged in LDS (rows × 6144 × 2 B)</th><th>Fits in 160 KB?</th></tr>
+<tr><td>8</td><td>96 KB</td><td>yes</td></tr>
+<tr><td>12</td><td>144 KB</td><td>yes, just</td></tr>
+<tr><td>16</td><td>192 KB</td><td>no</td></tr>
+</table></div>
+<p>So the kernel asserts <code>S ≤ 12</code>, and vLLM uses 1, 2, 4 and 8. Sixteen is reachable by staging that one input in two halves, since each wave only reads its own K-slice; it's the smallest next step.</p>
+</section>
+
+<section class="ch" id="q4">
+<div class="num">04</div><h2>How does the MonoKernel use waves? Every CU and every wave does the same kind of work</h2>
+<ul>
+<li>The layers run one after another, one launch each.</li>
+<li>Each layer is written as <b>stages</b>, and each stage is a list of <b>tasks</b> spread over the 256 CUs: task <code>t</code> runs on CTA <code>(base + t) mod 256</code>. A stage with 256 tasks is one task per CU; a stage with 1,920 tasks is 7–8 per CU.</li>
+<li>We write the code at the CTA level, for all 8 waves of a CU at once: 2 waves per SIMD × 4 SIMDs × 64 lanes = <b>512 threads</b>. Inside a task, the waves split the K dimension of the weight between them and combine through LDS.</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>Helper</th><th>What it does</th></tr>
+<tr><td><code>u_&lt;stage&gt;</code></td><td>Issue the weight loads from HBM for one unit of this wave's work (1 KB tile per wave). No math.</td></tr>
+<tr><td><code>hint_wait</code>, <code>poll</code></td><td>Wait until the input mailbox carries this launch's tag.</td></tr>
+<tr><td><code>stage_x</code></td><td>Copy the input rows from the mailbox into LDS.</td></tr>
+<tr><td><code>run_units</code>, <code>mma_units</code></td><td>Run the GEMM on the matrix cores (and the point-wise ops around it).</td></tr>
+<tr><td><code>reduce_rows</code></td><td>Combine the 8 waves' partial sums through LDS.</td></tr>
+<tr><td><code>emit_out</code>, <code>put_bf</code></td><td>Finished tile goes to LDS, then into the next mailbox with the tag.</td></tr>
+</table></div>
+<p>This is the same skeleton for seven of the fourteen stages. The <a href="index.html#qb">q_b walkthrough</a> goes line by line.</p>
+</section>
+
+<section class="ch" id="q5">
+<div class="num">05</div><h2>How does a MonoKernel differ from normal code?</h2>
+<p>Watch the two GIFs. Same layer, same time scale.</p>
+<div class="stage"><img src="kernel-chain.gif" alt="Animated: the kernel chain, one kernel per operation" style="width:100%;height:auto;display:block;border-radius:8px"><div class="cap">Normal: nineteen launches. The CU grid is mostly empty even mid-kernel and fully dark between kernels, while results go out to HBM and back.</div></div>
+<div class="stage"><img src="monokernel.gif" alt="Animated: the MonoKernel, one launch per layer" style="width:100%;height:auto;display:block;border-radius:8px"><div class="cap">MonoKernel: one launch. The grid stays coloured, stages overlap, hand-offs go through mailboxes in L2, and the two all-reduces are stages, not kernels.</div></div>
+<ul>
+<li>Normal code: the kernel ending <i>is</i> the barrier, and HBM <i>is</i> the hand-off. Registers and LDS die with each kernel.</li>
+<li>MonoKernel: one resident grid, no grid barrier, point-to-point waits on tagged mailboxes, intermediates kept in LDS and L2, weights streamed from HBM once.</li>
+</ul>
+<p>The interactive version with a scrubber is in <a href="index.html#animation">section 04</a>.</p>
+</section>
+
+<section class="ch" id="q6">
+<div class="num">06</div><h2>What is a mailbox? How does it schedule the LDS reads and writes?</h2>
+<p>A mailbox is a named slice of a scratch buffer in global memory, one allocation made once per runtime. Each slot is 8 bytes: a value and a <b>tag</b>. The tag is this launch's epoch, <code>step × launches_per_step + layer + 1</code>.</p>
+<ul>
+<li><b>Writer:</b> one 8-byte store of <code>(value, tag)</code>. Readers can never see a new tag with an old value.</li>
+<li><b>Reader:</b> load the pair, compare the tag to its own epoch. Match → fresh. Else sleep briefly and reload. Bounded: after <code>POLL_LIMIT</code> retries it marks a fail-stop instead of hanging.</li>
+<li><b>No reset between layers or steps.</b> Old values carry old tags, so every layer can share one scratch buffer, and CUDA-graph replay needs no clearing kernel. Only the step counter in device memory changes between replays.</li>
+</ul>
+<p>How it sequences the LDS traffic inside a task:</p>
+<ol>
+<li>Each wave issues its weight loads (HBM → registers). Nothing touches LDS yet.</li>
+<li>Wave 0 polls the input mailbox; a barrier releases the other 7 waves when the tag matches.</li>
+<li>All 512 threads copy the input rows from the mailbox into LDS (<code>xs</code>). One global read, eight consumers.</li>
+<li>Each wave reads its 32-k slice of <code>xs</code> per MFMA, keeps its accumulator in registers.</li>
+<li>Each wave writes its partial into LDS (<code>red</code>); barrier; threads sum the 8 partials into LDS (<code>outs</code>).</li>
+<li>Threads write <code>outs</code> into the next mailbox as tagged pairs. The downstream CTAs, already spinning in step 2, wake up.</li>
+</ol>
+<p>Think of it as a pigeonhole wall: numbered boxes, each with a date stamp; you read a box only if the date is today. The names (<code>q_an</code>, <code>q_nope</code>, …) are labels painted on sections of the wall at compile time; at run time it's just addresses.</p>
+</section>
+
+<section class="ch" id="q7">
+<div class="num">07</div><h2>Sample cases</h2>
+<h3>7.1 How to write a GEMM-type stage</h3>
+<p>Every projection (<code>qkv_a</code>, <code>q_b</code>, <code>uk</code>, <code>uv</code>, <code>o</code>, <code>down</code>) follows this shape. Shown for <code>q_b</code>, 4096 weight rows → 256 tasks of 16 rows:</p>
+<pre>for t in range(start("q_b"), N_QB, G):          # G = 256; my tasks: t, t+256, …
+    def u_qb(c):                                # unit c of this wave
+        kc = (wave * QB_UNITS + c) * 2          # which 64-k chunk
+        return unit_fp8x2(w, scale, t, kc, …)   # issue 2 × 1 KB loads + scale
+    pre = [u_qb(c) for c in range(QB_UNITS)]    # loads in flight FIRST
+    hint_wait(mb("q_an"))                       # then wait for the input
+    stage_x_pairs(mb("q_an"))                   # mailbox rows → LDS xs
+    acc = run_units(u_qb, pre)                  # mfma_f32_16x16x32_bf16 × 4 per unit
+    reduce_rows(acc)                            # 8 waves' partials → LDS outs
+    emit_out(...)                               # RoPE on the pe rows
+    put_bf(mb("q_nope") or mb("q_pe"), tag)     # tagged pairs for the next stage</pre>
+<p>Per wave: 2 units × 4 MFMAs, each MFMA a 16 × 32 weight tile times a 32 × 16 input tile (only S columns real). K is split across waves, not rows, because 16 is the MFMA's minimum height.</p>
+
+<h3>7.2 How to write the indexer layer</h3>
+<p>The sparse indexer is three stages, and only the first is a plain GEMM:</p>
+<ul>
+<li><b><code>index_q</code></b>: the index-query projection. At TP4 it has no tasks of its own: its 256 tiles ride on the <code>q_b</code> CTAs, reusing the normalised tile already in LDS.</li>
+<li><b><code>index_score</code></b>, 1,920 tasks: score every past token. The B operand isn't a staged activation but the <b>fp8 index cache</b>, read per key through the block table. So it calls <code>rocdl.mfma</code> directly instead of <code>mma_units</code>, and writes one fp32 score per token per row into <code>mb("index_scores")</code> (the one mailbox that grows with context).</li>
+<li><b><code>index_select</code></b>, 2 tasks: pick the top-2048 per row. No GEMM. A 12-bit histogram of the scores in LDS with atomic adds, a prefix scan to find the digit holding the 2048th largest key, then a full radix pass only if that bucket overflows. The winners go to <code>mb("indices")</code> and back to vLLM's <code>paged_kv_indices</code>, so the following non-indexer layers reuse them.</li>
+</ul>
+<p>The <code>split</code> attention stage then gathers those 2048 keys per row from the KV cache and does QKᵀ and softmax·V in 32 key-splits, also with direct MFMA calls.</p>
+
+<h3>7.3 How to write the TP all-reduce</h3>
+<p>Two stages end in a cross-GPU sum: <code>o</code> and <code>down</code>. There is no RCCL call. At startup each rank allocates a <b>symmetric buffer</b>, exports it with <code>hipIpcGetMemHandle</code>, and swaps handles over <code>all_gather_object</code>, so every rank can write directly into every other rank's copy. Then, in <code>peer_reduce</code>:</p>
+<pre># 1. push: one wave per destination rank
+if wave < W:                                    # W = TP size
+    put_bf(peer[wave] + region, (rank*S + s)*HIDDEN + row, [v0, v1], CM_SYS)
+gpu.barrier()
+# 2. pull: poll my own slots, one per source rank, until all carry this tag
+parts = poll([(own + region, ((src*S + s)*HIDDEN + row)//2) for src in range(W)])
+# 3. sum in fixed rank order 0..W-1, add the residual, emit
+total = residual + parts[0] + parts[1] + … + parts[W-1]</pre>
+<p>One-shot push plus an ordered local reduction: a single round of communication, no separate sync kernel, and bit-identical results on every rank because the sum order is fixed. The stores use the <code>sc0 sc1</code> (system) cache scope so they're visible across GPUs. The peer buffer is 2 copies × W slots × (S × 6144 × 8 B) per region: 1.5 MB at TP4 with 2 rows.</p>
+</section>
+
+<footer>Companion to the <a href="index.html">full MonoKernel page</a>. Part of <a href="../index.html">GLM-5.2 home</a>.</footer>
+</main>
+<nav class="rail" aria-label="Sections"><ol>
+<li><a href="#q1">01 The issue</a></li><li><a href="#q2">02 Fuse + waves</a></li><li><a href="#q3">03 Why 12 tokens</a></li><li><a href="#q4">04 Waves design</a></li><li><a href="#q5">05 vs normal code</a></li><li><a href="#q6">06 Mailbox</a></li><li><a href="#q7">07 Sample cases</a></li>
+</ol></nav>
+</div>
+<script>
+(function(){const links=[...document.querySelectorAll('nav.rail a')];const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+const io=new IntersectionObserver(en=>{en.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('now',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});secs.forEach(s=>s&&io.observe(s));})();
+</script>
+<script data-root="../" data-here="intro">
+/* Shared side-panel navigation: burger button + slide-in panel. */
+(function(){
+  var sc=document.currentScript, root=(sc&&sc.dataset.root)||'./', here=(sc&&sc.dataset.here)||'';
+  var items=[
+    ['home','Home','GLM-5.2, explained slowly',root+'index.html'],
+    ['opt','GLM – optimization','Where every vLLM and AITER PR sits in the model',root+'optimization/index.html'],
+    ['pure','GLM – pure optimization','Only the performance PRs, no drafts, no fixes',root+'pure-optimization/index.html'],
+    ['mono','MonoKernel','One launch per layer: the fused decode kernel',root+'monokernel/index.html'],
+    ['intro','MonoKernel – intro','The short version: seven questions',root+'monokernel/intro.html'],
+    ['pr','PR review','The original review-prep page (pr-review)',root+'pr-review/index.html']
+  ];
+  var btn=document.createElement('button'); btn.className='gnav-btn'; btn.setAttribute('aria-label','Open menu'); btn.setAttribute('aria-expanded','false');
+  btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  var ov=document.createElement('div'); ov.className='gnav-overlay';
+  var panel=document.createElement('nav'); panel.className='gnav-panel'; panel.setAttribute('aria-label','Site menu');
+  var html='<div class="gnav-head"><b>GLM-5.2 home</b><button class="gnav-close" aria-label="Close menu">×</button></div><ul class="gnav-list">';
+  items.forEach(function(it){ html+='<li><a href="'+it[3]+'"'+(it[0]===here?' class="now" aria-current="page"':'')+'>'+it[1]+'<small>'+it[2]+'</small></a></li>'; });
+  html+='</ul><div class="gnav-foot">Original host: <a href="https://skkkumar.github.io/pr-review/" target="_blank" rel="noopener">skkkumar.github.io/pr-review</a></div>';
+  panel.innerHTML=html;
+  document.body.appendChild(btn); document.body.appendChild(ov); document.body.appendChild(panel);
+  function open(){ document.documentElement.classList.add('gnav-open'); btn.setAttribute('aria-expanded','true'); panel.querySelector('a').focus(); }
+  function close(){ document.documentElement.classList.remove('gnav-open'); btn.setAttribute('aria-expanded','false'); btn.focus(); }
+  btn.addEventListener('click',function(){ document.documentElement.classList.contains('gnav-open')?close():open(); });
+  ov.addEventListener('click',close); panel.querySelector('.gnav-close').addEventListener('click',close);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.documentElement.classList.contains('gnav-open'))close(); });
+})();
+</script>
+</body>
+</html>
