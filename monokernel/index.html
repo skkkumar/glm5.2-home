@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GLM-5.2 home — explained slowly, a guided film</title>
+<title>GLM-5 MonoKernel — one launch per layer, explained slowly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 /* Shared side-panel navigation for the GLM-5.2 site */
 .gnav-btn{position:fixed;top:14px;left:14px;z-index:1000;width:42px;height:42px;border-radius:10px;border:2px solid #1F2A37;background:#F7F9FB;color:#1F2A37;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
@@ -26,929 +28,712 @@
 .gnav-foot{margin-top:auto;padding:12px 16px 16px;font-size:.78em;color:#46525F;border-top:2px solid #C6D0DA}
 .gnav-foot a{color:#4A6FA5}
 
-</style>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<style>
 :root{
   --paper:#E9EEF2; --sheet:#F7F9FB; --ink:#1F2A37; --ink2:#46525F; --muted:#7D8A98;
   --line:#C6D0DA; --hl:#F2B632; --hl-soft:#FBE6B3; --hl-ink:#5C3D00;
   --done:#1E8C7A; --done-soft:#D3EEE7; --att:#4A6FA5; --att-soft:#D7E3F1; --idle:#FFFFFF;
+  --attn:#534AB7; --attn-bg:#EEEDFE; --idx:#BA7517; --idx-bg:#FAEEDA; --mla:#0F6E56; --mla-bg:#E1F5EE; --moe:#D85A30; --moe-bg:#FAECE7; --red:#8A94A0; --red-bg:#E3E7EB; --hbm:#B23A3A; --hbm-bg:#F6DADA;
   --fs:20px; --lh:1.75;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;font-size:var(--fs);line-height:var(--lh);letter-spacing:.012em;word-spacing:.06em}
 body.big{--fs:24px;--lh:1.9}
-body.huge{--fs:28px;--lh:2}
 a{color:var(--att)}
 button{font:inherit;font-size:.85em;padding:.5em 1em;border-radius:10px;border:2px solid var(--ink);background:var(--sheet);color:var(--ink);cursor:pointer}
 button:hover{background:#fff}
-button:focus-visible,a:focus-visible{outline:3px solid var(--hl);outline-offset:3px}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--hl);outline-offset:3px}
 button.primary{background:var(--ink);color:#fff}
 button.primary:hover{background:#0F1720}
 button.small{font-size:.72em;padding:.35em .8em;border-width:1.5px}
+button[aria-pressed="true"]{background:var(--hl-soft);border-color:var(--hl-ink);color:var(--hl-ink)}
 .bar{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:2px solid var(--line);padding:.6rem 1rem .6rem 4.2rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
 .bar .grow{flex:1}
 .bar .stat{font-size:.8em;color:var(--ink2)}
-.wrap{display:grid;grid-template-columns:210px minmax(0,1fr) auto;gap:1.6rem;max-width:1680px;margin:0 auto;padding:0 1rem 6rem}
-aside.model{position:sticky;top:76px;align-self:start;padding-top:1rem;font-size:.78em}
-aside.model .mlabel{color:var(--muted);letter-spacing:.05em;text-transform:uppercase;font-size:.85em}
-aside.model .mchap{font-weight:700;margin:.2em 0 .6em;min-height:1.4em;color:var(--hl-ink)}
-aside.model svg{height:calc(100vh - 168px);width:auto;max-width:42vw;display:block}
-aside.model .box.on{fill:var(--hl);stroke:var(--hl-ink)}
-aside.model .box.col.on{fill:var(--hl-soft)}
-aside.model g[data-ch]{cursor:pointer}
-aside.model .mhint{color:var(--muted);margin-top:.5em}
-nav.rail{position:sticky;top:64px;align-self:start;font-size:.78em;padding-top:1.5rem}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1.6rem;max-width:1180px;margin:0 auto;padding:0 1rem 6rem}
+nav.rail{position:sticky;top:64px;align-self:start;font-size:.74em;padding-top:1.5rem;width:230px}
 nav.rail ol{list-style:none;margin:0;padding:0}
 nav.rail li{margin:.15em 0}
 nav.rail a{display:block;padding:.35em .6em;border-radius:8px;color:var(--ink2);text-decoration:none;border-left:4px solid transparent}
 nav.rail a.now{background:var(--hl-soft);color:var(--hl-ink);border-left-color:var(--hl)}
-nav.rail a.done{border-left-color:var(--done)}
-main{max-width:700px}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}nav.rail{display:none}.bar .stat{display:none}}
+main{max-width:760px;min-width:0}
 header.hero{padding:3rem 0 1rem}
-header.hero h1{font-size:2.3em;line-height:1.15;margin:0 0 .4em;font-weight:700}
-header.hero p.lead{font-size:1.1em;color:var(--ink2);max-width:32ch;margin:0 0 1.2rem}
-.hero-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem}
-.notice{font-size:.8em;color:var(--ink2);background:var(--sheet);border-left:6px solid var(--hl);padding:.6em 1em;border-radius:0 10px 10px 0}
+header.hero h1{font-size:2.2em;line-height:1.15;margin:0 0 .4em;font-weight:700}
+header.hero p.lead{font-size:1.1em;color:var(--ink2);max-width:34ch;margin:0 0 1.2rem}
+.notice{font-size:.8em;color:var(--ink2);background:var(--sheet);border-left:6px solid var(--hl);padding:.6em 1em;border-radius:0 10px 10px 0;margin:1rem 0}
 section.ch{padding:3rem 0 1rem;border-top:2px solid var(--line);scroll-margin-top:70px}
 section.ch h2{font-size:1.55em;line-height:1.2;margin:0 0 .2em}
+section.ch h3{font-size:1.1em;margin:1.6em 0 .4em}
 section.ch .num{font-size:.7em;color:var(--muted);letter-spacing:.05em}
-.controls{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0 1.2rem}
 p{margin:0 0 1em;max-width:62ch}
-.say .s{border-radius:4px;padding:0 .1em}
-.say .s.on{background:var(--hl-soft);box-shadow:0 0 0 3px var(--hl-soft)}
-.say .s.did{color:var(--ink2)}
-.stage{background:var(--sheet);border:2px solid var(--line);border-radius:14px;padding:.8rem;margin:1.2rem 0 1.6rem;scroll-margin-top:84px}
+ul,ol{max-width:62ch}
+li{margin:.3em 0}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:var(--sheet);padding:.05em .3em;border-radius:5px}
+pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78em;line-height:1.5;background:var(--sheet);border:2px solid var(--line);border-radius:12px;padding:.9em 1em;overflow-x:auto;max-width:100%}
+.stage{background:var(--sheet);border:2px solid var(--line);border-radius:14px;padding:.9rem;margin:1.2rem 0 1.6rem;scroll-margin-top:84px}
 .stage svg{width:100%;height:auto;display:block}
 .stage .cap{font-size:.75em;color:var(--ink2);margin:.6rem .2rem 0}
 .numcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin:1rem 0 1.5rem}
-.numcards div{background:var(--sheet);border:2px solid var(--line);border-radius:12px;padding:.8rem}
-.numcards b{display:block;font-size:1.4em;line-height:1.2}
-.numcards span{font-size:.72em;color:var(--ink2)}
-table{border-collapse:collapse;font-size:.82em;width:100%;margin:1rem 0 1.5rem}
-th,td{text-align:left;padding:.5em .6em;border-bottom:1.5px solid var(--line);vertical-align:top}
-th{color:var(--ink2);font-weight:700}
-.qa{background:var(--sheet);border:2px solid var(--line);border-radius:12px;padding:1rem 1.2rem;margin:0 0 1rem}
-.qa b{display:block;margin-bottom:.3em}
-.qa p{font-size:.9em;margin:0}
-svg text{font-family:inherit;font-size:14px;fill:var(--ink)}
-svg text.small{font-size:12px;fill:var(--ink2)}
-svg text.bold{font-weight:700}
-svg .box{fill:var(--idle);stroke:var(--line);stroke-width:1.5}
-svg .box.on{fill:var(--hl);stroke:var(--hl-ink)}
-svg .box.col.on{fill:var(--hl-soft)}
-svg .box.done{fill:var(--done-soft);stroke:var(--done)}
-svg .box.att{fill:var(--att-soft);stroke:var(--att)}
-svg .arr{stroke:var(--ink2);stroke-width:1.5;fill:none}
-svg .wire{stroke:var(--done);stroke-width:2;fill:none;stroke-dasharray:6 5}
-svg .wlit{stroke:var(--hl-ink)!important;stroke-width:3.5!important}
-svg .slot{fill:var(--sheet);stroke:var(--line);stroke-width:1.5}
-svg .slot.main{fill:var(--att-soft);stroke:var(--att)}
-svg .slot.draft{fill:#fff;stroke:var(--muted);stroke-dasharray:4 3}
-svg .slot.ok{fill:var(--done-soft);stroke:var(--done)}
-svg .slot.fix{fill:var(--hl-soft);stroke:var(--hl-ink)}
-@media (max-width:1180px){
-  .wrap{grid-template-columns:230px minmax(0,1fr);max-width:1080px;gap:2rem}
-  aside.model{display:none}
-}
-@media (max-width:820px){
-  .wrap{grid-template-columns:1fr;gap:0}
-  nav.rail{position:static;padding:1rem 0 0}
-  nav.rail ol{display:flex;flex-wrap:wrap;gap:.3em}
-  nav.rail a{border-left:none;border-bottom:4px solid transparent;padding:.3em .5em}
-  nav.rail a.now{border-bottom-color:var(--hl)}
-  header.hero h1{font-size:1.8em}
-}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-
-/* ---- built-for highlights ---- */
-.builtfor{margin:1.2rem 0 2.4rem;scroll-margin-top:80px}
-.builtfor .why{font-size:1.05em;background:var(--hl-soft);border-left:6px solid var(--hl);padding:.8em 1.1em;border-radius:0 12px 12px 0;max-width:62ch}
-.hl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.8rem;margin:1.1rem 0 .8rem}
-.hl{background:var(--sheet);border:2px solid var(--line);border-radius:14px;padding:.85rem 1rem}
-.hl .t{font-weight:700;margin:0 0 .3em;display:flex;align-items:baseline;gap:.45em;flex-wrap:wrap}
-.hl .big{font-size:1.5em;color:var(--hl-ink)}
-.hl p{margin:.2em 0 0;font-size:.86em;color:var(--ink2);line-height:1.55}
-.hl.star{border-color:var(--hl-ink);box-shadow:0 0 0 4px var(--hl-soft)}
-.hl.star .tag{font-size:.68em;background:var(--hl);color:var(--ink);border-radius:999px;padding:.15em .7em;font-weight:700;letter-spacing:.04em}
-.builtfor .fine{font-size:.78em;color:var(--muted);margin:.4rem 0 0}
+.numcard{background:var(--sheet);border:2px solid var(--line);border-radius:12px;padding:.7em .9em}
+.numcard b{display:block;font-size:1.5em;line-height:1.1}
+.numcard span{font-size:.75em;color:var(--ink2)}
+table{border-collapse:collapse;width:100%;font-size:.78em;margin:1rem 0 1.5rem;background:var(--sheet);border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.tbl{overflow-x:auto;margin:1rem 0 1.5rem}
+.tbl table{margin:0}
+th,td{text-align:left;padding:.55em .7em;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--att-soft);color:var(--ink);font-weight:700}
+tr:last-child td{border-bottom:0}
+td code{white-space:nowrap}
+.key{display:inline-block;padding:.05em .5em;border-radius:6px;font-size:.85em;border:1.5px solid}
+.k-a{background:var(--attn-bg);border-color:var(--attn);color:#3C3489}
+.k-i{background:var(--idx-bg);border-color:var(--idx);color:#633806}
+.k-m{background:var(--mla-bg);border-color:var(--mla);color:#085041}
+.k-e{background:var(--moe-bg);border-color:var(--moe);color:#712B13}
+.legend{display:flex;flex-wrap:wrap;gap:.5em 1.2em;font-size:.75em;color:var(--ink2);margin:.6em 0}
+.legend span{display:inline-flex;align-items:center;gap:.4em}
+.sw{width:14px;height:14px;border-radius:3px;border:1.5px solid;display:inline-block}
+/* widgets */
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem .9rem;margin:.4rem 0 .8rem}
+.scrub{display:flex;align-items:center;gap:.6rem;flex:1 1 220px;min-width:200px}
+input[type=range]{flex:1;accent-color:var(--ink)}
+.tv{min-width:4.2em;text-align:right;font-weight:700;font-size:.85em;font-family:ui-monospace,Menlo,monospace}
+.grid16{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px}
+.cell{aspect-ratio:1;border-radius:4px;border:1.5px solid var(--line);background:transparent;padding:0;min-height:0;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--ink2)}
+.cell[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:-3px}
+.two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:1rem}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.panel{background:#fff;border:2px solid var(--line);border-radius:12px;padding:.8rem}
+.panel h4{margin:0 0 .5rem;font-size:.8em;color:var(--ink2);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;margin-top:.8rem}
+.stat2{border-top:3px solid var(--line);padding-top:.3em}
+.stat2 b{font-size:1.4em;line-height:1.1;display:block}
+.stat2 span{font-size:.7em;color:var(--ink2)}
+.now{min-height:1.5em;font-size:.85em;color:var(--ink2);margin:.2em 0 .6em}
+.now b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:.4em;margin-bottom:.6em}
+.chips button{font-size:.72em;padding:.3em .7em;border-width:1.5px;font-family:ui-monospace,Menlo,monospace}
+.walk{display:flex;flex-wrap:wrap;gap:.35em;align-items:center;font-size:.75em}
+.tk{display:inline-flex;align-items:center;height:1.9em;padding:0 .6em;border-radius:6px;border:1.5px solid;font-family:ui-monospace,Menlo,monospace}
+.gwrap{overflow-x:auto}
+.seg{display:flex;gap:.4em;flex-wrap:wrap}
+.seg button{font-size:.75em;padding:.3em .7em}
+.lbl{font-size:.8em;color:var(--ink2);min-width:4.2em}
+.rowctl{display:flex;align-items:center;gap:.6em;margin:.3em 0}
+.mrow{display:grid;grid-template-columns:12px minmax(0,1fr) 70px;gap:.6em;align-items:center;padding:.3em 0;border-bottom:1px solid var(--line);font-size:.78em}
+.mrow .nm{font-family:ui-monospace,Menlo,monospace}
+.mrow .fl{font-size:.85em;color:var(--ink2)}
+.mrow .sz{text-align:right}
+.ph{font-size:.85em;font-weight:700;margin:.9em 0 .3em}
+.barscale{display:flex;height:26px;border-radius:8px;overflow:hidden;border:1.5px solid var(--line)}
+footer{font-size:.75em;color:var(--ink2);padding:2rem 0;border-top:2px solid var(--line);margin-top:2rem}
 </style>
 </head>
 <body>
 <div class="bar">
-  <button class="primary" id="playAll">Play the whole film</button>
-  <button id="pauseBtn">Pause</button>
-  <button id="stopBtn">Stop</button>
-  <span class="grow"></span>
-  <label class="stat" for="voiceSel">Voice</label><select id="voiceSel" class="stat" style="font:inherit;font-size:.8em;max-width:220px;border-radius:8px;border:1.5px solid var(--ink);background:var(--sheet);color:var(--ink);padding:.3em .4em"><option value="">loading…</option></select><button class="small" id="voiceTest">Test</button>
-  <button class="small" id="sizeBtn">Text size</button>
-  <button class="small" id="speedBtn">Speed: normal</button>
+  <div class="grow"><b>MonoKernel</b> <span class="stat">· GLM-5 fused decode layer on MI355X · vLLM #60831</span></div>
+  <button class="small" onclick="document.body.classList.toggle('big')">Bigger text</button>
 </div>
 <div class="wrap">
-<nav class="rail" aria-label="Chapters"><ol id="toc"></ol></nav>
 <main>
-<header class="hero" id="top">
-  <h1>GLM-5.2, explained slowly</h1>
-  <p class="lead">A guided film of how the model works. Pictures, a voice, and one idea at a time.</p>
-  <div class="hero-actions">
-    <button class="primary" onclick="playFilm()">Play the whole film</button>
-    <a href="#ch1"><button>Read at my own pace</button></a>
+<header class="hero">
+  <h1>One launch per layer: the GLM-5 MonoKernel, explained slowly</h1>
+  <p class="lead">How a decode layer that used to be nineteen kernels became one, and why that matters when you only have a few tokens.</p>
+  <div class="notice">The kernel and its integration live in-tree in <a href="https://github.com/vllm-project/vllm/pull/60831">vllm #60831</a>: kernel source under <code>vllm/models/deepseek_v32/amd/ops/mono/</code>, the vLLM hook under <code>amd/mono/{spec,weights,kernel}.py</code>, enabled with <code>VLLM_ROCM_MONO_DECODE=1</code>. The earlier split version (<a href="https://github.com/vllm-project/vllm/pull/60216">vllm #60216</a> calling <a href="https://github.com/ROCm/aiter/pull/6173">aiter #6173</a>) is closed. Everything below is read from the #60831 diff; numbers are for TP4 on an MI355X unless stated.</div>
+  <div class="numcards">
+    <div class="numcard"><b>19 → 1</b><span>kernels per layer at decode</span></div>
+    <div class="numcard"><b>256</b><span>CTAs, one per CU, all resident</span></div>
+    <div class="numcard"><b>0</b><span>HBM round trips between stages</span></div>
+    <div class="numcard"><b>1–8</b><span>tokens per step it runs for</span></div>
   </div>
-  <p class="notice">Each chapter has a Listen button (the browser reads the text aloud and highlights each sentence) and a Show button (plays the animation). The film mode does both, chapter after chapter. Works in Chrome, Edge and Safari, on Mac and Windows; pick a voice you like from the Voice menu at the top and press Test.</p>
 </header>
 
-<section class="builtfor" id="ch0">
-  <div class="num">Before we start</div>
-  <h2>What GLM-5.2 was built for</h2>
-  <p class="why"><b>One sentence:</b> GLM-5.2 is Z.ai's open-weights flagship (MIT license, June 2026), built for <b>long-horizon coding and agentic work</b> — and its whole design answers one question: <b>how do you make a 1-million-token context affordable?</b></p>
-  <div class="hl-grid">
-    <div class="hl"><div class="t"><span class="big">753B → ~40B</span></div><p><b>Mixture of Experts.</b> You download 753B parameters (1.51&nbsp;TB in BF16), but each token runs only ~40B: 8 of 256 experts plus 1 shared, across 78 layers (first 3 dense). A huge library of specialists; each word consults a small committee. <i>Chapter 5.</i></p></div>
-    <div class="hl"><div class="t"><span class="big">top 2,048</span></div><p><b>MLA + DSA attention.</b> MLA compresses the KV cache into a small latent; DSA means each query reads only the 2,048 most relevant earlier tokens instead of all million. <i>Chapters 6–7.</i></p></div>
-    <div class="hl star"><div class="t"><span class="big">2.9×</span><span class="tag">THE NEW IDEA</span></div><p><b>IndexShare.</b> The indexer that picks those 2,048 tokens used to run in every layer. GLM-5.2 runs it in 1 layer in 4 and shares the list — 75% of indexer compute gone, ~2.9× fewer per-token FLOPs at 1M context (Z.ai also reports a 1.82× prefill speedup for the cached variant). This is what makes the 1M window economically viable. <i>Chapter 8.</i></p></div>
-    <div class="hl"><div class="t"><span class="big">+20%</span></div><p><b>Faster generation (MTP).</b> A draft module guesses ~5 words ahead; the main model verifies them in one pass. KVShare and rejection sampling push the accepted length up 20% (4.56 → 5.47 tokens per round). <i>Chapter 10.</i></p></div>
-    <div class="hl"><div class="t"><span class="big">1M in / 131K out</span></div><p><b>Context.</b> 1,048,576 input tokens — about five times GLM-5.1's 200K, roughly an entire large codebase in one prompt — with up to 131,072 output tokens.</p></div>
-    <div class="hl"><div class="t"><span class="big">High / Max</span></div><p><b>Two thinking efforts, per request.</b> Max (the default) for deep multi-step work, High for faster routine generation; thinking can also be switched off entirely.</p></div>
-  </div>
-  <p class="fine">Where it lands: 62.1 on SWE-bench Pro and 81.0 on Terminal-Bench 2.1 — the strongest open-weights coding model at release, in the same conversation as the closed frontier models.</p>
-</section>
-
-<section class="ch" id="ch1" data-anim="ch1">
-  <div class="num">Chapter 1</div>
-  <h2>What GLM-5.2 is, and the one problem it solves</h2>
-  <div class="controls"><button onclick="listen('ch1')">Listen</button><button onclick="show('ch1')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>GLM-5.2 is a large language model made by Z.ai, a company in Beijing. It came out on June 13, 2026. It is open: anyone can download it and run it.</p>
-  <p>It is built for one job above all: working on code for a very long time without losing track. Its headline feature is a context window of one million tokens. A token is a piece of a word. One million tokens is about ten long novels, or a whole software project, read in one go.</p>
-  <p>The previous version, GLM-5.1, could hold about 200 thousand tokens. So this is five times more.</p>
-  <p>Holding that much text is expensive. Most of the design of GLM-5.2 is about making it affordable. Keep that sentence in your head. Everything else in this film is an answer to it.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 150" role="img" aria-label="Bar comparison of context window: GLM-5.1 200 thousand versus GLM-5.2 one million">
-      <text x="20" y="40">GLM-5.1</text><rect x="110" y="24" width="0" height="26" rx="6" fill="var(--att)" id="c1b1"/><text x="120" y="42" id="c1t1" class="small"></text>
-      <text x="20" y="100">GLM-5.2</text><rect x="110" y="84" width="0" height="26" rx="6" fill="var(--hl)" id="c1b2"/><text x="120" y="102" id="c1t2" class="small"></text>
-      <text x="110" y="136" class="small">context window, in tokens</text>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch2" data-anim="ch2">
-  <div class="num">Chapter 2</div>
-  <h2>The problem: reading is expensive</h2>
-  <div class="controls"><button onclick="listen('ch2')">Listen</button><button onclick="show('ch2')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>To understand a word, a model compares it with every other word it has read. This is called attention.</p>
-  <p>With five words, that is a small web. With twelve, the web is thick. The number of comparisons grows with the square of the number of words. Double the words, four times the work.</p>
-  <p>At one million words, that is one trillion comparisons, on every floor of the model. Nobody can pay for that.</p>
-  <p>So GLM-5.2 uses four shortcuts. One for the size of the brain. One for memory. One for attention. And one brand new shortcut that only GLM-5.2 has.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 260" role="img" aria-label="Words in a circle with lines between every pair; the web thickens as words are added">
-      <g id="c2lines"></g><g id="c2dots"></g>
-      <text x="20" y="30" class="bold" id="c2n">5 words</text>
-      <text x="20" y="54" class="small" id="c2c">25 comparisons</text>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch3" data-anim="ch3">
-  <div class="num">Chapter 3</div>
-  <h2>The whole flow, from the outside</h2>
-  <div class="controls"><button onclick="listen('ch3')">Listen</button><button onclick="show('ch3')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>Here is the whole machine at once. Text enters at the bottom. First, each token becomes a list of 6,144 numbers. Think of it as the word's identity card.</p>
-  <p>Then the card climbs a tower of 78 floors. On every floor, the card is edited a little: it picks up context, it gets sharper.</p>
-  <p>Floors one to three are plain floors, where everything works together. Floors four to seventy-eight are expert floors, where the card visits only a few specialists.</p>
-  <p>At the top, the finished card is turned into a score for every word in the dictionary. The highest score is the next word. And bolted to the exit is a small helper that guesses a few words ahead.</p>
-  <p>We will visit each of these parts.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 470" role="img" aria-label="A token climbs from the input, through the embedding, three dense floors, seventy-five expert floors, to the output head with an MTP helper on the side">
-      <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-      <g id="c3b0"><rect class="box" x="200" y="410" width="280" height="44" rx="8"/><text x="340" y="437" text-anchor="middle">Your text (up to 1M tokens)</text></g>
-      <g id="c3b1"><rect class="box" x="200" y="340" width="280" height="44" rx="8"/><text x="340" y="367" text-anchor="middle">Embedding: word → 6,144 numbers</text></g>
-      <g id="c3b2"><rect class="box" x="200" y="270" width="280" height="44" rx="8"/><text x="340" y="297" text-anchor="middle">Floors 1–3: plain (dense)</text></g>
-      <g id="c3b3"><rect class="box" x="200" y="140" width="280" height="104" rx="8"/><text x="340" y="182" text-anchor="middle">Floors 4–78: expert floors</text><text x="340" y="206" text-anchor="middle" class="small">attention room + expert room, ×75</text></g>
-      <g id="c3b4"><rect class="box" x="200" y="70" width="280" height="44" rx="8"/><text x="340" y="97" text-anchor="middle">Output head: pick the next word</text></g>
-      <g id="c3b5"><rect class="box" x="510" y="64" width="150" height="56" rx="8"/><text x="585" y="88" text-anchor="middle">MTP helper</text><text x="585" y="108" text-anchor="middle" class="small">guesses ~5 ahead</text></g>
-      <line class="arr" x1="480" y1="92" x2="504" y2="92" marker-end="url(#ah)"/>
-      <text x="340" y="40" text-anchor="middle" class="small">the next word comes out here</text>
-      <circle id="c3tok" cx="216" cy="432" r="9" fill="var(--hl)" stroke="var(--hl-ink)" stroke-width="1.5"/>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch4" data-anim="ch4">
-  <div class="num">Chapter 4</div>
-  <h2>One floor has two rooms</h2>
-  <div class="controls"><button onclick="listen('ch4')">Listen</button><button onclick="show('ch4')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>Every floor has two rooms, always in the same order.</p>
-  <p>The first room is attention. Here the word looks around and asks: who else in this text matters to me?</p>
-  <p>The second room is the experts. Here the word asks: now that I know my context, what do I mean?</p>
-  <p>Gather, then think. Every floor, 78 times in a row.</p>
-  <p>Three of the four shortcuts live in the attention room. The fourth lives in the expert room. Let's start with the expert room, because it is the easiest to picture.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 300" role="img" aria-label="A token enters the attention room, then the expert room, then leaves the floor">
-      <g id="c4r1"><rect class="box" x="60" y="60" width="250" height="180" rx="14"/><text x="185" y="100" text-anchor="middle" class="bold">Attention room</text><text x="185" y="130" text-anchor="middle" class="small">who matters to me?</text><text x="185" y="160" text-anchor="middle" class="small">MLA · DSA · IndexShare</text></g>
-      <g id="c4r2"><rect class="box" x="370" y="60" width="250" height="180" rx="14"/><text x="495" y="100" text-anchor="middle" class="bold">Expert room</text><text x="495" y="130" text-anchor="middle" class="small">what do I mean?</text><text x="495" y="160" text-anchor="middle" class="small">router · 8 of 256 · shared</text></g>
-      <line class="arr" x1="310" y1="210" x2="364" y2="210" marker-end="url(#ah)"/>
-      <text x="20" y="280" class="small" id="c4msg">Press Show to send a word through the floor.</text>
-      <circle id="c4tok" cx="20" cy="210" r="9" fill="var(--hl)" stroke="var(--hl-ink)" stroke-width="1.5"/>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch5" data-anim="ch5">
-  <div class="num">Chapter 5</div>
-  <h2>Shortcut 1 — a hospital of experts (Mixture of Experts)</h2>
-  <div class="controls"><button onclick="listen('ch5')">Listen</button><button onclick="show('ch5')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>Imagine a hospital with 256 doctors. You do not see all of them. A receptionist reads your file and sends you to eight. There is also one family doctor who sees everyone.</p>
-  <p>In GLM-5.2, the receptionist is called the router. The doctors are called experts. The family doctor is the shared expert.</p>
-  <p>This is why the model can be huge and cheap at the same time. It has 753 billion parameters in total. That is the whole hospital. But each token only uses about 40 billion. That is the eight doctors it visits.</p>
-  <p>The router also gives each chosen expert a weight, so their answers are blended, not just added.</p>
-  <p>On floors one to three there is no router. Those floors use one big shared network, because early on the card is too raw to route well.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 300" role="img" aria-label="Grid of 256 experts; each new word lights up eight of them; one shared expert is always on">
-      <g id="c5grid"></g>
-      <rect class="box done" x="290" y="250" width="100" height="32" rx="8"/><text x="340" y="271" text-anchor="middle" class="small">shared expert</text>
-      <text x="20" y="30" class="bold" id="c5w">word: def</text>
-      <text x="20" y="288" class="small" id="c5msg">8 lit = the experts this word visits</text>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch6" data-anim="ch6">
-  <div class="num">Chapter 6</div>
-  <h2>Shortcut 2 — a smaller notebook (MLA)</h2>
-  <div class="controls"><button onclick="listen('ch6')">Listen</button><button onclick="show('ch6')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>Now the attention room. When a word arrives, the model writes two things about it into a notebook: a key, which says what this word is about, and a value, which says what it carries. Later words read this notebook.</p>
-  <p>Normally each entry is big, and at one million words the notebook is enormous. Just moving it around the chip becomes the slowest part.</p>
-  <p>Multi-head latent attention, or MLA, fixes this. It squeezes the key and value together into one small note, called a latent. Only the small note is stored. When a later word needs it, the note is expanded back on the spot.</p>
-  <p>Same memory of the story, much less paper. This idea comes from DeepSeek, and GLM-5.2 inherits it.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 260" role="img" aria-label="A big key and value pair shrinks into one small note that slides into a notebook; on read it expands again">
-      <text x="20" y="30" class="bold">arriving word</text>
-      <g id="c6big"><rect class="box att" x="20" y="50" width="70" height="120" rx="8"/><text x="55" y="115" text-anchor="middle" class="small">key</text><rect class="box att" x="100" y="50" width="70" height="120" rx="8"/><text x="135" y="115" text-anchor="middle" class="small">value</text></g>
-      <line class="arr" x1="185" y1="110" x2="235" y2="110" marker-end="url(#ah)"/>
-      <text x="210" y="95" text-anchor="middle" class="small">squeeze</text>
-      <g id="c6note"><rect class="box" x="245" y="90" width="60" height="40" rx="6"/><text x="275" y="115" text-anchor="middle" class="small">note</text></g>
-      <text x="480" y="30" class="bold">the notebook</text>
-      <g id="c6book"></g>
-      <text x="20" y="240" class="small" id="c6msg">Press Show to watch four words get squeezed and stored.</text>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch7" data-anim="ch7">
-  <div class="num">Chapter 7</div>
-  <h2>Shortcut 3 — the highlighter (DeepSeek Sparse Attention)</h2>
-  <div class="controls"><button onclick="listen('ch7')">Listen</button><button onclick="show('ch7')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>Even with small notes, reading all of them is the trillion-comparison problem from chapter two.</p>
-  <p>DeepSeek Sparse Attention, or DSA, splits the job in two. First, a tiny cheap helper called the indexer skims every note and gives it a score. It keeps only the top 2,048. Second, the real, expensive attention reads only those 2,048 notes.</p>
-  <p>Be precise here: the indexer still looks at every word, so it is still quadratic. But each of its looks is very cheap. The expensive part now touches 2,048 words instead of a million.</p>
-  <p>Watch it happen: the highlighter skims first, then attention reads only the bright notes.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 250" role="img" aria-label="A scanning bar passes over a row of notes, five light up, then attention lines connect the new word only to those five">
-      <g id="c7toks"></g>
-      <rect id="c7scan" x="36" y="150" width="12" height="44" rx="3" fill="var(--hl)" opacity="0"/>
-      <g id="c7att"></g>
-      <rect class="box att" x="290" y="30" width="100" height="36" rx="8"/><text x="340" y="53" text-anchor="middle">new word</text>
-      <text x="340" y="232" text-anchor="middle" class="small" id="c7msg">Row = the past words (24 drawn, 1M in real life).</text>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch8" data-anim="ch8">
-  <div class="num">Chapter 8</div>
-  <h2>Shortcut 4 — share the highlights (IndexShare, the new idea)</h2>
-  <div class="controls"><button onclick="listen('ch8')">Listen</button><button onclick="show('ch8')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>Here is the catch, and here is the new idea. Every one of the 78 floors had its own indexer. Each one skims a million notes. That skimming became the biggest cost.</p>
-  <p>Then Z.ai measured something. Neighbouring floors pick 70 to 100 percent of the same words. They keep rediscovering the same list.</p>
-  <p>So IndexShare deletes the indexer from three out of every four floors. The pattern is: skim, copy, copy, copy, repeated up the whole tower.</p>
-  <p>A copy floor receives the list through a wire from the floor below. Everything else it still computes itself: its own queries, its own weights, its own output. Only the list of positions is shared.</p>
-  <p>Z.ai trained the model with this pattern built in, using sequences of 128 thousand tokens, so the surviving indexers learned to serve their neighbours.</p>
-  <p>The result: 2.9 times less compute per token at one million context. Say it carefully in your talk: that is a compute saving, not a wall-clock speed-up. The notebook memory does not shrink by the same amount.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 400" role="img" aria-label="Eight stacked floors; floors 1 and 5 run their own indexer, the others copy the list through a wire">
-      <g id="c8layers"></g><g id="c8marks"></g>
-      <text x="20" y="390" class="small" id="c8msg">Press Show to step through eight floors.</text>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch9" data-anim="ch9">
-  <div class="num">Chapter 9</div>
-  <h2>The glue parts you will see on the real blueprint</h2>
-  <div class="controls"><button onclick="listen('ch9')">Listen</button><button onclick="show('ch9')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>On the real blueprint you will see a few small parts we have not named yet.</p>
-  <p>RMSNorm is a volume knob. Before each room, it rescales the card's numbers to a steady level, so nothing explodes or fades across 78 floors.</p>
-  <p>The residual connection is a safety wire. After each room, the original card is added back to the result. So a floor can only add to what came before; it can never erase it.</p>
-  <p>QK-Norm is a volume knob inside attention. It is applied to the queries and keys before they are compared, which keeps training stable.</p>
-  <p>RoPE tells attention where each word sits in the text. It rotates the numbers by an amount that depends on the position.</p>
-  <p>And SwiGLU is what each expert is made of: a small network with a gate that decides how much signal passes through. Glue, but important glue.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 230" role="img" aria-label="Left: uneven bars are rescaled to an even level by RMSNorm. Right: the original card is added back to the room's output through a residual wire">
-      <text x="20" y="30" class="bold">RMSNorm: the volume knob</text>
-      <g id="c9bars"></g>
-      <text x="400" y="30" class="bold">Residual: the safety wire</text>
-      <g id="c9res">
-        <rect class="box" x="400" y="60" width="90" height="40" rx="8"/><text x="445" y="85" text-anchor="middle" class="small">card in</text>
-        <rect class="box att" x="520" y="60" width="90" height="40" rx="8"/><text x="565" y="85" text-anchor="middle" class="small">room</text>
-        <line class="arr" x1="490" y1="80" x2="514" y2="80" marker-end="url(#ah)"/>
-        <path id="c9wire" d="M 445 100 L 445 160 L 552 160" class="arr" stroke-dasharray="5 4" marker-end="url(#ah)"/>
-        <line class="arr" x1="565" y1="100" x2="565" y2="146" marker-end="url(#ah)"/>
-        <circle id="c9plus" cx="565" cy="160" r="14" class="box"/><text x="565" y="165" text-anchor="middle" class="bold">+</text>
-        <text x="600" y="165" class="small" id="c9msg">= card out</text>
-      </g>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch10" data-anim="ch10">
-  <div class="num">Chapter 10</div>
-  <h2>Bonus shortcut — guess ahead (Multi-Token Prediction)</h2>
-  <div class="controls"><button onclick="listen('ch10')">Listen</button><button onclick="show('ch10')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>One last shortcut, at the exit. Normally a model writes one word per pass through the tower. Slow.</p>
-  <p>GLM-5.2 has a small sketcher, the multi-token prediction module, that drafts about five words ahead. The tower then checks the whole draft in one pass. Correct words are kept for free; wrong ones are thrown away. That is called speculative decoding with rejection sampling.</p>
-  <p>GLM-5.2 adds two reuse tricks here. KVShare: the sketcher reads the tower's own notebook instead of keeping a copy. And index reuse: the sketcher's first draft step runs the highlighter once, and the later draft steps copy that list.</p>
-  <p>Sound familiar? It is IndexShare again, at the exit door.</p>
-  <p>In Z.ai's tests, the average accepted draft grew from 4.56 to 5.47 words. That is a 20 percent gain.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 170" role="img" aria-label="Race between one word per turn and drafting five words then checking once">
-      <text x="20" y="30" class="small">Old way: one word per turn</text>
-      <g id="c10slow"></g>
-      <text x="20" y="110" class="small">GLM-5.2: draft 5, check once, keep the good ones</text>
-      <g id="c10fast"></g>
-      <text x="20" y="160" class="small" id="c10msg">Press Show to race.</text>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch11" data-anim="ch11">
-  <div class="num">Chapter 11</div>
-  <h2>All together: the real blueprint, part by part</h2>
-  <div class="controls"><button onclick="listen('ch11')">Listen</button><button onclick="show('ch11')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <p style="font-size:.85em;color:var(--ink2)">This is the same graph as hfviewer shows for amd/GLM-5.2-MXFP4 (architecture type glm_moe_dsa). Each sentence lights up the part it describes.</p>
-  <div class="say">
-  <p>Everything starts as word pieces, and the model knows exactly 154,880 of them: that is its whole dictionary. The embedding layer turns each piece into a list of 6,144 numbers, its identity card, and the card keeps this size through the entire model. RMSNorm, the volume knob, rescales the numbers to a steady level before the attention room. The kv latent projection is where MLA lives: it squeezes the word's key and value into one small note, and only the note is stored in the notebook. The indexer is the DSA highlighter: it skims every note and keeps the best 2,048, and thanks to IndexShare only one floor in four actually has this box, while the other three copy its list through a wire. Then real attention runs, reading only the 2,048 highlighted notes, with QK-Norm keeping the comparisons tame and RoPE telling it where each word sits. The plus sign is the residual connection, a safety wire that adds the original card back to whatever attention found. Volume knob number two, right before the thinking part. The router, our receptionist, reads the card, gives all 256 experts a score, and keeps the top 8. The eight chosen experts each run a small SwiGLU network while 248 stay idle, and remember that floors one to three skip the router and use one big dense network instead. The shared expert sees every word, always, so common knowledge lives there and the other experts can stay specialised. The second safety wire adds the original back again, and then the card climbs to the next floor, 78 times in total. After floor 78, one last volume knob, and then the language model head gives a score to all 154,880 dictionary words, and the highest score is the next word. The MTP module hangs off the exit: it drafts about five words ahead using the tower's own notebook, and the tower verifies the whole draft in one pass.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 990" role="img" aria-label="Top to bottom dataflow through embedding, 78 repeated layers with attention and expert blocks, final norm, language model head and MTP module">
-      <g id="c11n0"><rect class="box" x="220" y="20" width="240" height="44" rx="8"/><text x="340" y="38" text-anchor="middle" class="bold">Your words</text><text x="340" y="56" text-anchor="middle" class="small">154,880-piece dictionary</text></g>
-      <line class="arr" x1="340" y1="64" x2="340" y2="84" marker-end="url(#ah)"/>
-      <g id="c11n1"><rect class="box" x="220" y="88" width="240" height="48" rx="8"/><text x="340" y="107" text-anchor="middle" class="bold">embed_tokens</text><text x="340" y="126" text-anchor="middle" class="small">word → 6,144 numbers</text></g>
-      <line class="arr" x1="340" y1="136" x2="340" y2="160" marker-end="url(#ah)"/>
-      <rect x="60" y="164" width="560" height="632" rx="16" fill="none" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="7 5"/>
-      <text x="340" y="188" text-anchor="middle" class="bold">Transformer layer — repeats ×78</text>
-      <g id="c11n2"><rect class="box" x="220" y="204" width="240" height="44" rx="8"/><text x="340" y="222" text-anchor="middle" class="bold">RMSNorm</text><text x="340" y="240" text-anchor="middle" class="small">volume stabilizer</text></g>
-      <line class="arr" x1="340" y1="248" x2="340" y2="268" marker-end="url(#ah)"/>
-      <rect x="90" y="272" width="500" height="168" rx="12" fill="none" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="7 5"/>
-      <text x="340" y="298" text-anchor="middle" class="bold">MLA attention + DSA sparse attention</text>
-      <g id="c11n3"><rect class="box" x="104" y="330" width="146" height="88" rx="8"/><text x="177" y="356" text-anchor="middle" class="bold">kv latent proj</text><text x="177" y="378" text-anchor="middle" class="small">MLA: compress</text><text x="177" y="396" text-anchor="middle" class="small">the notes</text></g>
-      <g id="c11n4"><rect class="box" x="266" y="330" width="160" height="88" rx="8"/><text x="346" y="356" text-anchor="middle" class="bold">Indexer</text><text x="346" y="378" text-anchor="middle" class="small">picks top 2,048</text><text x="346" y="396" text-anchor="middle" class="small">exists 1 floor in 4</text></g>
-      <g id="c11n5"><rect class="box" x="442" y="330" width="134" height="88" rx="8"/><text x="509" y="356" text-anchor="middle" class="bold">Attention</text><text x="509" y="378" text-anchor="middle" class="small">QK-Norm, RoPE</text><text x="509" y="396" text-anchor="middle" class="small">reads 2,048 only</text></g>
-      <line class="arr" x1="340" y1="440" x2="340" y2="454" marker-end="url(#ah)"/>
-      <path d="M 340 258 L 74 258 L 74 472 L 322 472" class="arr" stroke-dasharray="5 4" marker-end="url(#ah)"/>
-      <g id="c11n6"><circle class="box" cx="340" cy="472" r="14"/><text x="340" y="477" text-anchor="middle" class="bold">+</text></g>
-      <line class="arr" x1="340" y1="486" x2="340" y2="496" marker-end="url(#ah)"/>
-      <g id="c11n7"><rect class="box" x="220" y="500" width="240" height="44" rx="8"/><text x="340" y="518" text-anchor="middle" class="bold">RMSNorm</text><text x="340" y="536" text-anchor="middle" class="small">volume stabilizer again</text></g>
-      <line class="arr" x1="340" y1="544" x2="340" y2="560" marker-end="url(#ah)"/>
-      <rect x="90" y="564" width="500" height="168" rx="12" fill="none" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="7 5"/>
-      <text x="340" y="590" text-anchor="middle" class="bold">Mixture of experts (SwiGLU MLPs)</text>
-      <g id="c11n8"><rect class="box" x="104" y="622" width="140" height="88" rx="8"/><text x="174" y="648" text-anchor="middle" class="bold">Router</text><text x="174" y="670" text-anchor="middle" class="small">scores 256,</text><text x="174" y="688" text-anchor="middle" class="small">keeps top 8</text></g>
-      <g id="c11n9"><rect class="box" x="260" y="622" width="180" height="88" rx="8"/><text x="350" y="648" text-anchor="middle" class="bold">8 of 256 experts</text><text x="350" y="670" text-anchor="middle" class="small">SwiGLU gated MLP</text><text x="350" y="688" text-anchor="middle" class="small">248 stay idle</text></g>
-      <g id="c11n10"><rect class="box" x="456" y="622" width="120" height="88" rx="8"/><text x="516" y="648" text-anchor="middle" class="bold">Shared</text><text x="516" y="670" text-anchor="middle" class="small">always on</text></g>
-      <line class="arr" x1="340" y1="732" x2="340" y2="746" marker-end="url(#ah)"/>
-      <path d="M 340 554 L 74 554 L 74 762 L 322 762" class="arr" stroke-dasharray="5 4" marker-end="url(#ah)"/>
-      <g id="c11n11"><circle class="box" cx="340" cy="762" r="14"/><text x="340" y="767" text-anchor="middle" class="bold">+</text></g>
-      <text x="340" y="790" text-anchor="middle" class="small">↻ loops back to the top of the layer, 78 times</text>
-      <line class="arr" x1="340" y1="796" x2="340" y2="816" marker-end="url(#ah)"/>
-      <g id="c11n12"><rect class="box" x="220" y="820" width="240" height="36" rx="8"/><text x="340" y="843" text-anchor="middle" class="bold">Final RMSNorm</text></g>
-      <line class="arr" x1="340" y1="856" x2="340" y2="872" marker-end="url(#ah)"/>
-      <g id="c11n13"><rect class="box" x="220" y="876" width="240" height="48" rx="8"/><text x="340" y="895" text-anchor="middle" class="bold">lm_head</text><text x="340" y="914" text-anchor="middle" class="small">scores all 154,880 words</text></g>
-      <g id="c11n14"><rect class="box" x="478" y="872" width="160" height="56" rx="8"/><text x="558" y="894" text-anchor="middle" class="bold">MTP module</text><text x="558" y="914" text-anchor="middle" class="small">drafts ~5 ahead</text></g>
-      <line class="arr" x1="460" y1="900" x2="472" y2="900" marker-end="url(#ah)"/>
-      <line class="arr" x1="340" y1="924" x2="340" y2="944" marker-end="url(#ah)"/>
-      <text x="340" y="964" text-anchor="middle" class="small">the next word comes out</text>
-    </svg>
-    <div class="cap">Open the live version at hfviewer.com/amd/GLM-5.2-MXFP4 and you will recognise every box.</div>
-  </div>
-</section>
-
-
-
-
-<section class="ch" id="chpd" data-anim="chpd">
-  <div class="num">Chapter 11b</div>
-  <h2>Prefill and decode: the same tower, used two ways</h2>
-  <div class="controls"><button onclick="listen('chpd')">Listen</button><button onclick="show('chpd')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <p style="font-size:.85em;color:var(--ink2)">The blueprint above is the same in both phases. What changes is how many tokens climb it at once. Left: prefill. Right: decode.</p>
-  <div class="say">
-  <p>Every pass through the tower is one of two kinds: prefill or decode. Prefill happens once, at the start: all the prompt tokens climb the 78 floors together, side by side, in one big batch. On the way up, every one of them writes its sticky-note into the notebook, so after prefill the whole prompt is in memory. Only the last token's card goes to the LM head, and that gives the first output token. Prefill is heavy on arithmetic: many tokens, all 78 floors, and the indexer scoring every token against every earlier one, and this is the wait before the first word appears, called time to first token. Decode is everything after that: one new token climbs the tower alone, reads the notebook, adds one new note, and the LM head gives the next token. Decode does very little arithmetic per step, but it must read the big notebook and the expert weights every single time, so it is limited by memory speed rather than compute, and this is the time per output token. That is why the two phases get different kernels: prefill kernels work on big blocks of tokens, while decode kernels work on one token per sequence and lean on the paged notebook. In the blueprint above nothing changes between the two: same floors, same rooms, and only the shape of the batch changes, many tokens in prefill, one token in decode. Keep this in mind for the next two chapters: pass 1 is prefill, everything after it is decode, and MTP is a trick that lives only in decode.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 440" role="img" aria-label="Left: prefill, six prompt tokens climb the tower together and fill the notebook. Right: decode, one token climbs alone, reads the notebook and adds one note.">
-      <text x="175" y="24" text-anchor="middle" class="bold">Prefill: the prompt goes in</text>
-      <text id="pdo1" x="175" y="44" text-anchor="middle" class="small"></text>
-      <g id="pdh1"><rect class="box" x="100" y="52" width="150" height="26" rx="6"/><text x="175" y="69" text-anchor="middle" class="small">LM head</text></g>
-      <line class="arr" x1="175" y1="90" x2="175" y2="82" marker-end="url(#ah)"/>
-      <g id="pdt1"><rect class="box col" x="100" y="90" width="150" height="200" rx="10"/><text x="175" y="118" text-anchor="middle" class="bold">78 floors</text><text x="175" y="136" text-anchor="middle" class="small">many tokens at once</text></g>
-      <line class="arr" x1="175" y1="302" x2="175" y2="294" marker-end="url(#ah)"/>
-      <g id="pde1"><rect class="box" x="100" y="302" width="150" height="26" rx="6"/><text x="175" y="319" text-anchor="middle" class="small">Embedding</text></g>
-      <g id="pdtok1"><rect class="slot main" x="103" y="350" width="22" height="22" rx="4"/><rect class="slot main" x="128" y="350" width="22" height="22" rx="4"/><rect class="slot main" x="153" y="350" width="22" height="22" rx="4"/><rect class="slot main" x="178" y="350" width="22" height="22" rx="4"/><rect class="slot main" x="203" y="350" width="22" height="22" rx="4"/><rect class="slot main" x="228" y="350" width="22" height="22" rx="4"/></g>
-      <text x="175" y="390" text-anchor="middle" class="small">the prompt: 6 tokens, together</text>
-      <text x="295" y="84" text-anchor="middle" class="small">notebook</text>
-      <g id="pdn1"></g>
-      <text id="pdb1" x="175" y="412" text-anchor="middle" class="small" opacity="0">heavy arithmetic · time to first token (TTFT)</text>
-      <text id="pdk1" x="175" y="430" text-anchor="middle" class="small" opacity="0">prefill kernels: big blocks of tokens</text>
-
-      <text x="505" y="24" text-anchor="middle" class="bold">Decode: one token at a time</text>
-      <text id="pdo2" x="505" y="44" text-anchor="middle" class="small"></text>
-      <g id="pdh2"><rect class="box" x="430" y="52" width="150" height="26" rx="6"/><text x="505" y="69" text-anchor="middle" class="small">LM head</text></g>
-      <line class="arr" x1="505" y1="90" x2="505" y2="82" marker-end="url(#ah)"/>
-      <g id="pdt2"><rect class="box col" x="430" y="90" width="150" height="200" rx="10"/><text x="505" y="118" text-anchor="middle" class="bold">78 floors</text><text x="505" y="136" text-anchor="middle" class="small">one token per sequence</text></g>
-      <line class="arr" x1="505" y1="302" x2="505" y2="294" marker-end="url(#ah)"/>
-      <g id="pde2"><rect class="box" x="430" y="302" width="150" height="26" rx="6"/><text x="505" y="319" text-anchor="middle" class="small">Embedding</text></g>
-      <g id="pdtok2"><rect class="slot ok" x="494" y="350" width="22" height="22" rx="4"/></g>
-      <text x="505" y="390" text-anchor="middle" class="small">the new token, alone</text>
-      <text x="625" y="84" text-anchor="middle" class="small">notebook</text>
-      <g id="pdarr2"></g>
-      <g id="pdn2"></g>
-      <text id="pdb2" x="505" y="412" text-anchor="middle" class="small" opacity="0">memory-bound · time per output token (TPOT)</text>
-      <text id="pdk2" x="505" y="430" text-anchor="middle" class="small" opacity="0">decode kernels: one token, paged notebook</text>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="chnm" data-anim="chnm">
-  <div class="num">Chapter 12</div>
-  <h2>Eight tokens without MTP: one word per pass</h2>
-  <div class="controls"><button onclick="listen('chnm')">Listen</button><button onclick="show('chnm')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <p style="font-size:.85em;color:var(--ink2)">Same drawing as the next chapter, but the MTP modules are switched off. Watch how many times the main model has to run.</p>
-  <div class="say">
-  <p>First, the same eight tokens the old way, with no MTP module at all. Pass 1 is the prefill: the whole prompt goes through all 78 floors together, and the LM head picks token 1: The. Pass 2 is the first decode step: The goes back in at the bottom, climbs all 78 floors alone, reads the notebook, and out comes cat. Pass 3, another decode step, all 78 floors again: sat. Pass 4: on. Pass 5: the. Pass 6: warm. Pass 7: mat. Pass 8: and, and we are done. Eight tokens: one prefill pass and seven decode passes, one word each time, and every pass has to wait for the one before it. Now compare with the next chapter: the same eight tokens in one prefill pass and two decode passes, plus eight cheap MTP draft steps.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="-30 0 710 640" role="img" aria-label="Main model alone generating eight tokens one per pass, with the MTP modules greyed out, and a strip of eight token slots filling one at a time">
-      <text id="nmo_m" x="120" y="22" text-anchor="middle" class="small"></text>
-      <g id="nmm_head"><rect class="box" x="30" y="34" width="180" height="30" rx="6"/><text x="120" y="54" text-anchor="middle" class="bold">LM head</text></g>
-      <g id="nmm_col"><rect class="box col" x="30" y="86" width="180" height="400" rx="12" fill="none" stroke-dasharray="6 5"/><text x="120" y="108" text-anchor="middle" class="bold">Main model</text><text x="120" y="124" text-anchor="middle" class="small">78 floors</text></g>
-      <line class="arr" x1="120" y1="136" x2="120" y2="68" marker-end="url(#ah)"/>
-      <g id="nmm_b1"><rect class="box" x="50" y="136" width="140" height="52" rx="6"/><text x="120" y="158" text-anchor="middle" class="bold">DSA block</text><text x="120" y="176" text-anchor="middle" class="small">without indexer</text></g>
-      <line class="arr" x1="120" y1="198" x2="120" y2="192" marker-end="url(#ah)"/>
-      <g id="nmm_b2"><rect class="box" x="50" y="198" width="140" height="52" rx="6"/><text x="120" y="220" text-anchor="middle" class="bold">DSA block</text><text x="120" y="238" text-anchor="middle" class="small">without indexer</text></g>
-      <line class="arr" x1="120" y1="260" x2="120" y2="254" marker-end="url(#ah)"/>
-      <g id="nmm_b3"><rect class="box" x="50" y="260" width="140" height="52" rx="6"/><text x="120" y="282" text-anchor="middle" class="bold">DSA block</text><text x="120" y="300" text-anchor="middle" class="small">without indexer</text></g>
-      <line class="arr" x1="120" y1="322" x2="120" y2="316" marker-end="url(#ah)"/>
-      <g id="nmm_b4"><rect class="box" x="50" y="322" width="140" height="52" rx="6"/><text x="120" y="344" text-anchor="middle" class="bold">DSA block</text><text x="120" y="362" text-anchor="middle" class="small">with indexer</text></g>
-      <path d="M 196 348 L 216 348 L 216 162 L 196 162" fill="none" stroke="var(--done)" stroke-width="2" marker-end="url(#ah)"/>
-      <text x="226" y="262" class="small" transform="rotate(-90 226 262)" text-anchor="middle">reuse top-k list</text>
-      <line class="arr" x1="120" y1="506" x2="120" y2="378" marker-end="url(#ah)"/>
-      <g id="nmm_emb"><rect class="box" x="30" y="506" width="180" height="30" rx="6"/><text x="120" y="526" text-anchor="middle" class="bold">Embedding</text></g>
-      <text id="nmi_m" x="120" y="556" text-anchor="middle" class="small">in: the prompt</text>
-      <path id="nmloop" class="arr" d="M 30 49 L -12 49 L -12 521 L 24 521" marker-end="url(#ah)"/>
-      <text x="-20" y="285" class="small" transform="rotate(-90 -20 285)" text-anchor="middle">the new token goes back in</text>
-
-      <g opacity="0.35">
-        <rect class="box" x="240" y="86" width="160" height="400" rx="12" fill="none" stroke-dasharray="6 5"/><text x="320" y="108" text-anchor="middle" class="bold">MTP module</text><text x="320" y="124" text-anchor="middle" class="small">not used</text>
-        <rect class="box" x="470" y="86" width="160" height="400" rx="12" fill="none" stroke-dasharray="6 5"/><text x="550" y="108" text-anchor="middle" class="bold">MTP module</text><text x="550" y="124" text-anchor="middle" class="small">not used</text>
-        <rect class="box" x="240" y="34" width="160" height="30" rx="6"/><text x="320" y="54" text-anchor="middle" class="bold">MTP head</text>
-        <rect class="box" x="470" y="34" width="160" height="30" rx="6"/><text x="550" y="54" text-anchor="middle" class="bold">MTP head</text>
-        <rect class="box" x="240" y="506" width="160" height="30" rx="6"/><text x="320" y="526" text-anchor="middle" class="bold">Embedding</text>
-        <rect class="box" x="470" y="506" width="160" height="30" rx="6"/><text x="550" y="526" text-anchor="middle" class="bold">Embedding</text>
-        <text x="435" y="300" text-anchor="middle" class="bold">switched off</text>
-      </g>
-
-      <text x="30" y="584" class="small">the eight tokens</text>
-      <text id="nmcount" x="662" y="584" text-anchor="end" class="small">main-model passes: 0</text>
-      <text id="nmphase" x="340" y="584" text-anchor="middle" class="bold"></text>
-      <g id="nmstrip"></g>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch12" data-anim="ch12">
-  <div class="num">Chapter 13</div>
-  <h2>Eight tokens, start to finish: the main model and the MTP modules together</h2>
-  <div class="controls"><button onclick="listen('ch12')">Listen</button><button onclick="show('ch12')">Show</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <p style="font-size:.85em;color:var(--ink2)">This is Z.ai's own architecture figure from the GLM-5.2 blog, redrawn: the main model on the left, the MTP module in the middle running its first draft step with an indexer, and the same MTP module on the right running the next draft steps without one. Each sentence lights up the part it describes, and the strip at the bottom fills up with the eight tokens.</p>
-  <div class="say">
-  <p>We want eight tokens: The cat sat on the warm mat and. Pass 1 is the prefill: the main model reads the whole prompt through its 78 floors at once, and in each group of four DSA blocks the bottom one has the indexer and computes the top-k list that the three above it reuse. The LM head turns the finished card into a score for every word, and the highest score becomes token 1: The. Now we are in decode, and the MTP module takes over: it receives the main model's hidden state through H-Norm and the embedding of The through E-Norm, and a Linear layer joins them into one card. Its DSA block has an indexer, so it computes a fresh top-k list, and it reads the shared KV cache, the very same notebook the main model uses, so nothing is copied. The shared MTP head proposes token 2 as a draft: cat. Draft step 2 runs the MTP module again but without the indexer: it reuses the top-k list from draft step 1 and the same shared cache, and proposes sat. Draft steps 3 and 4 do the same, proposing on and a, so we have four drafts from one skim. Pass 2 is a decode pass, but a wide one: the main model checks all four drafts in a single pass, comparing each draft with the word it would have chosen itself. Cat, sat and on match, so they are accepted for free, while a does not match, so it is thrown away and replaced by the main model's own choice, the. That is rejection sampling: five tokens confirmed after only two passes through the main model. Round two starts from the: the MTP module drafts warm, mat, and, purred, again one skim and three reuses. Pass 3, another wide decode pass, verifies them: warm, mat and and are accepted, and our eight tokens are done. Eight tokens for one prefill pass and two decode passes instead of one plus seven, and in Z.ai's coding tests the average accepted length is 5.47 tokens per round.</p>
-  </div>
-  <div class="stage">
-    <svg viewBox="0 0 680 640" role="img" aria-label="Main model beside two MTP module steps, with reuse of the top-k list and a shared KV cache, and a strip of eight token slots that fill in as the animation proceeds">
-      <text id="c12o_m" x="120" y="22" text-anchor="middle" class="small"></text>
-      <text id="c12o_p1" x="320" y="22" text-anchor="middle" class="small"></text>
-      <text id="c12o_p2" x="550" y="22" text-anchor="middle" class="small"></text>
-      <g id="c12m_head"><rect class="box" x="30" y="34" width="180" height="30" rx="6"/><text x="120" y="54" text-anchor="middle" class="bold">LM head</text></g>
-      <g id="c12p1_head"><rect class="box" x="240" y="34" width="160" height="30" rx="6"/><text x="320" y="54" text-anchor="middle" class="bold">MTP head (shared)</text></g>
-      <g id="c12p2_head"><rect class="box" x="470" y="34" width="160" height="30" rx="6"/><text x="550" y="54" text-anchor="middle" class="bold">MTP head (shared)</text></g>
-
-      <g id="c12m_col"><rect class="box col" x="30" y="86" width="180" height="400" rx="12" fill="none" stroke-dasharray="6 5"/><text x="120" y="108" text-anchor="middle" class="bold">Main model</text><text x="120" y="124" text-anchor="middle" class="small">78 floors</text></g>
-      <g id="c12p1_col"><rect class="box col" x="240" y="86" width="160" height="400" rx="12" fill="none" stroke-dasharray="6 5"/><text x="320" y="108" text-anchor="middle" class="bold">MTP module</text><text x="320" y="124" text-anchor="middle" class="small">draft step 1</text></g>
-      <g id="c12p2_col"><rect class="box col" x="470" y="86" width="160" height="400" rx="12" fill="none" stroke-dasharray="6 5"/><text x="550" y="108" text-anchor="middle" class="bold">MTP module</text><text x="550" y="124" text-anchor="middle" class="small">draft steps 2, 3, 4</text></g>
-
-      <line class="arr" x1="120" y1="136" x2="120" y2="68" marker-end="url(#ah)"/>
-      <g id="c12m_b1"><rect class="box" x="50" y="136" width="140" height="52" rx="6"/><text x="120" y="158" text-anchor="middle" class="bold">DSA block</text><text x="120" y="176" text-anchor="middle" class="small">without indexer</text></g>
-      <line class="arr" x1="120" y1="198" x2="120" y2="192" marker-end="url(#ah)"/>
-      <g id="c12m_b2"><rect class="box" x="50" y="198" width="140" height="52" rx="6"/><text x="120" y="220" text-anchor="middle" class="bold">DSA block</text><text x="120" y="238" text-anchor="middle" class="small">without indexer</text></g>
-      <line class="arr" x1="120" y1="260" x2="120" y2="254" marker-end="url(#ah)"/>
-      <g id="c12m_b3"><rect class="box" x="50" y="260" width="140" height="52" rx="6"/><text x="120" y="282" text-anchor="middle" class="bold">DSA block</text><text x="120" y="300" text-anchor="middle" class="small">without indexer</text></g>
-      <line class="arr" x1="120" y1="322" x2="120" y2="316" marker-end="url(#ah)"/>
-      <g id="c12m_b4"><rect class="box" x="50" y="322" width="140" height="52" rx="6"/><text x="120" y="344" text-anchor="middle" class="bold">DSA block</text><text x="120" y="362" text-anchor="middle" class="small">with indexer</text></g>
-      <path id="c12m_reuse" d="M 196 348 L 216 348 L 216 162 L 196 162" fill="none" stroke="var(--done)" stroke-width="2" marker-end="url(#ah)"/>
-      <text x="226" y="262" class="small" transform="rotate(-90 226 262)" text-anchor="middle">reuse top-k list</text>
-      <text x="40" y="262" class="small" transform="rotate(-90 40 262)" text-anchor="middle">pattern repeats</text>
-      <line class="arr" x1="120" y1="506" x2="120" y2="378" marker-end="url(#ah)"/>
-
-      <line class="arr" x1="320" y1="150" x2="320" y2="68" marker-end="url(#ah)"/>
-      <g id="c12p1_dsa"><rect class="box" x="260" y="150" width="120" height="80" rx="6"/><text x="320" y="184" text-anchor="middle" class="bold">DSA block</text><text x="320" y="204" text-anchor="middle" class="small">with indexer</text></g>
-      <line class="arr" x1="320" y1="262" x2="320" y2="234" marker-end="url(#ah)"/>
-      <g id="c12p1_lin"><rect class="box" x="260" y="262" width="120" height="32" rx="6"/><text x="320" y="283" text-anchor="middle" class="bold">Linear</text></g>
-      <line class="arr" x1="287" y1="326" x2="287" y2="298" marker-end="url(#ah)"/><line class="arr" x1="353" y1="326" x2="353" y2="298" marker-end="url(#ah)"/>
-      <g id="c12p1_h"><rect class="box" x="256" y="326" width="62" height="32" rx="6"/><text x="287" y="347" text-anchor="middle" class="small">H-Norm</text></g>
-      <g id="c12p1_e"><rect class="box" x="322" y="326" width="62" height="32" rx="6"/><text x="353" y="347" text-anchor="middle" class="small">E-Norm</text></g>
-      <line class="arr" x1="353" y1="506" x2="353" y2="362" marker-end="url(#ah)"/>
-      <path id="c12w1" class="arr" d="M 120 76 L 232 76 L 232 400 L 287 400 L 287 362" marker-end="url(#ah)"/>
-
-      <line class="arr" x1="550" y1="150" x2="550" y2="68" marker-end="url(#ah)"/>
-      <g id="c12p2_dsa"><rect class="box" x="490" y="150" width="120" height="80" rx="6"/><text x="550" y="184" text-anchor="middle" class="bold">DSA block</text><text x="550" y="204" text-anchor="middle" class="small">without indexer</text></g>
-      <line class="arr" x1="550" y1="262" x2="550" y2="234" marker-end="url(#ah)"/>
-      <g id="c12p2_lin"><rect class="box" x="490" y="262" width="120" height="32" rx="6"/><text x="550" y="283" text-anchor="middle" class="bold">Linear</text></g>
-      <line class="arr" x1="517" y1="326" x2="517" y2="298" marker-end="url(#ah)"/><line class="arr" x1="583" y1="326" x2="583" y2="298" marker-end="url(#ah)"/>
-      <g id="c12p2_h"><rect class="box" x="486" y="326" width="62" height="32" rx="6"/><text x="517" y="347" text-anchor="middle" class="small">H-Norm</text></g>
-      <g id="c12p2_e"><rect class="box" x="552" y="326" width="62" height="32" rx="6"/><text x="583" y="347" text-anchor="middle" class="small">E-Norm</text></g>
-      <line class="arr" x1="583" y1="506" x2="583" y2="362" marker-end="url(#ah)"/>
-      <path id="c12w2" class="arr" d="M 320 76 L 455 76 L 455 400 L 517 400 L 517 362" marker-end="url(#ah)"/>
-
-      <path id="c12r_arrow" d="M 384 170 L 486 170" fill="none" stroke="var(--done)" stroke-width="2" marker-end="url(#ah)"/>
-      <text x="435" y="160" text-anchor="middle" class="small">reuse top-k list</text>
-      <g id="c12kv"><rect class="box" x="402" y="196" width="66" height="60" rx="8" stroke="var(--done)"/><text x="435" y="220" text-anchor="middle" class="small">Shared</text><text x="435" y="238" text-anchor="middle" class="small">KV cache</text></g>
-      <path d="M 402 226 L 386 226" fill="none" stroke="var(--done)" stroke-width="2" marker-end="url(#ah)"/>
-      <path d="M 468 226 L 484 226" fill="none" stroke="var(--done)" stroke-width="2" marker-end="url(#ah)"/>
-
-      <g id="c12m_emb"><rect class="box" x="30" y="506" width="180" height="30" rx="6"/><text x="120" y="526" text-anchor="middle" class="bold">Embedding</text></g>
-      <g id="c12p1_emb"><rect class="box" x="240" y="506" width="160" height="30" rx="6"/><text x="320" y="526" text-anchor="middle" class="bold">Embedding (shared)</text></g>
-      <g id="c12p2_emb"><rect class="box" x="470" y="506" width="160" height="30" rx="6"/><text x="550" y="526" text-anchor="middle" class="bold">Embedding (shared)</text></g>
-      <text id="c12i_m" x="120" y="556" text-anchor="middle" class="small">in: the prompt</text>
-      <text id="c12i_p1" x="320" y="556" text-anchor="middle" class="small">in: the token just made</text>
-      <text id="c12i_p2" x="550" y="556" text-anchor="middle" class="small">in: the previous draft</text>
-
-      <text x="30" y="584" class="small">the eight tokens</text>
-      <text id="c12count" x="662" y="584" text-anchor="end" class="small">main-model passes: 0 · MTP draft steps: 0</text>
-      <text id="c12phase" x="340" y="584" text-anchor="middle" class="bold"></text>
-      <g id="c12strip"></g>
-    </svg>
-  </div>
-</section>
-
-<section class="ch" id="ch13" data-anim="none">
-  <div class="num">Chapter 14</div>
-  <h2>For your talk on Wednesday</h2>
-  <div class="controls"><button onclick="listen('ch13')">Listen</button><button class="small" onclick="stopAll()">Stop</button></div>
-  <div class="say">
-  <p>Here is the one-sentence story of GLM-5.2: how do you make one million tokens affordable? Then give four answers. MoE for the parameters. MLA for the memory. DSA for the attention. IndexShare for the indexer. And MTP for speed at the exit.</p>
-  <p>Tell it in that order, and every slide is an answer to the same question.</p>
-  </div>
-  <div class="numcards">
-    <div><b>78</b><span>floors (layers)</span></div>
-    <div><b>6,144</b><span>numbers per card (hidden size)</span></div>
-    <div><b>256 → 8 + 1</b><span>experts, chosen, shared</span></div>
-    <div><b>753B / 40B</b><span>total / active parameters</span></div>
-    <div><b>2,048</b><span>notes the highlighter keeps</span></div>
-    <div><b>1 in 4</b><span>floors that keep an indexer</span></div>
-    <div><b>2.9×</b><span>less compute per token at 1M</span></div>
-    <div><b>4.56 → 5.47</b><span>accepted draft words (+20%)</span></div>
-  </div>
-  <table>
-    <tr><th>Name on hfviewer</th><th>Our nickname</th><th>Chapter</th></tr>
-    <tr><td>embed_tokens</td><td>identity card maker</td><td>3</td></tr>
-    <tr><td>RMSNorm</td><td>volume knob</td><td>9</td></tr>
-    <tr><td>Multi-head latent attention (MLA)</td><td>compressed sticky-notes</td><td>6</td></tr>
-    <tr><td>Sparse attention (top-k selection)</td><td>the highlighter, DSA + IndexShare</td><td>7, 8</td></tr>
-    <tr><td>QK-Norm</td><td>keeps comparisons tame</td><td>9</td></tr>
-    <tr><td>Residual connection</td><td>safety wire (+)</td><td>9</td></tr>
-    <tr><td>MoE router / experts / shared expert</td><td>receptionist, 8 doctors, family doctor</td><td>5</td></tr>
-    <tr><td>Gated MLP (SwiGLU)</td><td>what each doctor is made of</td><td>9</td></tr>
-    <tr><td>LM head</td><td>scoreboard for 154,880 words</td><td>11</td></tr>
-    <tr><td>Multi-token prediction (MTP)</td><td>the sketcher</td><td>10</td></tr>
-  </table>
-  <div class="qa"><b>"Isn't this just DeepSeek V3.2's architecture?"</b><p>Mostly inherited, yes: MLA, DSA and the MoE layout come from that lineage. The new contributions in 5.2 are IndexShare and the reuse tricks in the MTP module. Say it plainly; it is not a weakness.</p></div>
-  <div class="qa"><b>"Does sharing the list hurt quality?"</b><p>Neighbouring floors already overlap 70 to 100 percent, and the pattern was trained in during mid-training at 128K tokens, so the surviving indexers adapted to their neighbours.</p></div>
-  <div class="qa"><b>"Why share across 4 floors and not all 78?"</b><p>Overlap is high between neighbours, not between distant floors. Four is the balance Z.ai chose between savings and quality.</p></div>
-  <div class="qa"><b>"Is 2.9× the real speed-up?"</b><p>No. It is a per-token compute estimate at 1M context. Memory for the notebook, kernels, and cache transfers still cost. The related IndexCache paper measured up to 1.82× faster prefill on a different, smaller model at 200K.</p></div>
-  <div class="qa"><b>"Where is IndexShare in the hfviewer graph?"</b><p>Inside the sparse-attention selection step. The graph draws all 78 layers as one repeated block, so it cannot show that three of every four layers reuse a neighbour's selection; that lives in the config.</p></div>
-  <p style="font-size:.9em;color:var(--ink2)">Suggested timing for 60 minutes: intro 5, expert room 10, attention room with MLA and DSA 15, IndexShare 15, MTP 8, glue and benchmarks 7. If you must cut, cut MTP first, never IndexShare.</p>
-</section>
-</main>
-<aside class="model" id="modelAside" aria-label="Where we are in the model">
-  <div class="mlabel">Where we are in the model</div>
-  <div class="mchap" id="modelChap"></div>
-  <div id="modelSvg"></div>
-  <div class="mhint">Click any part to jump to its chapter.</div>
-</aside>
+<section class="ch" id="roofline">
+<div class="num">01</div><h2>Memory bound, compute bound, latency bound</h2>
+<p>Every GPU kernel does two things: it <b>moves data</b> between HBM and the cores, and it <b>does math</b> on that data. Whichever takes longer is the bottleneck.</p>
+<ul>
+<li><b>Memory bound</b>: the cores wait for data. Element-wise ops, and LLM decode, where each weight is read once per token and used for very little math.</li>
+<li><b>Compute bound</b>: the data arrives fast enough and the cores are busy the whole time. Big matrix multiplies, LLM prefill.</li>
+<li><b>Latency bound</b>: neither. The kernel is too small to keep either the memory pipe or the cores busy, and fixed costs (launch, drain, sync) set the time.</li>
+</ul>
+<div class="stage">
+<svg viewBox="0 0 380 300" role="img" aria-label="Roofline with a latency-bound point far below the roof">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#46525F" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+<line x1="50" y1="230" x2="50" y2="50" stroke="#46525F" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="50" y1="230" x2="345" y2="230" stroke="#46525F" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="58" y="44" font-size="12" fill="#46525F">Speed (FLOPs/s)</text>
+<text x="195" y="258" font-size="12" fill="#46525F" text-anchor="middle">Math per byte loaded (arithmetic intensity)</text>
+<path d="M50 230 L200 80" fill="none" stroke="#0F6E56" stroke-width="3"/>
+<path d="M200 80 L335 80" fill="none" stroke="#D85A30" stroke-width="3"/>
+<text x="118" y="140" font-size="12" fill="#085041" text-anchor="middle">Memory roof</text>
+<text x="268" y="66" font-size="12" fill="#712B13" text-anchor="middle">Compute roof</text>
+<line x1="200" y1="80" x2="200" y2="230" stroke="#7D8A98" stroke-dasharray="4 3"/>
+<text x="200" y="244" font-size="11" fill="#46525F" text-anchor="middle">ridge ≈ 300 FLOP/B (bf16, MI355X)</text>
+<circle cx="110" cy="170" r="6" fill="#0F6E56"/>
+<text x="122" y="166" font-size="12" fill="#1F2A37">decode, fused: on the roof</text>
+<line x1="110" y1="178" x2="110" y2="208" stroke="#7D8A98" stroke-dasharray="3 3"/>
+<circle cx="110" cy="214" r="6" fill="#D85A30"/>
+<text x="122" y="218" font-size="12" fill="#1F2A37">same math, tiny kernels</text>
+<text x="56" y="286" font-size="13" font-weight="700" fill="#1F2A37">Gap under the roof = latency bound</text>
+</svg>
+<div class="cap">The roofline only tells you the ceiling. A point far below <i>both</i> roofs is latency bound. The MonoKernel doesn't move the point sideways (the math is the same); it pushes it <b>up</b>.</div>
 </div>
-<style>
-@media (min-width:821px){.stage.pin{position:sticky;top:76px;z-index:5}}
-.stage .live{position:sticky;top:76px;background:var(--sheet);padding:.5rem .6rem;margin:-.2rem 0 .6rem;border-bottom:2px solid var(--line);font-size:.85em;color:var(--ink2);min-height:2.6em;z-index:6}
-.stage .live:empty{display:none}
-</style>
+<h3>Why decode at 2–8 tokens lands in the gap</h3>
+<p>For each layer the GPU reads the layer's weights once and does about 2 FLOPs per weight per token. At 8 tokens with FP8 weights that is roughly 16 FLOPs per byte, against a ridge near 300. Decode is deeply memory bound on paper. But the old kernel chain never reaches the memory roof either: each of its nineteen kernels moves only a few MB, pays a launch, drains to HBM, and waits for its slowest block. Bandwidth is only "available" if enough bytes are in flight (Little's law: at 8 TB/s and ~1 µs latency you need ~8 MB outstanding at all times), and a kernel that moves 2 MB in total can never get there.</p>
+<h3>The extended roofline: what fusion actually recovers</h3>
+<p>Add a fixed cost to the model: <code>time = T₀ + max(bytes ÷ BW, FLOPs ÷ peak)</code>. Now the ceiling depends on how big the kernel is.</p>
+<div class="stage">
+<svg viewBox="0 0 380 300" role="img" aria-label="Extended roofline with 1 MB, 16 MB and 256 MB kernels">
+<line x1="70" y1="230" x2="70" y2="40" stroke="#46525F" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="70" y1="230" x2="360" y2="230" stroke="#46525F" stroke-width="1.2" marker-end="url(#ar)"/>
+<g font-size="11" fill="#46525F">
+<text x="66" y="189" text-anchor="end" dominant-baseline="central">1 T</text><text x="66" y="147" text-anchor="end" dominant-baseline="central">10 T</text><text x="66" y="106" text-anchor="end" dominant-baseline="central">100 T</text><text x="66" y="65" text-anchor="end" dominant-baseline="central">1 P</text>
+<text x="70" y="246" text-anchor="middle">1</text><text x="140" y="246" text-anchor="middle">10</text><text x="210" y="246" text-anchor="middle">100</text><text x="280" y="246" text-anchor="middle">1k</text><text x="350" y="246" text-anchor="middle">10k</text>
+<text x="215" y="266" text-anchor="middle">FLOPs per byte (log)</text><text x="76" y="36">FLOPs/s (log)</text>
+</g>
+<line x1="70" y1="189" x2="350" y2="189" stroke="#C6D0DA"/><line x1="70" y1="147" x2="350" y2="147" stroke="#C6D0DA"/><line x1="70" y1="106" x2="350" y2="106" stroke="#C6D0DA"/>
+<line x1="245" y1="48" x2="245" y2="230" stroke="#7D8A98" stroke-dasharray="4 3"/>
+<path d="M70 151 L245 48 L350 48" fill="none" stroke="#1F2A37" stroke-width="2.5"/>
+<path d="M70 154 L80 148 L90 142 L100 136 L110 130 L120 125 L130 119 L140 113 L150 107 L160 101 L170 95 L180 89 L190 83 L200 77 L210 71 L220 66 L230 60 L240 54 L250 51 L260 50 L350 49" fill="none" stroke="#0F6E56" stroke-width="2.5"/>
+<path d="M70 174 L80 168 L90 162 L100 156 L110 150 L120 144 L130 139 L140 133 L150 127 L160 121 L170 115 L180 109 L190 103 L200 97 L210 91 L220 85 L230 80 L240 74 L250 69 L260 65 L270 62 L280 59 L290 56 L300 55 L310 53 L320 52 L350 50" fill="none" stroke="#BA7517" stroke-width="2.5"/>
+<path d="M70 218 L80 212 L90 206 L100 200 L110 194 L120 189 L130 183 L140 177 L150 171 L160 165 L170 159 L180 153 L190 147 L200 141 L210 135 L220 130 L230 124 L240 118 L250 112 L260 106 L270 101 L280 95 L290 90 L300 84 L310 80 L320 75 L330 70 L340 66 L350 63" fill="none" stroke="#D85A30" stroke-width="2.5"/>
+<line x1="140" y1="114" x2="140" y2="175" stroke="#46525F" stroke-width="1.2" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="146" y="147" font-size="11" fill="#1F2A37" dominant-baseline="central">latency gap</text>
+<g font-size="11" fill="#1F2A37"><rect x="76" y="282" width="14" height="3" fill="#1F2A37"/><text x="94" y="284" dominant-baseline="central">Roof</text><rect x="134" y="282" width="14" height="3" fill="#0F6E56"/><text x="152" y="284" dominant-baseline="central">256 MB</text><rect x="208" y="282" width="14" height="3" fill="#BA7517"/><text x="226" y="284" dominant-baseline="central">16 MB</text><rect x="276" y="282" width="14" height="3" fill="#D85A30"/><text x="294" y="284" dominant-baseline="central">1 MB</text></g>
+</svg>
+<div class="cap">MI355X-like numbers: 8 TB/s, 2.5 PFLOP/s bf16, T₀ = 5 µs. A 1 MB kernel sits ~25× under the roof at every intensity. A 256 MB kernel nearly touches it. The old chain was on the red curve, nineteen times per layer. The MonoKernel pays T₀ once and moves the whole layer's weights in that launch, sliding to the green curve. Same x position; different curve.</div>
+</div>
+</section>
+
+<section class="ch" id="hardware">
+<div class="num">02</div><h2>The hardware words: CU, CTA, wave, lane</h2>
+<p>You need four words to read this kernel. Two are hardware, two are software.</p>
+<div class="stage">
+<svg viewBox="0 0 380 330" role="img" aria-label="One compute unit with four SIMDs, LDS and caches">
+<rect x="10" y="10" width="360" height="222" rx="8" fill="none" stroke="#46525F" stroke-dasharray="4 3"/>
+<text x="20" y="30" font-size="13" font-weight="700" fill="#1F2A37">One CU (×256 on MI355X)</text>
+<g font-size="11">
+<rect x="20" y="42" width="80" height="112" rx="5" fill="#EEEDFE" stroke="#534AB7"/><text x="60" y="56" text-anchor="middle" font-weight="700" fill="#3C3489">SIMD 0</text><text x="60" y="74" text-anchor="middle" fill="#3C3489">8 wave slots</text><text x="60" y="90" text-anchor="middle" fill="#3C3489">64-lane ALU</text><text x="60" y="106" text-anchor="middle" fill="#3C3489">VGPR file</text><text x="60" y="122" text-anchor="middle" fill="#3C3489">matrix core</text><text x="60" y="140" text-anchor="middle" fill="#3C3489">waves 0, 4</text>
+<rect x="106" y="42" width="80" height="112" rx="5" fill="#EEEDFE" stroke="#534AB7"/><text x="146" y="56" text-anchor="middle" font-weight="700" fill="#3C3489">SIMD 1</text><text x="146" y="74" text-anchor="middle" fill="#3C3489">8 wave slots</text><text x="146" y="90" text-anchor="middle" fill="#3C3489">64-lane ALU</text><text x="146" y="106" text-anchor="middle" fill="#3C3489">VGPR file</text><text x="146" y="122" text-anchor="middle" fill="#3C3489">matrix core</text><text x="146" y="140" text-anchor="middle" fill="#3C3489">waves 1, 5</text>
+<rect x="192" y="42" width="80" height="112" rx="5" fill="#EEEDFE" stroke="#534AB7"/><text x="232" y="56" text-anchor="middle" font-weight="700" fill="#3C3489">SIMD 2</text><text x="232" y="74" text-anchor="middle" fill="#3C3489">8 wave slots</text><text x="232" y="90" text-anchor="middle" fill="#3C3489">64-lane ALU</text><text x="232" y="106" text-anchor="middle" fill="#3C3489">VGPR file</text><text x="232" y="122" text-anchor="middle" fill="#3C3489">matrix core</text><text x="232" y="140" text-anchor="middle" fill="#3C3489">waves 2, 6</text>
+<rect x="278" y="42" width="80" height="112" rx="5" fill="#EEEDFE" stroke="#534AB7"/><text x="318" y="56" text-anchor="middle" font-weight="700" fill="#3C3489">SIMD 3</text><text x="318" y="74" text-anchor="middle" fill="#3C3489">8 wave slots</text><text x="318" y="90" text-anchor="middle" fill="#3C3489">64-lane ALU</text><text x="318" y="106" text-anchor="middle" fill="#3C3489">VGPR file</text><text x="318" y="122" text-anchor="middle" fill="#3C3489">matrix core</text><text x="318" y="140" text-anchor="middle" fill="#3C3489">waves 3, 7</text>
+<rect x="20" y="164" width="338" height="28" rx="5" fill="#E1F5EE" stroke="#0F6E56"/><text x="189" y="182" text-anchor="middle" font-weight="700" fill="#085041">LDS 160 KB, shared by all 8 waves of the CTA</text>
+<rect x="20" y="198" width="338" height="26" rx="5" fill="#F1EFE8" stroke="#888780"/><text x="189" y="215" text-anchor="middle" fill="#444441">L1 cache, scalar unit, scheduler</text>
+<rect x="60" y="248" width="260" height="26" rx="5" fill="#F1EFE8" stroke="#888780"/><text x="190" y="265" text-anchor="middle" fill="#444441">L2 per XCD, Infinity Cache shared</text>
+<rect x="60" y="284" width="260" height="26" rx="5" fill="#FAECE7" stroke="#D85A30"/><text x="190" y="301" text-anchor="middle" font-weight="700" fill="#712B13">HBM3E, 288 GB, 8 TB/s</text>
+</g>
+<text x="190" y="324" font-size="11" fill="#46525F" text-anchor="middle">the MonoKernel's 8 waves land two per SIMD</text>
+</svg>
+</div>
+<div class="tbl"><table>
+<tr><th>Word</th><th>What it is</th><th>In this kernel</th></tr>
+<tr><td><b>Lane</b></td><td>One thread's slot in a wave. Has its own registers.</td><td><code>lane = tid % 64</code>. Owns one piece of every tile.</td></tr>
+<tr><td><b>Wave</b></td><td>64 threads that execute one instruction together, in lockstep, on one SIMD. (NVIDIA: warp of 32.)</td><td><code>wave = tid // 64</code>, 0–7. Issues loads and MFMAs. The real unit of work.</td></tr>
+<tr><td><b>CTA</b> (workgroup)</td><td>Software: threads launched together on one CU that share LDS and can barrier.</td><td>512 threads = 8 waves. Owns one <i>task</i> at a time.</td></tr>
+<tr><td><b>CU</b></td><td>Hardware: 4 SIMDs, LDS, L1. 256 per MI355X.</td><td>Not an abstraction in the code. <code>BLOCKS = 256</code> and one big CTA per CU make <code>bid</code> ≡ the CU.</td></tr>
+</table></div>
+<h3>What an ALU is, and the three kinds here</h3>
+<p>An ALU (arithmetic logic unit) is the circuit that does the math: numbers in from registers, one operation, result back. Everything else exists to feed it. A CDNA CU has three kinds: the <b>vector ALU</b> on each SIMD, 64 lanes wide, for per-element work (softmax exponentials, scale multiplies, RMSNorm, the top-k histogram, tag compares); the <b>matrix core</b>, a specialised ALU that does a whole small matrix multiply per instruction, which is where all the projections and expert math go; and the <b>scalar ALU</b>, one per CU, for values that are the same across a wave (addresses, loop counters, branch decisions). "Compute bound" means the matrix cores are the bottleneck; "memory bound" means they're waiting for data; "latency bound" means they're waiting for something else, like a launch or a sync.</p>
+<h3>A wave is a running program, not a store of instructions</h3>
+<p>The kernel code lives once, in memory, behind an instruction cache. Every wave runs that same code. What makes waves different is <b>where they are in it and what data they hold</b>: a program counter, 64 lanes of registers, an execution mask for divergent branches, and the counters <code>s_waitcnt</code> checks. A wave slot on a SIMD is a place to keep that state live. The analogy: the recipe is printed once on the wall; each wave is a cook at their own station, partway through it, with their own ingredients; the SIMD is one burner, and each cycle one cook gets to use it. Parking a cook costs a station (registers), not a copy of the recipe. All 131,072 threads run the same <code>kernel.py</code>; each wave decides what to do from its own <code>bid</code>, <code>wave</code> and <code>lane</code>.</p>
+<h3>Waves and clock cycles</h3>
+<p>There is one clock for the CU. Each SIMD issues at most one instruction per cycle, from one ready wave. In the classic GCN/CDNA scheme the CU's scheduler visits the four SIMDs in rotation, so each SIMD gets a turn every 4 cycles, and a wave64 vector instruction occupies the ALU for 4 cycles, which lines up. On a turn the SIMD can issue to several different units at once (vector, scalar, memory, LDS, branch) as long as they come from different waves. For performance reasoning the simple version is enough: per SIMD, one vector instruction in flight at a time, so a wave with nothing independent to do stalls, and either another wave or more ILP fills the gap. What matters is <b>latency</b> (an HBM load is hundreds of cycles; an MFMA tens, more for bigger shapes) against <b>issue rate</b>. The MonoKernel has only two waves per SIMD to switch between, so it fills the gaps with ILP: weight loads issued before the mailbox wait, several MFMA chains per wave.</p>
+<h3>Resident is not executing</h3>
+<p>Each SIMD holds up to 8 parked waves, so a CU can hold 32, but per cycle each SIMD issues <b>one</b> instruction from <b>one</b> ready wave. The others wait. Parking waves is a latency-hiding tool: while one wave waits hundreds of cycles for HBM, another can run. The MonoKernel uses only 8 of 32 slots (25% occupancy) and hides latency with ILP instead: each wave issues all its weight loads before it waits for its inputs, and keeps several MFMA chains going. The empty slots are deliberate: the kernel's LDS and register footprint keep any other workgroup off the CU, which is what guarantees all 256 CTAs are resident at once.</p>
+<p>The counting, once: 2 waves × 4 SIMDs = 8 waves = 512 threads = 1 CTA per CU. 256 CUs → 256 CTAs → 131,072 threads, 2,048 waves, all live for the whole layer.</p>
+</section>
+
+<section class="ch" id="occupancy">
+<div class="num">03</div><h2>Occupancy math, and why the MonoKernel runs at 25% on purpose</h2>
+<p>This section follows AMD's <a href="https://rocm.blogs.amd.com/software-tools-optimization/occupancy-math-mi355x/README.html">Occupancy Math on the MI355X</a> guide (Pandey, Li, Luo; ROCm blog, July 2026), keeping only what you need to read this kernel. Its one-line thesis: occupancy is a diagnostic, not a goal, and matrix-bound kernels hit peak at a fraction of full occupancy.</p>
+<h3>The budget, per CU</h3>
+<div class="tbl"><table>
+<tr><th>Resource</th><th>Budget</th><th>Private to</th><th>Note</th></tr>
+<tr><td>VGPRs</td><td>512 per lane</td><td>each SIMD</td><td>regular (≤256) + accumulator (≤256) draw on <b>one</b> file; CDNA3 unified them, CDNA4 keeps it. Allocated in groups of 8.</td></tr>
+<tr><td>SGPRs</td><td>~800 per SIMD, ≤102 per wave</td><td>each SIMD</td><td>wave-uniform values; rarely binds</td></tr>
+<tr><td>LDS</td><td>160 KB</td><td>the CU</td><td>2.5× CDNA3's 64 KB; shared by all four SIMDs</td></tr>
+<tr><td>Wave slots</td><td>8 per SIMD, 32 per CU</td><td>each SIMD</td><td>plus a limited pool of hardware barriers per CU</td></tr>
+</table></div>
+<p>The hinge of the whole calculation: <b>registers are per-SIMD, LDS is per-CU.</b> A wave on SIMD 0 can't touch SIMD 1's registers, but every wave in a workgroup sees the same LDS.</p>
+<h3>The four limiters</h3>
+<pre>VGPR limit:  floor( 512 / total-VGPRs-per-lane )   → waves / SIMD   (regular + accumulator)
+SGPR limit:  floor( ~800 / SGPRs-per-wave )        → waves / SIMD
+LDS  limit:  floor( 160 KB / LDS-per-workgroup )   → workgroups / CU
+WG   limit:  max resident workgroups per CU         (slots + barriers)
+
+occupancy = min(all four, converted to waves/SIMD), clamped at 8/SIMD, 32/CU</pre>
+<p>The unit trap: VGPR and SGPR limits are waves per SIMD, the LDS limit is workgroups per CU. Convert before taking the minimum. A 4-wave workgroup puts one wave on each SIMD, so <i>n</i> workgroups per CU = <i>n</i> waves per SIMD. An 8-wave workgroup puts <b>two</b> on each SIMD, so each workgroup costs two waves per SIMD. That second case is this kernel.</p>
+<h3>Why the ceiling is rarely the target</h3>
+<p>Occupancy hides latency by switching between parked waves (TLP). Little's Law says what you actually need is <b>independent operations in flight = latency × throughput</b>. For the matrix core, if an MFMA takes L cycles to retire and the unit accepts one every T cycles, you need about L/T independent MFMAs in flight. You can get them from many waves of one chain each (TLP), or from one wave running several independent accumulator chains (ILP). Both satisfy the law; both spend the same 512-VGPR file.</p>
+<p>The blog measured this directly: a single scaled MFMA in a loop with K independent accumulator chains, occupancy throttled separately. With 8 chains per wave the matrix core held about 97% of its ~5 PFLOP/s peak from one wave per SIMD (12% occupancy) upward; with one dependent chain it starved at the same floor. Same chip, same register file, two ways to spend it; the low-occupancy, high-ILP route wins. (The benchmark keeps operands in registers and moves no memory, so real kernels land lower.)</p>
+<p>The memory side follows the same law: <b>bytes in flight = HBM latency × bandwidth</b>. At 8 TB/s and sub-microsecond latency that's a few MB across the GPU, tens of KB per CU. A handful of waves each issuing wide <code>buffer_load</code>s with several outstanding before the <code>s_waitcnt</code> saturates the bus. The lever is bytes-per-wave in flight, not wave count.</p>
+<h3>The trap, and the roofline underneath</h3>
+<p>More waves per SIMD means fewer VGPRs per wave, so a smaller accumulator tile, so lower arithmetic intensity, so more traffic per MFMA, so the matrix core waits. Arithmetic intensity is set by tile size, not occupancy. For MFMA-bound kernels the sweet spot is routinely 2–4 waves per SIMD, not 8. The MI355X machine balance is about 5 PFLOP/s ÷ 8 TB/s ≈ 625 FLOP/byte for MXFP8; with the bf16 MFMA this kernel uses, roughly half that. Decode at 2–8 rows sits two orders of magnitude below either ridge.</p>
+<h3>Applied to the MonoKernel</h3>
+<ul>
+<li><b>Occupancy by construction: 8 of 32 waves per CU, 25%.</b> One 512-thread workgroup, two waves per SIMD. In the blog's terms, the workgroup limit is pinned at 1 per CU; the kernel's LDS use (<code>xs</code> up to 96–144 KB, <code>WORK_WORDS ≤ 32768</code> words) and register footprint are what enforce it. That is the point: the design needs every CTA resident, and a second workgroup landing on a CU would break the "one CTA per CU" assumption the mailbox waits rely on.</li>
+<li><b>It's the ILP route.</b> With only two waves per SIMD to switch between, TLP can't hide much. So each wave keeps its own latency covered: <code>u_qb</code> issues both units' 1 KB loads before <code>hint_wait</code>, <code>run_units</code> prefetches the next batch before computing the current one, and each wave advances its accumulator across 4 sub-passes per unit. That's the blog's "wide loads, several outstanding, before the waitcnt" recipe.</li>
+<li><b>It's memory-bound, so the matrix-core argument matters less than the HBM one.</b> The figure of merit is achieved bandwidth during decode. The blog's Little's-Law number, tens of KB in flight per CU, is exactly what the 8 waves × 2 units × 1 KB = 16 KB of outstanding weight loads per task provides.</li>
+<li><b>LDS is spent the way the blog recommends.</b> Accumulators stay in registers; LDS holds the staged input (<code>xs</code>) and the cross-wave reduction (<code>red</code>), i.e. pipeline depth and cooperation, never the hot accumulator.</li>
+<li><b>Measure the right thing.</b> By the blog's workflow, step 3 ("is occupancy even your problem?") answers itself here. Pull <code>MfmaUtil</code>, <code>VALUBusy</code> and achieved bandwidth from rocprofv3, and the kernel's own <code>timeline=True</code> stamps for per-stage wait vs. compute.</li>
+</ul>
+</section>
+
+<section class="ch" id="animation">
+<div class="num">04</div><h2>Watch it: kernel chain vs MonoKernel</h2>
+<p>The same decode layer, two ways, on the same relative time scale. Toggle between them. The grid is the 256 CUs; the chart underneath is time.</p>
+<div class="stage">
+<div class="seg" role="group" aria-label="Mode" style="margin-bottom:.6rem"><button id="mChain" aria-pressed="true">Kernel chain (before)</button><button id="mMono" aria-pressed="false">MonoKernel (after)</button></div>
+<div class="controls" role="group" aria-label="Playback">
+  <button class="primary small" id="play">Play</button><button class="small" id="back">−0.5</button><button class="small" id="fwd">+0.5</button>
+  <div class="scrub"><input type="range" id="t" min="0" max="36" step="0.05" value="0" aria-label="Time"><span class="tv" id="tv">t = 0.0</span></div>
+  <div class="seg" role="group" aria-label="Speed"><button class="small" data-s="0.5" aria-pressed="false">½×</button><button class="small" data-s="1" aria-pressed="true">1×</button><button class="small" data-s="2" aria-pressed="false">2×</button></div>
+</div>
+<p class="now" id="now" aria-live="polite"></p>
+<div class="two">
+  <div class="panel"><h4>CUs right now</h4><div class="grid16" id="grid"></div><div class="legend" id="legend"></div>
+    <div class="stats"><div class="stat2"><b id="sLaunch">0</b><span>launches so far</span></div><div class="stat2"><b id="sHbm">0</b><span>HBM round trips</span></div><div class="stat2"><b id="sUtil">0%</b><span>CUs busy now</span></div></div></div>
+  <div class="panel"><h4 id="gTitle">Kernel stream</h4><div class="gwrap" id="gantt"></div></div>
+</div>
+<div class="cap" id="animNotes"></div>
+</div>
+<h3>The same two runs as GIFs</h3>
+<p>For sharing or for readers without JavaScript. Same schedules as the interactive version.</p>
+<div class="stage"><img src="kernel-chain.gif" alt="Animated: the kernel chain, one kernel per operation, with the CU grid mostly empty and dark gaps between kernels" style="width:100%;height:auto;display:block;border-radius:8px"><div class="cap">Before: nineteen launches, eighteen round trips through HBM.</div></div>
+<div class="stage"><img src="monokernel.gif" alt="Animated: the MonoKernel, one launch per layer, with the CU grid staying coloured as stages overlap" style="width:100%;height:auto;display:block;border-radius:8px"><div class="cap">After: one launch, stages overlapping across CTA bands.</div></div>
+<p>Three things to watch in the chain view: the grid is mostly empty even mid-kernel (a skinny GEMM at 2 rows launches 64–96 blocks, a norm launches 2); the grid goes fully dark between every kernel (drain to HBM, launch, ramp); and the two all-reduces are separate RCCL kernels. In the MonoKernel view the grid stays coloured, stages overlap, and tiny stages like <code>q_norm</code> or <code>cache</code> cost almost nothing because the other 250 CTAs just keep waiting on mailboxes.</p>
+</section>
+
+<section class="ch" id="howitworks">
+<div class="num">05</div><h2>How one decode step becomes one launch per layer</h2>
+<p>Before, every operation was its own kernel. The kernel ending was the barrier; HBM was the hand-off. The MonoKernel keeps one grid resident for the whole layer and uses each memory tier for what it's good at.</p>
+<div class="tbl"><table>
+<tr><th>Tier</th><th>Before (kernel chain)</th><th>MonoKernel</th></tr>
+<tr><td>Registers, LDS (per CU)</td><td>Die with each kernel</td><td>Task tiles, MFMA accumulators, the top-k histogram</td></tr>
+<tr><td>L2 (shared)</td><td>Cold at every kernel start</td><td>The mailboxes: small (value, tag) pairs, written just before they're read</td></tr>
+<tr><td>HBM</td><td>Every intermediate + weights + cache</td><td>Weights, KV / index cache, and only the two big scratch regions</td></tr>
+<tr><td>Peer GPUs</td><td>Separate RCCL all-reduce kernel</td><td>IPC writes into peer buffers from inside the kernel</td></tr>
+</table></div>
+<p>One correction to the slogan: it's one launch <b>per layer</b>, not per step. A step is still ~78 stream-ordered launches, captured into a CUDA graph, plus one <code>advance_step()</code> per runtime. What collapsed is each layer: nineteen kernels to one.</p>
+<h3>One kernel, two homes, now in-tree</h3>
+<p>The kernel was first upstreamed in two halves: the FlyDSL source in AITER (#6173) and a ~530-line caller in vLLM (#60216). Both are now closed in favour of <b>#60831</b>, which carries the whole package inside vLLM. It has eight commits: the port itself; per-layer routing, staged refusals and cache checks (kernel source moves to <code>amd/ops/mono</code>, integration to <code>amd/mono/</code>); bounded polls and fail-stop; dropping every variant vLLM doesn't use; tests and CI (<code>tests/models/deepseek_v32/amd_mono/</code>: dense, MoE, paged indexer, routing, safety, weights); dropping the unpacked attention weights; checking only real rows; and cleanup. The kernel still needs FlyDSL installed to compile.</p>
+<h3>The call chain in vLLM</h3>
+<div class="stage">
+<svg viewBox="0 0 380 470" role="img" aria-label="Call flow from model.forward to the kernel launch">
+<g font-size="11">
+<rect x="40" y="20" width="300" height="52" rx="6" fill="#EEEDFE" stroke="#534AB7"/><text x="190" y="40" text-anchor="middle" font-weight="700" fill="#3C3489">GlmMono.forward_layer(idx, …)</text><text x="190" y="58" text-anchor="middle" fill="#3C3489">called by every decoder layer, amd/mono/kernel.py</text>
+<line x1="190" y1="74" x2="190" y2="98" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="40" y="100" width="300" height="52" rx="6" fill="#EEEDFE" stroke="#534AB7"/><text x="190" y="120" text-anchor="middle" font-weight="700" fill="#3C3489">_begin_step() → spec.step_reason()</text><text x="190" y="138" text-anchor="middle" fill="#3C3489">first layer only: 1/2/4/8 tokens, pure decode, full graph?</text>
+<line x1="190" y1="154" x2="190" y2="178" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="40" y="180" width="300" height="52" rx="6" fill="#EEEDFE" stroke="#534AB7"/><text x="190" y="200" text-anchor="middle" font-weight="700" fill="#3C3489">_build(), first kernel step only</text><text x="190" y="218" text-anchor="middle" fill="#3C3489">compile ops for widths 2 / 4 / 8, eagerly, before graph capture</text>
+<line x1="190" y1="234" x2="190" y2="258" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="40" y="260" width="300" height="52" rx="6" fill="#E1F5EE" stroke="#0F6E56"/><text x="190" y="280" text-anchor="middle" font-weight="700" fill="#085041">_launch(idx) → op.forward()</text><text x="190" y="298" text-anchor="middle" fill="#085041">one kernel launch per layer per GPU</text>
+<line x1="190" y1="314" x2="190" y2="338" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="40" y="340" width="300" height="52" rx="6" fill="#EEEDFE" stroke="#534AB7"/><text x="190" y="360" text-anchor="middle" font-weight="700" fill="#3C3489">last layer: advance_step(); final_norm()</text><text x="190" y="378" text-anchor="middle" fill="#3C3489">bump the epoch counter once per step</text>
+<rect x="40" y="418" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7"/><text x="62" y="429" fill="#1F2A37">amd/mono/kernel.py + spec.py (integration)</text>
+<rect x="40" y="444" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56"/><text x="62" y="455" fill="#1F2A37">kernel package: vllm/models/deepseek_v32/amd/ops/mono/</text>
+</g>
+</svg>
+</div>
+<p>How the hook works: the model calls <code>GlmMono.forward_layer</code> for every decoder layer. At the first layer, <code>_begin_step()</code> asks <code>spec.step_reason()</code> whether this forward is a kernel step: 1, 2, 4 or 8 tokens, a pure decode step (<code>max_query_len == 1</code>), and not a piecewise CUDA graph. That decision depends only on what every TP rank builds alike from the scheduler output, because each launch all-reduces inside the kernel; a split decision would hang. If it is a kernel step, every layer is one launch, and each returns a zero partial sum plus the full residual stream, so vLLM's own layer code adds nothing. Otherwise all layers run the normal path.</p>
+<p>Refusals are staged and loud. <code>spec.refuse_config()</code> runs before weights load and lists every reason at once: gfx950 with 256 CUs, <code>glm_moe_dsa</code>, TP 4 or 8, no PP/DP/EP/EPLB/DCP, no speculative decoding, LoRA, KV transfer or sleep mode, an fp8 KV cache, <code>indexer_rope_interleave</code>, Model Runner V2, and FULL (not piecewise-only) CUDA graphs. <code>_refuse_model()</code> checks the loaded weights per layer. A one-token step is padded to 2 rows (<code>spec.width_for</code>): the pad row gets slot −1 and attends to nothing. Dense layers are faked as MoE with expert-sized MXFP4 slices and no router. The log line states the numerics up front: expert inputs quantised to MXFP8 where vLLM uses MXFP4, and the TP all-reduces done in bf16 inside the launch.</p>
+<h3>Inside one launch: the stages</h3>
+<div class="stage">
+<svg viewBox="0 0 380 330" role="img" aria-label="Four phases inside one launch">
+<g font-size="11">
+<rect x="40" y="20" width="300" height="56" rx="6" fill="#EEEDFE" stroke="#534AB7"/><text x="190" y="40" text-anchor="middle" font-weight="700" fill="#3C3489">1. Attention inputs: qkv_a, q_norm, cache, q_b</text><text x="190" y="58" text-anchor="middle" fill="#3C3489">norm → q/kv projections → RoPE → KV-cache write</text>
+<line x1="190" y1="78" x2="190" y2="98" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="40" y="100" width="300" height="56" rx="6" fill="#FAEEDA" stroke="#BA7517"/><text x="190" y="120" text-anchor="middle" font-weight="700" fill="#633806">2. Indexer: index_q, index_score, index_select</text><text x="190" y="138" text-anchor="middle" fill="#633806">score every past token → two-pass top-2048 (indexer layers)</text>
+<line x1="190" y1="158" x2="190" y2="178" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="40" y="180" width="300" height="56" rx="6" fill="#E1F5EE" stroke="#0F6E56"/><text x="190" y="200" text-anchor="middle" font-weight="700" fill="#085041">3. Sparse MLA: uk, split, uv, o</text><text x="190" y="218" text-anchor="middle" fill="#085041">attend to 2048 keys → o_proj → in-kernel all-reduce</text>
+<line x1="190" y1="238" x2="190" y2="258" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="40" y="260" width="300" height="56" rx="6" fill="#FAECE7" stroke="#D85A30"/><text x="190" y="280" text-anchor="middle" font-weight="700" fill="#712B13">4. MoE: router, ug, down</text><text x="190" y="298" text-anchor="middle" fill="#712B13">top-8 → experts → in-kernel all-reduce → layer output</text>
+</g>
+</svg>
+<div class="cap">These are the real stage names from <code>glm/layout.py → stage_tasks()</code>. Seven of them are the same GEMV skeleton with different weights; two call MFMA directly on gathered cache data; three have no MFMA at all.</div>
+</div>
+<h3>Three ideas make it work</h3>
+<ol>
+<li><b>One persistent grid, no grid barrier.</b> 256 CTAs × 512 threads. Each stage is a list of tasks; task <code>t</code> runs on CTA <code>(base + t) mod 256</code>. All CTAs are resident and dependencies only point backwards, so a CTA can spin-wait for its inputs without deadlocking.</li>
+<li><b>Tagged mailboxes instead of flags.</b> A value and this launch's epoch tag are stored together in one write. The reader polls until the tag matches. One round trip per hand-off, no clearing between layers. (Section 08.)</li>
+<li><b>GEMVs on matrix cores.</b> Weights are pre-packed so one wave loads a contiguous 1 KB tile; FP8 is widened to bf16 and fed to <code>mfma_f32_16x16x32_bf16</code> with the 2–8 tokens as the N dimension. Weight loads that don't depend on earlier stages are issued <i>before</i> the CTA waits for its inputs.</li>
+</ol>
+</section>
+
+<section class="ch" id="taskmap">
+<div class="num">06</div><h2>Which CU runs which task</h2>
+<p>TP4, 2 rows, indexer layer. Tap a stage to see which CTAs it uses and which task number each gets. Tap a cell to see that CTA's walk through the layer. The mapping is pure arithmetic from <code>start(name)</code> in <code>kernel.py</code>: CTA <code>bid</code> runs task <code>(bid − base) mod 256</code>, then +256, +512…</p>
+<div class="stage">
+<div class="chips" id="chips"></div>
+<div class="grid16" id="tgrid"></div>
+<div class="cap" id="tnote"></div>
+<div class="ph" id="ctaT">CTA walk</div>
+<div class="walk" id="walk"></div>
+<div class="ph">Inside one task</div>
+<div class="walk" id="anat"></div>
+</div>
+<ul>
+<li><b><code>qkv_a</code> starts at CTA 0</b> and uses CTAs 0–163. CTAs 164–255 are idle but already have their <code>q_b</code> weight loads in flight.</li>
+<li><b><code>split</code> is placed before <code>uk</code> on purpose</b>, at base 167, so split tiles land on CTAs that <code>qkv_a</code> has already freed.</li>
+<li><b><code>index_q</code> has no extra tasks at TP4.</b> Its 256 tiles exactly match <code>q_b</code>'s 256 tasks, so they ride on the same CTAs and reuse the normalised tile already in LDS.</li>
+<li><b><code>index_score</code> is 1,920 tasks</b>, 7–8 per CTA. <code>index_select</code> (the two-pass radix top-k) runs on CTAs 100–101 only.</li>
+</ul>
+</section>
+
+<section class="ch" id="timeline">
+<div class="num">07</div><h2>The layer in time</h2>
+<p>Illustrative schedule from the stage dependencies, TP4, 2 rows. Each band is a group of CTAs; blocks are stages; hatched blocks are the two in-kernel all-reduces. Durations are scaled from the work per stage, not measured. The real numbers come from building the op with <code>timeline=True</code>, which stamps <code>s_memrealtime</code> at the start and end of every task and when its inputs arrive.</p>
+<div class="stage">
+<div class="controls"><span class="lbl">Time</span><input type="range" id="tl" min="0" max="22" step="0.25" value="7" aria-label="Time"><span class="tv" id="tlv">7.0</span></div>
+<p class="now" id="tlnow"></p>
+<div class="two"><div class="panel"><h4>CUs at this moment</h4><div class="grid16" id="tlgrid"></div></div><div class="panel"><h4>Stages by CTA band</h4><div class="gwrap" id="tlgantt"></div></div></div>
+<div class="cap">Real edges are ragged, not vertical: a CTA starts a stage as soon as the specific mailbox pairs it reads are tagged, not when the whole previous stage ends.</div>
+</div>
+</section>
+
+<section class="ch" id="memory">
+<div class="num">08</div><h2>Global memory: scratch, peer buffer, mailboxes</h2>
+<p>The kernel touches three kinds of global memory. The <b>scratch buffer</b> is private to each GPU and holds the mailboxes between stages. The <b>symmetric peer buffer</b> is exported with HIP IPC so every GPU can write into every other GPU's copy; that's the in-kernel all-reduce. And <b>vLLM-owned buffers</b> come in as pointers: the input <code>h</code>, output <code>x_out</code>, packed weights, KV and index caches, <code>cos/sin</code>, the step counter, and <code>out_indices</code>.</p>
+<p>Sizes below come from running the PR's own <code>layout()</code> (<code>ops/mono/glm/layout.py</code>) with the GLM-5 config. Change the settings and watch which regions dominate.</p>
+<div class="stage" id="memwidget">
+<div class="rowctl"><span class="lbl">Rows</span><div class="seg" id="mrows"><button class="small" data-v="2">2</button><button class="small" data-v="4">4</button><button class="small" data-v="8" aria-pressed="true">8</button></div></div>
+<div class="rowctl"><span class="lbl">TP</span><div class="seg" id="mtp"><button class="small" data-v="4" aria-pressed="true">4</button><button class="small" data-v="8">8</button></div></div>
+<div class="rowctl"><span class="lbl">Layer</span><div class="seg" id="midx"><button class="small" data-v="0">No indexer</button><button class="small" data-v="1" aria-pressed="true">Indexer</button></div></div>
+<div class="rowctl"><span class="lbl">Context</span><input type="range" id="mctx" min="16" max="200" step="8" value="64" style="flex:1"><span class="tv" id="mctxo">64k</span></div>
+<div class="numcards" style="margin:.8rem 0"><div class="numcard"><b id="scrT">–</b><span>scratch, private per GPU</span></div><div class="numcard"><b id="symT">–</b><span>peer buffer, shared</span></div></div>
+<div class="cap" style="margin:.2rem 0 .3rem">Scratch, to scale</div>
+<div class="barscale" id="mbar"></div>
+<div class="legend" id="mleg"></div>
+<div id="mlist"></div>
+<div class="ph">Symmetric peer buffer (HIP IPC, every GPU can write)</div>
+<div id="msym"></div>
+</div>
+<h3>What stands out</h3>
+<ul>
+<li><b>Two regions dominate: <code>sp_acc</code> and <code>index_scores</code>.</b> <code>sp_acc</code> holds the split-softmax partials, one 512-wide accumulator per split, head and row. <code>index_scores</code> is one score per past token per row, so it grows with <code>max_model_len</code>.</li>
+<li><b>Every value is stored as a (value, tag) pair</b>: 8 bytes for a 4-byte value. The mailbox design roughly doubles scratch size. That's the price of a one-round-trip hand-off.</li>
+<li><b>One scratch is reused by all layers in a step</b>, which the epoch tag makes safe. But there is one runtime per width (2 / 4 / 8) × indexer / non-indexer, so up to six scratch and six peer buffers per GPU. The current layout adds three tiny regions the widget doesn't show, <code>poll_abort</code>, <code>poll_err_addr</code> and <code>poll_xrank_addr</code>, for the bounded-poll fail-stop, and the peer buffer gains a <code>poll_xrank</code> word per rank (plus a <code>dcp</code> region that is empty at DCP 1).</li>
+</ul>
+<h3>What a mailbox is</h3>
+<p>Physically, a mailbox is a slice of the scratch buffer: one <code>torch.zeros(nbytes, uint8)</code> made once when the runtimes are built. <code>mb("q_an")</code> is just <code>scratch + offset</code>, with the offset baked in at compile time. In practice the hot ones live in L2.</p>
+<p>A better picture than "dictionary" is a <b>pigeonhole wall</b>: a fixed grid of numbered 8-byte boxes, every box with a date stamp. The sender puts a value in box 37 stamped with today's date. The receiver checks box 37 and reads it only if the date is today. The names are labels painted on sections of the wall for humans.</p>
+<ul>
+<li><b>Writer</b> (<code>put</code>): one <code>buffer_store</code> of the pair <code>[value, tag]</code> as a single 8-byte write, so a reader never sees a new tag with an old value.</li>
+<li><b>Reader</b> (<code>poll</code>): load the pair, compare the tag to its own epoch. Match → fresh, continue. Else <code>s_sleep</code> briefly and reload. Loads use the <code>sc1</code> cache modifier so they bypass this CU's stale L1; peer-buffer loads use <code>sc0 sc1</code> to be visible across GPUs.</li>
+</ul>
+<h3>Why the tag is <code>step × launches_per_step + layer + 1</code></h3>
+<ul>
+<li><b>× launches_per_step</b>: layer <code>l</code> of step <code>s</code> gets a tag in <code>[s·L+1, s·L+L]</code>, so no two launches in the server's life share a tag and the sequence is strictly increasing. Anything left by the previous layer or the previous step fails the compare. That's what lets every layer share one scratch buffer.</li>
+<li><b>+ 1</b>: scratch starts as zeros, so tag 0 must mean "never written". Without the +1, step 0 layer 0 would read garbage as "ready".</li>
+<li><b>Why split step and layer</b>: <code>layer</code> is a kernel argument baked into the CUDA graph; <code>step</code> is read from a device-memory counter that <code>advance_step()</code> bumps once per step. So the captured graph never changes, and the only thing that moves between replays is one integer in memory.</li>
+</ul>
+<p>The tag is 32-bit, so it wraps after about 2³² ÷ L steps (≈55 million at 78 layers). Theoretically possible, not handled, and a fair reviewer question.</p>
+<h3>Bounded polls and fail-stop</h3>
+<p>A spin-wait that can never end is a hung GPU, so #60831 bounds every mailbox wait: a poll gives up after <code>spec.POLL_LIMIT</code> (20 million) retries, or sooner if a peer has raised the shared abort mark. An expired wait writes a sticky word per stage into the scratch (<code>poll_abort</code>, <code>poll_err_addr</code>) and, for cross-rank waits, into rank 0's peer buffer (<code>poll_xrank</code>). <code>_HealthWatch</code> copies those words to pinned host memory every step and checks the previous copy once its event completes, one step late and never blocking. On a hit, <code>_fail_stop</code> terminates the worker (non-output ranks exit immediately; rank 0 raises and exits after a grace period) so no rank is left spinning in a collective. The test-only <code>VLLM_MONO_UNSAFE_WARN=1</code> downgrades that to a warning.</p>
+</section>
+
+<section class="ch" id="qb">
+<div class="num">09</div><h2>Worked example: the <code>q_b</code> stage</h2>
+<p><code>q_b</code> is the second half of MLA's query path. GLM-5 doesn't produce the query with one big projection; it goes 6144 → 2048 (<code>q_a</code>), RMSNorm, then 2048 → 16 heads × 256 (<code>q_b</code>). The bottleneck saves parameters: 12.6M + 33.5M instead of ~100M per layer.</p>
+<div class="stage">
+<svg viewBox="0 0 380 372" role="img" aria-label="MLA query path shapes at TP4">
+<g font-size="11">
+<rect x="90" y="14" width="200" height="34" rx="5" fill="#F1EFE8" stroke="#888780"/><text x="190" y="28" text-anchor="middle" font-weight="700" fill="#444441">x: hidden state</text><text x="190" y="42" text-anchor="middle" fill="#444441">S × 6144 bf16</text>
+<line x1="190" y1="50" x2="190" y2="64" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="90" y="66" width="200" height="34" rx="5" fill="#EEEDFE" stroke="#534AB7"/><text x="190" y="80" text-anchor="middle" font-weight="700" fill="#3C3489">q_a projection</text><text x="190" y="94" text-anchor="middle" fill="#3C3489">W 2048 × 6144, in stage qkv_a</text>
+<line x1="190" y1="102" x2="190" y2="116" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="90" y="118" width="200" height="34" rx="5" fill="#F1EFE8" stroke="#888780"/><text x="190" y="132" text-anchor="middle" font-weight="700" fill="#444441">q_lora, then RMSNorm</text><text x="190" y="146" text-anchor="middle" fill="#444441">S × 2048 → mailbox q_an</text>
+<line x1="190" y1="154" x2="190" y2="168" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="90" y="170" width="200" height="34" rx="5" fill="#EEEDFE" stroke="#534AB7"/><text x="190" y="184" text-anchor="middle" font-weight="700" fill="#3C3489">q_b projection</text><text x="190" y="198" text-anchor="middle" fill="#3C3489">W 4096 × 2048 fp8, this GPU's 16 heads</text>
+<line x1="190" y1="206" x2="190" y2="220" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="90" y="222" width="200" height="34" rx="5" fill="#F1EFE8" stroke="#888780"/><text x="190" y="236" text-anchor="middle" font-weight="700" fill="#444441">q: 16 heads × 256</text><text x="190" y="250" text-anchor="middle" fill="#444441">S × 4096, per head 192 + 64</text>
+<line x1="150" y1="258" x2="110" y2="284" stroke="#46525F" marker-end="url(#ar)"/><line x1="230" y1="258" x2="270" y2="284" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="20" y="288" width="160" height="34" rx="5" fill="#E1F5EE" stroke="#0F6E56"/><text x="100" y="302" text-anchor="middle" font-weight="700" fill="#085041">q_nope</text><text x="100" y="316" text-anchor="middle" fill="#085041">S × 16 × 192 → uk stage</text>
+<rect x="200" y="288" width="160" height="34" rx="5" fill="#FAECE7" stroke="#D85A30"/><text x="280" y="302" text-anchor="middle" font-weight="700" fill="#712B13">q_pe, RoPE applied</text><text x="280" y="316" text-anchor="middle" fill="#712B13">S × 16 × 64 → split stage</text>
+<text x="190" y="350" text-anchor="middle" fill="#46525F">S = rows in the chunk (2, 4 or 8); 64 heads total, 16 per GPU at TP4</text>
+</g>
+</svg>
+</div>
+<h3>It is a matrix multiplication</h3>
+<p><b>Q = q_an · W_q_bᵀ</b>, q_an is S × 2048, W_q_b is 4096 × 2048, Q is S × 4096. With S = 2–8 it's a very skinny one, which people call a GEMV. Per sample the math is 2 × 2048 × 4096 ≈ 17 MFLOP; the weight read is 8 MB regardless of S. At S = 2 that's about 4 FLOPs per byte: memory bound by a mile.</p>
+<p>The 4096 rows are rows of the <b>weight matrix</b>, and each weight row produces one output feature. 4096 ÷ 16 rows per task = <b>256 tasks</b>, one per CTA at TP4. Each head is 256 rows, so tasks 0–15 are head 0, 16–31 head 1, and within a head the first 12 tasks write <code>q_nope</code>, the last 4 write <code>q_pe</code> after RoPE.</p>
+<h3>Inside one task</h3>
+<div class="stage">
+<svg viewBox="0 0 380 420" role="img" aria-label="Anatomy of one q_b task across 8 waves">
+<rect x="10" y="10" width="360" height="400" rx="8" fill="none" stroke="#46525F" stroke-dasharray="4 3"/>
+<text x="20" y="30" font-size="13" font-weight="700" fill="#1F2A37">One CTA, one q_b task t (16 weight rows)</text>
+<g font-size="11">
+<rect x="24" y="42" width="332" height="36" rx="5" fill="#E1F5EE" stroke="#0F6E56"/><text x="190" y="56" text-anchor="middle" font-weight="700" fill="#085041">1. Each wave issues its weight loads</text><text x="190" y="71" text-anchor="middle" fill="#085041">pre = [u_qb(c) …] · 1 KB tile per wave per unit</text>
+<line x1="190" y1="80" x2="190" y2="94" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="24" y="96" width="332" height="36" rx="5" fill="#F1EFE8" stroke="#888780"/><text x="190" y="110" text-anchor="middle" font-weight="700" fill="#444441">2. hint_wait on mb("q_an")</text><text x="190" y="125" text-anchor="middle" fill="#444441">wave 0 polls the (value, tag) pairs · barrier</text>
+<line x1="190" y1="134" x2="190" y2="148" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="24" y="150" width="332" height="36" rx="5" fill="#EEEDFE" stroke="#534AB7"/><text x="190" y="164" text-anchor="middle" font-weight="700" fill="#3C3489">3. stage_x_pairs: input rows → LDS xs</text><text x="190" y="179" text-anchor="middle" fill="#3C3489">all 512 threads copy S × 2048 values</text>
+<line x1="190" y1="188" x2="190" y2="202" stroke="#46525F" marker-end="url(#ar)"/>
+<g fill="#E1F5EE" stroke="#0F6E56"><rect x="24" y="204" width="40" height="52" rx="4"/><rect x="66" y="204" width="40" height="52" rx="4"/><rect x="108" y="204" width="40" height="52" rx="4"/><rect x="150" y="204" width="40" height="52" rx="4"/><rect x="192" y="204" width="40" height="52" rx="4"/><rect x="234" y="204" width="40" height="52" rx="4"/><rect x="276" y="204" width="40" height="52" rx="4"/><rect x="318" y="204" width="38" height="52" rx="4"/></g>
+<g fill="#085041" text-anchor="middle"><text x="44" y="224">w0</text><text x="44" y="242">K₀</text><text x="86" y="224">w1</text><text x="86" y="242">K₁</text><text x="128" y="224">w2</text><text x="128" y="242">K₂</text><text x="170" y="224">w3</text><text x="170" y="242">K₃</text><text x="212" y="224">w4</text><text x="212" y="242">K₄</text><text x="254" y="224">w5</text><text x="254" y="242">K₅</text><text x="296" y="224">w6</text><text x="296" y="242">K₆</text><text x="337" y="224">w7</text><text x="337" y="242">K₇</text></g>
+<text x="190" y="270" text-anchor="middle" fill="#46525F">4. run_units → mma_units: MFMA 16×16×32 per wave on its 256-k slice</text>
+<line x1="190" y1="278" x2="190" y2="292" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="24" y="294" width="332" height="36" rx="5" fill="#EEEDFE" stroke="#534AB7"/><text x="190" y="308" text-anchor="middle" font-weight="700" fill="#3C3489">5. reduce_rows via LDS red</text><text x="190" y="323" text-anchor="middle" fill="#3C3489">each wave stores 4 acc values · barrier · sum the 8 partials</text>
+<line x1="190" y1="332" x2="190" y2="346" stroke="#46525F" marker-end="url(#ar)"/>
+<rect x="24" y="348" width="332" height="36" rx="5" fill="#FAECE7" stroke="#D85A30"/><text x="190" y="362" text-anchor="middle" font-weight="700" fill="#712B13">6. put_bf → mb("q_nope") or mb("q_pe")</text><text x="190" y="377" text-anchor="middle" fill="#712B13">threads write (value, tag) pairs for the next stage</text>
+<text x="190" y="402" text-anchor="middle" fill="#46525F">then t += 256 (next task) or on to the next stage</text>
+</g>
+</svg>
+</div>
+<p>Only <b>x</b> is staged into LDS. Weights go HBM → registers → MFMA, each 1 KB tile read by exactly one wave, exactly once. The activations are tiny but every wave needs all of them, so they're copied once into <code>xs</code> and read eight times. That's why the LDS footprint scales with S × K, never with weight size.</p>
+<h3>The MFMA</h3>
+<div class="stage">
+<svg viewBox="0 0 380 240" role="img" aria-label="MFMA operand layout">
+<g font-size="11">
+<rect x="20" y="60" width="96" height="48" rx="4" fill="#E1F5EE" stroke="#0F6E56"/><text x="68" y="78" text-anchor="middle" font-weight="700" fill="#085041">A: 16 × 32</text><text x="68" y="96" text-anchor="middle" fill="#085041">weights, bf16</text>
+<text x="128" y="88" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2A37">×</text>
+<rect x="140" y="36" width="96" height="96" rx="4" fill="#EEEDFE" stroke="#534AB7"/><text x="188" y="68" text-anchor="middle" font-weight="700" fill="#3C3489">B: 32 × 16</text><text x="188" y="86" text-anchor="middle" fill="#3C3489">q_an from LDS</text><text x="188" y="102" text-anchor="middle" fill="#3C3489">S real columns</text>
+<text x="248" y="88" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2A37">+</text>
+<rect x="260" y="60" width="96" height="48" rx="4" fill="#FAECE7" stroke="#D85A30"/><text x="308" y="78" text-anchor="middle" font-weight="700" fill="#712B13">C: 16 × 16</text><text x="308" y="96" text-anchor="middle" fill="#712B13">fp32 accumulator</text>
+<text x="68" y="130" text-anchor="middle" fill="#46525F">8 bf16 per lane</text><text x="188" y="150" text-anchor="middle" fill="#46525F">8 bf16 per lane</text><text x="308" y="130" text-anchor="middle" fill="#46525F">4 fp32 per lane</text>
+<text x="190" y="184" text-anchor="middle" fill="#1F2A37">one instruction, one wave, 64 lanes hold all three tiles</text>
+<text x="190" y="204" text-anchor="middle" fill="#1F2A37">4 of these cover one 128-k unit, then × the fp32 block scale</text>
+<text x="190" y="224" text-anchor="middle" fill="#1F2A37">at S = 2 only 2 of the 16 columns carry real data</text>
+</g>
+</svg>
+</div>
+<div class="tbl"><table>
+<tr><th>Helper</th><th>Level</th><th>What it does</th></tr>
+<tr><td><code>u_qb(c)</code></td><td>wave</td><td>Computes <code>kc</code> for unit <code>c</code> of this wave, issues two <code>buffer_load</code>s (a 1 KB fp8 slab each) plus the block scale, and returns a descriptor <code>("fp8x2", [wv0, wv1], scale, b_word)</code>. <b>No math.</b></td></tr>
+<tr><td><code>hint_wait</code> / <code>poll</code></td><td>CTA</td><td>Wave 0 spins on a few (value, tag) pairs of <code>q_an</code> until the tag equals this epoch; barrier.</td></tr>
+<tr><td><code>stage_x_pairs</code></td><td>CTA</td><td>All 512 threads copy the mailbox rows into the LDS array <code>xs</code>.</td></tr>
+<tr><td><code>run_units</code></td><td>wave</td><td>Paces batches: issues the next batch's loads, then hands the current batch to <code>mma_units</code>.</td></tr>
+<tr><td><code>mma_units</code></td><td>wave</td><td>For each unit, 4 sub-passes: widen 8 fp8 → 8 bf16 (A), load 8 bf16 of <code>xs</code> (B), <code>rocdl.mfma_f32_16x16x32_bf16(a, b, c)</code>. Then <code>acc += c × coef</code>. This is the only place the matrix core is used.</td></tr>
+<tr><td><code>reduce_rows</code></td><td>CTA</td><td>Each wave stores its 4 partials into LDS <code>red</code>; barrier; 512 threads sum the 8 waves' contributions with plain adds. <b>No MFMA.</b></td></tr>
+<tr><td><code>emit_out</code> / <code>put_bf</code></td><td>CTA → grid</td><td>Finished 16 × S tile goes to LDS <code>outs</code>, RoPE on the <code>pe</code> rows, then tagged stores into the next mailbox.</td></tr>
+</table></div>
+<p>So: one wave computes <b>all 16 rows for all S sample columns</b>, but only for <b>its eighth of K</b>. Eight partial 16 × 16 tiles, summed through LDS, make the answer. K is split rather than rows because 16 is the MFMA's minimum height; splitting K keeps every MFMA full-sized while dividing the 2048-wide weight read eight ways.</p>
+<p>Per <code>q_b</code> task at TP4: 8 waves × 2 units × 4 MFMAs = 64 MFMA instructions, each reading 1 KB of weights that <code>u_qb</code> had already requested before the mailbox wait.</p>
+</section>
+
+<section class="ch" id="tables">
+<div class="num">10</div><h2>Every stage: what it calls, what it reads</h2>
+<p>Every stage is built from the same skeleton: wait → stage input → fetch units → MFMA → reduce → emit → put. The middle column lists the helpers in that order.</p>
+<div class="tbl"><table>
+<tr><th>Stage</th><th>Helpers, in pipeline order</th><th>Special</th></tr>
+<tr><td><span class="key k-a">qkv_a</span></td><td><code>start</code> → <code>stage_x_rmsnorm</code> → <code>u_qa</code> / <code>u_index_k</code> / <code>u_index_w</code> → <code>run_units</code> → <code>mma_units</code> → <code>reduce_rows</code> → <code>emit_out</code> → <code>put</code></td><td>reads <code>h</code> directly, no mailbox; also projects the indexer's k and gate</td></tr>
+<tr><td><span class="key k-a">q_norm</span></td><td><code>hint_wait</code>(q_a) → <code>stage_x_rmsnorm</code> → <code>put_bf</code>(q_an)</td><td>no MFMA; 2 CTAs</td></tr>
+<tr><td><span class="key k-a">cache</span></td><td><code>hint_wait</code>(kv_a) → <code>block_sum</code>, <code>wave_max</code>, <code>bf16_round</code> → <code>row_writes_cache</code> → <code>put</code>/<code>put2</code>/<code>put_bf</code></td><td>no MFMA; kv norm, RoPE, fp8 quant, cache writes; 1 CTA</td></tr>
+<tr><td><span class="key k-a">q_b</span></td><td><code>u_qb</code> → <code>hint_wait</code>(q_an) → <code>stage_x_pairs</code> → <code>run_units</code> → <code>mma_units</code> → <code>reduce_rows</code> → <code>emit_out</code> → <code>put_bf</code></td><td>RoPE on last 64 rows per head; index-Q folded in at TP4</td></tr>
+<tr><td><span class="key k-m">uk</span></td><td><code>u_uk</code> → <code>hint_wait</code>(q_nope) → <code>stage_x_pairs</code> → <code>run_units</code> → <code>mma_units</code> → <code>put_bf</code>(q_lat)</td><td>no <code>reduce_rows</code>: waves split heads, not K</td></tr>
+<tr><td><span class="key k-i">index_score</span></td><td><code>load_index_q8</code> → <code>get_bf2_many</code>(index_k) → <code>rocdl.mfma</code> directly → <code>put</code>(index_scores)</td><td>MFMA inline; fp8 index-cache reads; 7–8 tasks per CTA</td></tr>
+<tr><td><span class="key k-i">index_select</span></td><td><code>poll</code>(index_scores) → <code>clear_hist</code> → <code>radix_pass</code> / <code>select_digit</code> → <code>full_radix</code> on overflow → <code>gather</code>, <code>publish_all</code> → <code>put</code>(indices)</td><td>no GEMM; LDS histogram, atomics; 2 CTAs</td></tr>
+<tr><td><span class="key k-m">split</span></td><td><code>hint_wait</code>(indices, q_lat, q_pe) → <code>gather_old_kv</code>, <code>patch_new_kv</code> → <code>rocdl.mfma</code> directly → <code>wave_max</code>, <code>wave_sum</code> → <code>put</code>(sp_acc, sp_m, sp_l)</td><td>QKᵀ and softmax·V on 64-key splits</td></tr>
+<tr><td><span class="key k-m">uv</span></td><td><code>u_uv</code> → <code>poll</code>(sp_*) → merge splits (<code>wave_max</code>, <code>wave_sum</code>) → <code>run_units</code> → <code>mma_units</code> → <code>reduce_rows</code> → <code>put_bf</code>(o)</td><td>log-sum-exp merge of 32 splits before W_UV</td></tr>
+<tr><td><span class="key k-m">o</span></td><td><code>u_o</code> → <code>hint_wait</code>(o) → <code>stage_x_pairs</code> → <code>run_units</code> → <code>mma_units</code> → <code>reduce_rows</code> → <code>peer_reduce</code> → <code>resid_h</code> → <code>put_bf</code>(a)</td><td>first all-reduce + residual</td></tr>
+<tr><td><span class="key k-e">router</span></td><td><code>hint_wait</code>(a) → <code>stage_x_rmsnorm</code> → <code>u_r</code> (bf16 gate GEMV, K-folded) → <code>run_units</code> → LDS reduce → sigmoid → <code>put</code>(scores); <code>quant_mxfp8</code> → <code>put</code>(xq, xqs, xqd)</td><td>one sample per CTA, 8 experts per task (S × 32 tasks); top-8 happens later in <code>route_top8</code>, one wave per sample, with the expert bias and exact fp32 ties → sel, prob</td></tr>
+<tr><td><span class="key k-e">ug</span></td><td><code>hint_wait</code>(sel, xq) → <code>ug_prep</code>, <code>ug_units</code> → <code>u_ug</code> / <code>u_ug8</code> → <code>mma_units</code> → <code>ug_finish</code> → <code>put</code>(mid, ugp)</td><td>up + gate, SiLU; 4 tasks per CTA</td></tr>
+<tr><td><span class="key k-e">down</span></td><td><code>hint_wait</code>(mid) → <code>u_dn</code> → <code>run_units</code> → <code>mma_units</code> → <code>reduce_rows</code> → <code>emit_dn</code> → <code>peer_reduce</code> → <code>residual_a</code> → <code>store_x</code></td><td>second all-reduce; writes <code>x_out</code>, not a mailbox</td></tr>
+</table></div>
+<h3>Besides MFMA, what instructions run</h3>
+<ul>
+<li><b>VMEM</b>: <code>buffer_load</code> of weight tiles (the dominant traffic); scales and RoPE tables; mailbox <code>put</code> / <code>poll</code>; KV and index cache reads and writes; IPC stores into peer GPUs.</li>
+<li><b>LDS</b>: <code>lds_ld</code> / <code>lds_st</code> on <code>xs</code>, <code>red</code>, <code>outs</code> and the top-k histogram.</li>
+<li><b>VALU</b>: fp8/mxfp4 → bf16 widening, block-scale multiplies, RMSNorm (<code>rsq</code>), RoPE, softmax <code>exp</code>/max/sum, SiLU, residual adds, activation quant, radix counting.</li>
+<li><b>Cross-lane</b>: <code>xshfl</code>, <code>bpermute</code>, <code>readlane</code>, DPP reductions for wave-wide max and sum without LDS.</li>
+<li><b>SALU</b>: the address arithmetic that is the same across a wave (<code>start</code>, <code>mb</code> offsets, loop counters).</li>
+<li><b>Sync</b>: ~93 <code>gpu.barrier()</code>, compiler-inserted <code>s_waitcnt</code>, <code>s_sleep</code> in poll loops, <code>s_memrealtime</code> for the timeline.</li>
+</ul>
+<h3>Inputs per stage, per GPU, TP4, S = 8, 60k context</h3>
+<div class="tbl"><table>
+<tr><th>Stage</th><th>Input</th><th>Shape</th><th>Dtype</th><th>Size</th></tr>
+<tr><td rowspan="6"><span class="key k-a">qkv_a</span></td><td><code>h</code> layer input (from vLLM, no mailbox)</td><td>8 × 6144</td><td>bf16</td><td>96 KB</td></tr>
+<tr><td><code>g_in</code> norm gamma</td><td>6144</td><td>bf16</td><td>12 KB</td></tr>
+<tr><td><code>w_qkv_a</code> (2048 q_a + 512 kv_a + 64 pe rows)</td><td>2624 × 6144</td><td>fp8 + fp32/128²</td><td>16.1 MB</td></tr>
+<tr><td><code>w_index_k</code></td><td>128 × 6144</td><td>bf16</td><td>1.5 MB</td></tr>
+<tr><td><code>w_index_w</code></td><td>32 × 6144</td><td>bf16</td><td>384 KB</td></tr>
+<tr><td>outputs: <code>q_a</code>, <code>kv_a</code>, <code>index_k</code>, <code>index_w</code></td><td>8 × (2048 / 576 / 128 / 32)</td><td>(bf16, tag)</td><td>128 / 36 / 8 / 2 KB</td></tr>
+<tr><td><span class="key k-a">q_norm</span></td><td><code>q_a</code>, <code>g_q</code></td><td>8 × 2048; 2048</td><td>(bf16, tag); bf16</td><td>128 KB; 4 KB</td></tr>
+<tr><td><span class="key k-a">cache</span></td><td><code>kv_a</code>, <code>g_kv</code>, rope rows; writes 8 KV + index slots</td><td>8 × 576</td><td>(bf16, tag)</td><td>36 KB</td></tr>
+<tr><td rowspan="2"><span class="key k-a">q_b</span></td><td><code>q_an</code></td><td>8 × 2048</td><td>(bf16, tag)</td><td>128 KB</td></tr>
+<tr><td><code>w_q_b</code></td><td>4096 × 2048</td><td>fp8 + scales</td><td>8.0 MB</td></tr>
+<tr><td rowspan="2"><span class="key k-m">uk</span></td><td><code>q_nope</code></td><td>8 × 16 × 192</td><td>(bf16, tag)</td><td>192 KB</td></tr>
+<tr><td><code>w_uk</code></td><td>16 × 192 × 512</td><td>fp8 PTPC</td><td>1.5 MB</td></tr>
+<tr><td rowspan="2"><span class="key k-i">index_score</span></td><td><code>index_q</code></td><td>8 × 2048</td><td>(bf16, tag)</td><td>128 KB</td></tr>
+<tr><td>index cache, per row</td><td>60k × 128 + scales</td><td>fp8</td><td>7.7 MB × 8 rows</td></tr>
+<tr><td><span class="key k-i">index_select</span></td><td><code>index_scores</code></td><td>8 × 61,440</td><td>(fp32, tag)</td><td>3.75 MB</td></tr>
+<tr><td rowspan="2"><span class="key k-m">split</span></td><td><code>indices</code>, <code>q_lat</code>, <code>q_pe</code></td><td>8 × 2048; 8 × 16 × 512; 8 × 16 × 64</td><td>int32; (bf16, tag)</td><td>64 KB; 512 KB; 64 KB</td></tr>
+<tr><td>KV gather, per row</td><td>2048 × (512 + 128)</td><td>fp8 + bf16</td><td>1.3 MB × 8 rows</td></tr>
+<tr><td rowspan="2"><span class="key k-m">uv</span></td><td><code>sp_acc</code>, <code>sp_m</code>, <code>sp_l</code></td><td>8 × 32 × 16 × 512</td><td>(fp32, tag)</td><td>16 MB</td></tr>
+<tr><td><code>w_uv</code></td><td>16 × 256 × 512</td><td>fp8 PTPC</td><td>2.0 MB</td></tr>
+<tr><td rowspan="3"><span class="key k-m">o</span></td><td><code>o</code>, <code>h</code> residual</td><td>8 × 16 × 256; 8 × 6144</td><td>(bf16, tag); bf16</td><td>256 KB; 96 KB</td></tr>
+<tr><td><code>w_o</code></td><td>6144 × 4096</td><td>fp8 + scales</td><td>24.0 MB</td></tr>
+<tr><td>peer <code>attn</code> slots</td><td>4 ranks × 8 × 6144</td><td>(bf16, tag)</td><td>1.5 MB</td></tr>
+<tr><td rowspan="2"><span class="key k-e">router</span></td><td><code>a</code>, <code>g_post</code>, <code>bias</code></td><td>8 × 6144</td><td>(bf16, tag)</td><td>384 KB</td></tr>
+<tr><td><code>w_r</code></td><td>256 × 6144</td><td>bf16</td><td>3.0 MB</td></tr>
+<tr><td rowspan="2"><span class="key k-e">ug</span></td><td><code>xq</code>, <code>xqs</code>, <code>sel</code>, <code>prob</code></td><td>8 × 6144; 8 × 192; 8 × 9</td><td>fp8/mxfp8; int32; fp32</td><td>~52 KB</td></tr>
+<tr><td><code>w_ug</code>, touched experts only</td><td>≤65 × 1024 × 6144</td><td>mxfp4 + e8m0/32</td><td>3.2 MB per expert</td></tr>
+<tr><td rowspan="3"><span class="key k-e">down</span></td><td><code>mid</code></td><td>8 × 9 × 512</td><td>(bf16, tag)</td><td>288 KB</td></tr>
+<tr><td><code>w_dn</code>, touched experts only</td><td>≤65 × 6144 × 512</td><td>mxfp4 + e8m0/32</td><td>1.6 MB per expert</td></tr>
+<tr><td>peer <code>ffn</code> slots</td><td>4 ranks × 8 × 6144</td><td>(bf16, tag)</td><td>1.5 MB</td></tr>
+</table></div>
+<p>Weights dominate, and <code>w_o</code> is the single biggest read at 24 MB because it projects back to the full 6144 width before the all-reduce. The full expert tables are ~860 MB and ~430 MB per GPU, but only the routed experts are read, which is why batch helps MoE. The index-cache scan is the biggest activation-side read and the only one that grows with context. Everything always-read sums to roughly 55 MB per layer plus routed experts plus cache reads: on 8 TB/s that is a floor near 20 µs per layer, which is what the MonoKernel is trying to approach.</p>
+</section>
+
+<section class="ch" id="abstractions">
+<div class="num">11</div><h2>The kernel's abstractions, and where they live</h2>
+<p>Read it top-down and it's <b>layer → stage → task → tile</b>. Read it bottom-up and it's <b>lane → wave → CTA</b>. The task is where the two meet: one CTA, one task, eight waves sharing it.</p>
+<pre>tid  = fx.thread_idx.x     # 0..511 within the CTA
+bid  = fx.block_idx.x      # 0..255, which CTA
+lane = tid % 64            # position in the wave
+wave = tid // 64           # 0..7, which wave
+
+for t in range(start("q_b"), N_QB, G):   # G = 256: the whole scheduler</pre>
+<div class="tbl"><table>
+<tr><th>Kernel concept</th><th>Hardware level</th><th>Why</th></tr>
+<tr><td>Stage</td><td>all 256 CTAs</td><td>a phase of the layer</td></tr>
+<tr><td>Task</td><td>one CTA (= one CU)</td><td>needs LDS + barrier to combine waves</td></tr>
+<tr><td>K-slice of a task</td><td>one wave</td><td>one issue stream, one MFMA</td></tr>
+<tr><td>Unit (1 KB tile)</td><td>one wave, 64 lanes × 16 B</td><td>one coalesced load = one MFMA operand</td></tr>
+<tr><td>Element of a tile</td><td>one lane</td><td>registers are per lane</td></tr>
+<tr><td><code>red</code>, <code>xs</code>, <code>outs</code></td><td>LDS of the CU</td><td>shared by the 8 waves</td></tr>
+<tr><td>Mailbox</td><td>L2 / HBM scratch</td><td>shared across CUs</td></tr>
+<tr><td>Peer buffer</td><td>other GPUs' HBM</td><td>IPC-mapped</td></tr>
+</table></div>
+<h3>Warp specialisation, one level up</h3>
+<p>Warp specialisation gives different warps in a CTA different roles (loader, MMA, storer) and hands tiles through LDS. The MonoKernel does the same trick with <b>whole CTAs</b> as the units and <b>stages</b> as the roles, handing data through global mailboxes. Inside each CTA the eight waves are mostly homogeneous (same job, different K-slice), with two exceptions: wave 0 does the multi-producer polling, and every wave software-pipelines itself by issuing weight loads before it waits. On CDNA, which has no TMA or mbarrier, that per-wave prefetch is most of what a loader warp would buy. Combining both is a possible follow-up for the weight-streaming stages, not something the PR claims.</p>
+</section>
+
+<section class="ch" id="flydsl">
+<div class="num">12</div><h2>The FlyDSL API it's written in</h2>
+<p>FlyDSL is a Python-embedded DSL: you write the kernel as Python, FlyDSL <b>traces</b> it into MLIR (<code>gpu</code>, <code>rocdl</code>, <code>llvm</code> dialects), and LLVM compiles that to GFX950 code. The mental model: <b>Python runs once at build time and emits the GPU program</b>. By run time the MLIR is gone; <code>launch()</code> just hands a compiled code object to HIP with 44 pointers and ints.</p>
+<div class="tbl"><table>
+<tr><th>Purpose</th><th>API used</th><th>Note</th></tr>
+<tr><td>Define / launch</td><td><code>@flyc.kernel(known_block_size=[512,1,1])</code>, args as <code>Int64</code> pointers, <code>.launch(grid, block, stream)</code>, <code>fx.Stream</code></td><td>no tensor type; raw pointers only</td></tr>
+<tr><td>Compile-time vs run-time</td><td><code>const_expr(cond)</code>, <code>range_constexpr(n)</code>, plain Python loops and nested <code>def</code>s</td><td>untaken branches vanish; loops unroll; helpers are macros, inlined at each call</td></tr>
+<tr><td>Values</td><td><code>fx.Int32/Int64/Float32/BFloat16</code>, <code>fx.Vector</code>, <code>.bitcast</code>, <code>fmath.exp/rsq</code>, <code>T.vec(4, T.f32)</code></td><td>only these become SSA values</td></tr>
+<tr><td>Identity</td><td><code>fx.thread_idx.x</code>, <code>fx.block_idx.x</code></td><td>lane / wave / bid derived by hand</td></tr>
+<tr><td>LDS</td><td><code>@fx.struct class Smem</code> with <code>fx.Array</code>, <code>fx.SharedAllocator()</code></td><td>declares the fixed layout</td></tr>
+<tr><td>Global memory</td><td><code>fx.ptr_load/ptr_store</code>, <code>fx.inttoptr</code>; <code>bo.create_buffer_resource_from_addr</code>, <code>bo.buffer_load/store</code> with cache modifiers; <code>fx.atomic_add</code>, <code>fx.memory_fence</code></td><td>buffer instructions for weight streaming and mailboxes</td></tr>
+<tr><td>Sync / cross-lane</td><td><code>gpu.barrier()</code>, <code>fx.coop.warp_inclusive_scan</code>, <code>rocdl.readlane/readfirstlane/ds_bpermute/permlane*_swap</code>, <code>llvm.InlineAsmOp</code> for DPP, <code>llvm.call_intrinsic</code> for <code>s_sleep</code>, <code>s_memrealtime</code></td><td>escape hatches to raw ISA where needed</td></tr>
+<tr><td>Matrix / convert</td><td><code>rocdl.mfma_f32_16x16x32_bf16</code>, <code>…fp8_fp8</code>, <code>rocdl.mfma_scale_f32_16x16x128_f8f6f4</code>, <code>rocdl.cvt_pk_fp8_f32</code>, <code>cvt_scalef32_pk_bf16_fp8/fp4</code></td><td>the CDNA4 scaled MFMA runs the native MXFP4 experts</td></tr>
+</table></div>
+<p>Why this and not Triton or HIP C++: Triton hides the wave; FlyDSL exposes <code>lane</code>, <code>wave</code>, the LDS layout and raw intrinsics, which the mailbox and packing tricks need. HIP would give the same control, but the Python-as-macro layer lets one source generate the dense, indexer, non-indexer, TP4 and TP8 variants with <code>const_expr</code>, which is how <code>_build()</code> compiles six specialised kernels from one file on the first kernel step.</p>
+</section>
+
+<section class="ch" id="limits">
+<div class="num">13</div><h2>Limits, lineage, and what comes next</h2>
+<h3>Is it a hard-coded megakernel?</h3>
+<p>Mostly yes. GLM-5's shapes are module-level constants (<code>HIDDEN</code>, <code>KV_LORA</code>, <code>N_EXPERTS</code>, …), <code>BLOCKS = 256</code> matches the MI355X CU count and the persistent design needs every CTA resident, and the deployment is fixed to TP4/8, chunks of 2/4/8 rows, top-k 2048, fp8 KV, block-FP8 attention weights and MXFP4 experts. What's flexible is that it's a <i>generator</i>: FlyDSL compiles a specialised kernel per combination of samples, TP, indexer, cache layout and dense slices. It is a hand-tuned kernel for one model on one GPU, like the TileRT MonoKernel it references, not a general megakernel compiler like Mirage's MPK.</p>
+<h3>Why not 32 rows?</h3>
+<p>The kernel asserts <code>S ≤ 12</code>. The MFMA tile is 16 columns wide, so S = 16 is the natural ceiling of one accumulator. The real cap is LDS: <code>qkv_a</code> stages S × 6144 bf16 into <code>xs</code>, 96 KB at 8 rows, 144 KB at 12, 192 KB at 16, against 160 KB. Per-row scratch and task counts grow too (<code>split</code> is S × heads × 32 tasks). And the payoff shrinks: at 32 rows a batched GEMM is already near the memory roof, so the latency gap the kernel closes is smaller just as the engineering cost rises. Today <code>spec.step_reason()</code> accepts only 1, 2, 4 or 8 tokens; a 32-token step falls back to the normal chain.</p>
+<h3>Why 16 is the next step, and it's small</h3>
+<p>At 16 every MFMA column carries a real row; the padding disappears. The only thing over budget is <code>qkv_a</code>'s staging, and each wave only ever reads its own K-slice of <code>xs</code>, so staging x in two K-halves (or reading the B operand straight from the mailbox into registers, as the weights already do) removes the limit without touching the stage order, bases or mailbox contract. Then add 16 to <code>spec.STEP_TOKENS</code> and the kernel's <code>SUPPORTED_SAMPLES</code>, a fourth compiled width in <code>_build()</code>, and regenerate <code>layout()</code>. At 16 rows the intensity is ~32 FLOP/B against a ridge near 300, so the fusion win is nearly as large as at 8.</p>
+<h3>A group of megakernels for bigger batches</h3>
+<p>Splitting at the all-reduce after <code>o_proj</code> into an attention kernel and an MoE kernel is the sane middle ground above 16: each phase gets its own tiling (per row and head for attention; per expert with rows sorted by expert for MoE), the LDS budget resets, and the cost is one launch gap per layer instead of eighteen. The MoE half is close to what AITER's fused MoE already is; the sparse-attention chain (indexer, top-k, gather, split, merge) is where a persistent kernel keeps paying at mid-batch. The mailbox contract can survive the seam: the attention kernel's <code>o</code> stage writes <code>a</code> as tagged pairs, the MoE kernel's <code>router</code> polls them.</p>
+<h3>Where the mailbox idea comes from</h3>
+<p>The kernel's docstring says it: the tagged-pair protocol ("payload + launch epoch is the progress protocol for resident CTAs") is from <a href="https://github.com/tile-ai/TileRT">TileRT</a>'s MonoKernel, the tile-ai / TileLang team's persistent decode runtime for DeepSeek-V3.2 and GLM-5 on NVIDIA, which also plugs into vLLM as a decode engine through the V1 KVConnector. The port came through ROCm/ATOM#2435 into AITER and FlyDSL, and now lives in vLLM's tree. Underneath TileRT, the packed data+flag word is the shape of NCCL's LL protocol, and the resident-CTAs-walking-a-stage-list pattern is the 2025 megakernel line (Hazy Research's counters, Mirage MPK's event table). TileRT's contribution was the monotonically increasing launch epoch as the flag, which is what makes CUDA-graph replay clean with no reset kernel. The ISA-level realisation here (buffer stores with <code>sc1</code>, DPP polling across 64 lanes, IPC peer slots) is the AMD side's.</p>
+</section>
+
+<footer>Written from the diff of vllm-project/vllm #60831 (and the earlier #60216 / ROCm/aiter #6173), October 2026. Durations in the animations are illustrative; memory sizes are from the PR's own <code>layout()</code>. Part of <a href="../index.html">GLM-5.2 home</a>.</footer>
+</main>
+<nav class="rail" aria-label="Sections"><ol><li><a href="#roofline">01 Roofline</a></li><li><a href="#hardware">02 CU, CTA, wave, lane</a></li><li><a href="#occupancy">03 Occupancy math</a></li><li><a href="#animation">04 Before vs after</a></li><li><a href="#howitworks">05 How it works</a></li><li><a href="#taskmap">06 Task map</a></li><li><a href="#timeline">07 Timeline</a></li><li><a href="#memory">08 Memory + mailboxes</a></li><li><a href="#qb">09 q_b example</a></li><li><a href="#tables">10 Tables</a></li><li><a href="#abstractions">11 Abstractions</a></li><li><a href="#flydsl">12 FlyDSL</a></li><li><a href="#limits">13 Limits + lineage</a></li></ol></nav>
+</div>
 <script>
 (function(){
-const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
-let RUN=0; const T=[];
-function later(fn,ms){const id=setTimeout(fn,ms);T.push(id);return id;}
-function clearTimers(){while(T.length)clearTimeout(T.pop());}
-function tween(ms,fn,done){const my=RUN,t0=performance.now();(function f(now){if(my!==RUN)return;const p=Math.min(1,(now-t0)/ms);fn(p);if(p<1)requestAnimationFrame(f);else if(done)done();})(t0);}
-const ease=p=>p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
-const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+/* ---------- shared data ---------- */
+const P={a:{bg:'#EEEDFE',fg:'#534AB7',ink:'#3C3489',name:'Attention inputs'},i:{bg:'#FAEEDA',fg:'#BA7517',ink:'#633806',name:'Indexer'},m:{bg:'#E1F5EE',fg:'#0F6E56',ink:'#085041',name:'Sparse MLA'},e:{bg:'#FAECE7',fg:'#D85A30',ink:'#712B13',name:'MoE'},g:{bg:'#E3E7EB',fg:'#8A94A0',ink:'#444441',name:'All-reduce'},h:{bg:'#F6DADA',fg:'#B23A3A',ink:'#5A1A1A',name:'Launch gap + HBM drain'}};
+const E=[['qkv_a','a',[[0,163]],0,3,'fused q/kv projection, 164 weight tiles'],['q_norm','a',[[164,165]],3,3.5,'RMSNorm of q_lora'],['cache','a',[[166,166]],3,3.5,'RoPE + KV cache write'],['q_b + index_q','a',[[0,255]],3.5,5.5,'q_b projection; index-Q rides along at TP4'],['uk','m',[[39,102]],5.5,6.5,'q_nope · W_UK → q_lat'],['index_score','i',[[0,38],[103,255]],5.5,9,'score every past token, fp8 index cache'],['index_score','i',[[39,102]],6.5,10,'score every past token, fp8 index cache'],['index_select','i',[[100,101]],10,11,'two-pass radix top-2048'],['split','m',[[167,255],[0,38]],11,13,'partial softmax·V over 32 key splits'],['uv','m',[[103,230]],13,14,'merge splits · W_UV'],['o','m',[[231,255],[0,166]],14,15.5,'o_proj, push partials to peers'],['reduce attn','g',[[0,255]],15.5,16,'sum peer partials + residual'],['router','e',[[167,230]],16,16.5,'gate GEMM, top-8, activation quant'],['ug ×4','e',[[0,255]],16.5,19,'up/gate experts, 4 tasks per CTA'],['down','e',[[0,255]],19,21,'down experts, push partials to peers'],['reduce ffn','g',[[0,255]],21,21.5,'sum peer partials + residual']];
+const B=[[0,38],[39,99],[100,102],[103,163],[164,166],[167,230],[231,255]];
+const T_MONO=22;
+const cov=(e,c)=>e[2].some(r=>c>=r[0]&&c<=r[1]);
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const perm=[...Array(256).keys()];for(let i=255,s=7;i>0;i--){s=(s*1103515245+12345)&0x7fffffff;const j=s%(i+1);[perm[i],perm[j]]=[perm[j],perm[i]];}
+function mkgrid(el,click){for(let i=0;i<256;i++){const d=document.createElement(click?'button':'div');d.className='cell';if(click){d.setAttribute('aria-label','CTA '+i);d.setAttribute('aria-pressed','false');d.addEventListener('click',()=>click(i));}el.appendChild(d);}}
+function ganttMono(container,T,W,L,RH){const xs=x=>L+(W-14-L)*x/T;let s=`<svg viewBox="0 0 ${W} ${B.length*RH+44}" width="${W}" role="img" aria-label="MonoKernel stages per CTA band"><defs><pattern id="hp${container}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#8A94A0" stroke-width="1.5"/></pattern></defs>`;
+[0,5,10,15,20].forEach(x=>s+=`<line x1="${xs(x)}" y1="2" x2="${xs(x)}" y2="${B.length*RH+4}" stroke="#E6EAEE"/>`);
+B.forEach((b,i)=>{const y=i*RH+4;s+=`<text x="${L-8}" y="${y+RH/2}" text-anchor="end" dominant-baseline="central" style="font:11px ui-monospace,Menlo,monospace;fill:#46525F">${b[0]}–${b[1]}</text>`;
+E.forEach(e=>{const full=e[2].some(r=>r[0]<=b[0]&&r[1]>=b[1]);const partial=e[0]==='index_select'&&e[2].some(r=>r[0]<=b[1]&&r[1]>=b[0]);if(!full&&!partial)return;const p=P[e[1]],x=xs(e[3]),w=xs(e[4])-x;
+s+=`<rect x="${x}" y="${y+3}" width="${w}" height="${RH-6}" rx="4" fill="${e[1]==='g'?'url(#hp'+container+')':p.bg}" stroke="${p.fg}"/>`;if(w>44)s+=`<text x="${x+w/2}" y="${y+RH/2}" text-anchor="middle" dominant-baseline="central" style="font:11px ui-monospace,Menlo,monospace;fill:#1F2A37">${e[0].split(' ')[0]}</text>`;});});
+const y=B.length*RH+8;[0,5,10,15,20].forEach(x=>s+=`<text x="${xs(x)}" y="${y+12}" text-anchor="middle" style="font:11px sans-serif;fill:#46525F">${x}</text>`);
+s+=`<line id="cur_${container}" x1="${L}" y1="2" x2="${L}" y2="${B.length*RH+4}" stroke="#1F2A37" stroke-width="2"/></svg>`;document.getElementById(container).innerHTML=s;return xs;}
 
-/* ---- prepare page ---- */
-const sections=$$('section.ch');
-const tocSections=[$('#ch0'),...sections].filter(Boolean);
-sections.forEach(sec=>{
-  $$('.say p',sec).forEach(p=>{
-    const text=p.textContent.trim();let parts;
-    try{parts=text.split(/(?<=[.!?])\s+(?=[A-Z0-9"“(])/);}catch(e){parts=text.split('. ').map((s,i,a)=>i<a.length-1?s+'.':s);}
-    p.innerHTML=parts.map(s=>'<span class="s">'+esc(s)+'</span>').join(' ');
-  });
-  const stage=$('.stage',sec), say=$('.say',sec);
-  const synced=['ch11','ch12','chnm','chpd'];
-  if(stage&&say&&!synced.includes(sec.id)){sec.insertBefore(stage,say);stage.classList.add('pin');}
-  if(synced.includes(sec.id)){const live=document.createElement('div');live.className='live';live.id=sec.id+'live';stage.insertBefore(live,stage.firstChild);}
-});
-const toc=$('#toc');
-tocSections.forEach(sec=>{const li=document.createElement('li');const a=document.createElement('a');a.href='#'+sec.id;const num=$('.num',sec).textContent.replace('Chapter ','');a.textContent=(sec.id==='ch0'?'★ '+$('h2',sec).textContent:num+'. '+$('h2',sec).textContent);a.id='toc-'+sec.id;li.appendChild(a);toc.appendChild(li);});
-const io=new IntersectionObserver(es=>{es.forEach(e=>{const a=$('#toc-'+e.target.id);if(a)a.classList.toggle('now',e.isIntersecting); if(e.isIntersecting&&typeof modelFor==='function')modelFor(e.target.id);});},{rootMargin:'-40% 0px -50% 0px'});
-tocSections.forEach(s=>io.observe(s));
-
-/* ---- speech ---- */
-const synth=window.speechSynthesis; let voice=null; let rate=0.92; let voicesReady=false;
-const sel=$('#voiceSel');
-function score(v){ const n=(v.name||''), l=(v.lang||''); let sc=0;
-  if(/^en/i.test(l))sc+=100; if(/en[-_]GB/i.test(l))sc+=5;
-  if(/premium|enhanced|natural|neural/i.test(n))sc+=40;
-  if(/samantha|daniel|karen|moira|ava|zoe|serena|oliver|kate/i.test(n))sc+=25;   /* macOS voices */
-  if(/google uk english/i.test(n))sc+=20; if(/google us english/i.test(n))sc+=15;
-  if(/microsoft (aria|sonia|libby|ryan|guy)/i.test(n))sc+=20;
-  if(/compact|espeak|novelty|zarvox|trinoids|whisper|bubbles|bad news|good news|cellos|bells|boing|deranged|hysterical|pipe organ|albert|fred|junior|ralph|kathy|bahh|jester|organ|superstar|wobble|rocko|shelley|grandma|grandpa|eddy|flo|reed|sandy/i.test(n))sc-=60;
-  return sc; }
-function loadVoices(){ if(!synth)return; const vs=synth.getVoices(); if(!vs.length)return false;
-  voicesReady=true; const sorted=vs.slice().sort((a,b)=>score(b)-score(a));
-  const saved=localStorage.getItem('glmVoice');
-  sel.innerHTML=''; sorted.forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o);});
-  voice=(saved&&sorted.find(v=>v.name===saved))||sorted[0]; sel.value=voice.name; return true; }
-function pickVoice(){ if(!voice)loadVoices(); }
-if(synth){ if(!loadVoices()){ let tries=0; const iv=setInterval(()=>{tries++; if(loadVoices()||tries>20)clearInterval(iv);},250); }
-  synth.onvoiceschanged=()=>{ if(!voicesReady)loadVoices(); };
-  sel.addEventListener('change',()=>{ const vs=synth.getVoices(); voice=vs.find(v=>v.name===sel.value)||voice; localStorage.setItem('glmVoice',voice.name); say('This is the voice I will read with.'); });
-  $('#voiceTest').addEventListener('click',()=>say('Hello Sriram. This is how I sound.'));
-} else { sel.innerHTML='<option value="">no voice in this browser</option>'; $('#voiceTest').disabled=true; }
-function say(text){ if(!synth)return; pickVoice(); synth.cancel(); const u=new SpeechSynthesisUtterance(text); if(voice){u.voice=voice;u.lang=voice.lang;} u.rate=rate; synth.speak(u); }
-function unlock(){ if(!synth)return; try{ const u=new SpeechSynthesisUtterance(' '); u.volume=0; synth.speak(u); }catch(e){} }  /* Safari: first speak must happen inside the click */
-
-function speakSection(sec,onSentence){
-  const my=RUN; const spans=$$('.say .s',sec); spans.forEach(s=>s.classList.remove('on','did'));
-  return new Promise(resolve=>{
-    let i=0;
-    function mark(k){spans.forEach((s,j)=>{s.classList.toggle('on',j===k);s.classList.toggle('did',j<k);});
-      const sp=spans[k];const r=sp.getBoundingClientRect();
-      if(!['ch11','ch12','chnm','chpd'].includes(sec.id)&&(r.top<120||r.bottom>window.innerHeight-40))sp.scrollIntoView({behavior:'smooth',block:'center'});
-      if(onSentence)onSentence(k,sp.textContent);}
-    function next(){ if(my!==RUN){return resolve();} if(i>=spans.length){spans.forEach(s=>s.classList.remove('on'));return resolve();}
-      mark(i); const text=spans[i].textContent; i++;
-      if(synth){ pickVoice(); const u=new SpeechSynthesisUtterance(text); if(voice){u.voice=voice;u.lang=voice.lang;} u.rate=rate; u.pitch=1;
-        u.onend=()=>{if(my!==RUN)return resolve();later(next,220);}; u.onerror=()=>{if(my!==RUN)return resolve();later(next,200);};
-        synth.speak(u);
-      } else { later(next, 380*text.split(/\s+/).length); }
-    }
-    next();
-  });
-}
-
-/* ---- animations ---- */
-const A={};
-A.ch1=function(){ const my=RUN;
-  tween(1800,p=>{const q=ease(p);$('#c1b1').setAttribute('width',(100*q).toFixed(1));$('#c1t1').textContent=Math.round(200000*q).toLocaleString()+' tokens';$('#c1t1').setAttribute('x',118+100*q);
-    $('#c1b2').setAttribute('width',(520*q).toFixed(1));$('#c1t2').textContent=Math.round(1048576*q).toLocaleString()+' tokens';$('#c1t2').setAttribute('x',118+Math.min(380,520*q));});
-};
-A.ch2=function(){ const my=RUN; let n=3;
-  function draw(n){const cx=380,cy=140,r=100,pts=[];for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n;pts.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}
-    let L='',D='';for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)L+='<line x1="'+pts[i][0].toFixed(1)+'" y1="'+pts[i][1].toFixed(1)+'" x2="'+pts[j][0].toFixed(1)+'" y2="'+pts[j][1].toFixed(1)+'" stroke="var(--att)" stroke-width="0.9" opacity="0.5"/>';
-    for(let i=0;i<n;i++)D+='<circle cx="'+pts[i][0].toFixed(1)+'" cy="'+pts[i][1].toFixed(1)+'" r="9" fill="var(--att-soft)" stroke="var(--att)" stroke-width="1.5"/>';
-    $('#c2lines').innerHTML=L;$('#c2dots').innerHTML=D;$('#c2n').textContent=n+' words';$('#c2c').textContent=(n*n).toLocaleString()+' comparisons';}
-  draw(n);(function step(){if(my!==RUN)return;n++;if(n>12){$('#c2c').textContent='144 comparisons … at 1M words: 1,000,000,000,000';return;}draw(n);later(step,450);})();
-};
-A.ch3=function(){ const my=RUN; const stops=[[432,'c3b0'],[362,'c3b1'],[292,'c3b2'],[192,'c3b3'],[92,'c3b4'],[40,null]]; const tok=$('#c3tok');
-  $$('#ch3 .box').forEach(b=>b.classList.remove('on','done')); let k=0;
-  (function go(){ if(my!==RUN)return; if(k>=stops.length-1){$('#c3b5 .box').classList.add('on');return;}
-    const y0=stops[k][0],y1=stops[k+1][0]; if(stops[k][1])$('#'+stops[k][1]+' .box').classList.add('on');
-    later(()=>{ if(my!==RUN)return; if(stops[k][1]){$('#'+stops[k][1]+' .box').classList.remove('on');$('#'+stops[k][1]+' .box').classList.add('done');}
-      tween(700,p=>tok.setAttribute('cy',(y0+(y1-y0)*ease(p)).toFixed(1)),()=>{k++;go();}); },700);
-  })();
-};
-A.ch4=function(){ const my=RUN; const tok=$('#c4tok'),msg=$('#c4msg'); $$('#ch4 .box').forEach(b=>b.classList.remove('on','done')); tok.setAttribute('cx',20);
-  msg.textContent='A word arrives on the floor.';
-  tween(900,p=>tok.setAttribute('cx',(20+165*ease(p)).toFixed(1)),()=>{ if(my!==RUN)return; $('#c4r1 .box').classList.add('on'); msg.textContent='Attention room: gathering context from other words.';
-    later(()=>{ if(my!==RUN)return; $('#c4r1 .box').classList.remove('on');$('#c4r1 .box').classList.add('done');
-      tween(900,p=>tok.setAttribute('cx',(185+310*ease(p)).toFixed(1)),()=>{ if(my!==RUN)return; $('#c4r2 .box').classList.add('on'); msg.textContent='Expert room: processing what the word means.';
-        later(()=>{ if(my!==RUN)return; $('#c4r2 .box').classList.remove('on');$('#c4r2 .box').classList.add('done');
-          tween(800,p=>tok.setAttribute('cx',(495+165*ease(p)).toFixed(1)),()=>{msg.textContent='Done. The word goes up to the next floor, and this repeats 78 times.';});
-        },1600);});
-    },1600);});
-};
-A.ch5=function(){ const my=RUN; const g=$('#c5grid');
-  if(!g.children.length){let h='';for(let r=0;r<8;r++)for(let c=0;c<32;c++){h+='<rect id="c5e'+(r*32+c)+'" x="'+(40+c*(16+3))+'" y="'+(46+r*(16+3))+'" width="16" height="16" rx="3" class="box"/>';}g.innerHTML=h;}
-  const words=['def','cat','∑','while','bonjour','return','heart','42']; let i=0;
-  (function round(){ if(my!==RUN)return; for(let k=0;k<256;k++)$('#c5e'+k).classList.remove('on'); const ch=new Set(); while(ch.size<8)ch.add(Math.floor(Math.random()*256)); ch.forEach(k=>$('#c5e'+k).classList.add('on'));
-    $('#c5w').textContent='word: '+words[i]; i++; if(i<words.length)later(round,1100); else $('#c5msg').textContent='Each word visits a different 8. The shared expert (green) always runs.'; })();
-};
-A.ch6=function(){ const my=RUN; const book=$('#c6book'); book.innerHTML=''; const msg=$('#c6msg'); const big=$$('#c6big rect'); const note=$('#c6note');
-  for(let i=0;i<4;i++)book.innerHTML+='<rect x="480" y="'+(50+i*46)+'" width="160" height="40" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="4 4"/>';
-  let i=0;
-  (function word(){ if(my!==RUN)return; if(i>=4){msg.textContent='Reading back: the small note is expanded on the spot. Same story, much less paper.'; big.forEach(r=>r.classList.add('on')); return;}
-    msg.textContent='Word '+(i+1)+': key + value get squeezed into one small note…'; big.forEach(r=>{r.setAttribute('height',120);r.setAttribute('y',50);});
-    tween(600,p=>{const h=120-80*ease(p);big.forEach(r=>{r.setAttribute('height',h.toFixed(1));r.setAttribute('y',(50+(120-h)/2).toFixed(1));});},()=>{ if(my!==RUN)return;
-      const fly=document.createElementNS('http://www.w3.org/2000/svg','g'); fly.innerHTML='<rect x="245" y="90" width="60" height="40" rx="6" class="box on"/><text x="275" y="115" text-anchor="middle" class="small">note</text>'; book.appendChild(fly);
-      const tx=490-245, ty=(50+i*46)-90; msg.textContent='…and only the note is stored in the notebook.';
-      tween(700,p=>{const q=ease(p);fly.setAttribute('transform','translate('+(tx*q).toFixed(1)+','+(ty*q).toFixed(1)+')');},()=>{ if(my!==RUN)return; $('rect',fly).classList.remove('on');$('rect',fly).classList.add('done'); i++; later(word,500); });
-    });
-  })();
-};
-A.ch7=function(){ const my=RUN; const N=24,x0=40,gap=25.5,y=150,keep=[2,7,11,15,20]; const toks=$('#c7toks');
-  let h='';for(let i=0;i<N;i++)h+='<rect id="c7t'+i+'" x="'+(x0+i*gap)+'" y="'+y+'" width="18" height="24" rx="4" class="box"/>'; toks.innerHTML=h; $('#c7att').innerHTML='';
-  const scan=$('#c7scan'); scan.setAttribute('opacity','0.85'); $('#c7msg').textContent='Step 1: the cheap indexer skims every note…'; let i=0;
-  (function s(){ if(my!==RUN)return; scan.setAttribute('x',x0+i*gap-3); if(keep.includes(i))$('#c7t'+i).classList.add('on'); i++; if(i<N)later(s,90); else {scan.setAttribute('opacity','0'); phase2();} })();
-  function phase2(){ $('#c7msg').textContent='Step 2: real attention reads only the highlighted notes.'; let k=0;
-    (function line(){ if(my!==RUN)return; if(k>=keep.length){$('#c7msg').textContent='Expensive part: 2,048 notes instead of 1,000,000.';return;} const tx=x0+keep[k]*gap+9;
-      $('#c7att').innerHTML+='<line x1="340" y1="66" x2="'+tx+'" y2="'+(y-4)+'" stroke="var(--att)" stroke-width="2.5" stroke-linecap="round"/>'; k++; later(line,220); })(); }
-};
-A.ch8=function(){ const my=RUN; const H=36,G=8,x0=120,w=440,y0=20; const L=$('#c8layers'),M=$('#c8marks'); M.innerHTML='';
-  let h='';for(let i=0;i<8;i++){const y=y0+i*(H+G);h+='<rect id="c8L'+i+'" class="box" x="'+x0+'" y="'+y+'" width="'+w+'" height="'+H+'" rx="8"/><text x="'+(x0+14)+'" y="'+(y+23)+'" class="bold">Floor '+(i+1)+'</text><text id="c8s'+i+'" x="'+(x0+w-14)+'" y="'+(y+23)+'" text-anchor="end" class="small"></text>';} L.innerHTML=h;
-  const msgs=['Floor 1 skims all 1M notes itself: it owns the list.','Floor 2 copies floor 1\u2019s list. No skimming. Attention still runs.','Floor 3 copies the same list.','Floor 4 copies it too: three free rides.','Floor 5 starts fresh: new skim, new list.','Floor 6 copies floor 5.','Floor 7 copies.','Floor 8 copies. Pattern: skim, copy, copy, copy. 75% of skims gone.'];
-  let i=0;
-  (function step(){ if(my!==RUN)return; if(i>=8)return; const y=y0+i*(H+G),own=(i%4===0); const r=$('#c8L'+i);
-    if(own){r.classList.add('on');$('#c8s'+i).textContent='skims 1M notes';} else {r.classList.add('done');$('#c8s'+i).textContent='copies the list'; const src=y0+(Math.floor(i/4)*4)*(H+G)+H/2; M.innerHTML+='<path class="wire" d="M '+(x0-24)+' '+src+' L '+(x0-24)+' '+(y+H/2)+' L '+(x0-6)+' '+(y+H/2)+'" marker-end="url(#ah)"/>';}
-    $('#c8msg').textContent=msgs[i]; i++; later(step,900); })();
-};
-A.ch9=function(){ const my=RUN; const g=$('#c9bars'); const hs=[30,110,60,130,45,95]; let h='';
-  hs.forEach((v,i)=>{h+='<rect id="c9b'+i+'" x="'+(20+i*50)+'" y="'+(180-v)+'" width="36" height="'+v+'" rx="5" fill="var(--att-soft)" stroke="var(--att)" stroke-width="1.5"/>';}); h+='<text x="20" y="205" class="small" id="c9m">uneven numbers…</text>'; g.innerHTML=h;
-  later(()=>{ if(my!==RUN)return; $('#c9m').textContent='…rescaled to a steady level.'; tween(900,p=>{hs.forEach((v,i)=>{const nh=v+(75-v)*ease(p);const r=$('#c9b'+i);r.setAttribute('height',nh.toFixed(1));r.setAttribute('y',(180-nh).toFixed(1));});}); },800);
-  later(()=>{ if(my!==RUN)return; $('#c9wire').setAttribute('stroke','var(--done)'); $('#c9wire').setAttribute('stroke-width','2.5'); $('#c9plus').classList.add('on'); $('#c9msg').textContent='= original + result'; },2000);
-};
-A.ch10=function(){ const my=RUN; const words=['The','cat','sat','on','the','warm','mat','and','purred','softly']; const S=$('#c10slow'),F=$('#c10fast'); S.innerHTML='';F.innerHTML=''; $('#c10msg').textContent='Racing…';
-  const chip=(w,i,y,cls)=>'<rect x="'+(20+i*64)+'" y="'+y+'" width="58" height="28" rx="6" class="box '+cls+'"/><text x="'+(49+i*64)+'" y="'+(y+18)+'" text-anchor="middle" class="small">'+w+'</text>';
-  let i=0;(function slow(){ if(my!==RUN)return; S.innerHTML+=chip(words[i],i,42,'att'); i++; if(i<words.length)later(slow,550); })();
-  let b=0;(function batch(){ if(my!==RUN)return; if(b>=2){later(()=>{$('#c10msg').textContent='Same text, far fewer passes. Average accepted draft: 5.47 words.';},600);return;}
-    for(let j=0;j<5;j++){ later(()=>{ if(my!==RUN)return; F.innerHTML+=chip(words[b*5+j],b*5+j,122,'done'); },j*80); }
-    b++; later(batch,1400); })();
-};
-const c11map=[['c11n0'],['c11n1'],['c11n2'],['c11n3'],['c11n4'],['c11n5'],['c11n6'],['c11n7'],['c11n8'],['c11n9'],['c11n10'],['c11n11'],['c11n12','c11n13'],['c11n14']];
-function c11step(k,text){ c11map.forEach((ids,j)=>ids.forEach(id=>{const b=$('#'+id+' .box');b.classList.toggle('on',j===k);b.classList.toggle('done',j<k);}));
-  if(typeof modelLight==='function'){ modelLight(c11map[Math.min(k,c11map.length-1)].map(id=>id.replace(/^c11/,''))); const l=$('#modelChap'); if(l)l.textContent='Chapter 11 · part '+(Math.min(k,c11map.length-1)+1); }
-  const live=$('#ch11live'); if(live)live.textContent=(text||''); const el=$('#'+c11map[Math.min(k,c11map.length-1)][0]); if(el)el.scrollIntoView({behavior:'smooth',block:'center'}); }
-A.ch11=function(){ const my=RUN; const spans=$$('#ch11 .say .s'); let k=0;
-  (function step(){ if(my!==RUN)return; if(k>=c11map.length)return; spans.forEach((s,j)=>{s.classList.toggle('on',j===k);s.classList.toggle('did',j<k);}); c11step(k,spans[k]?spans[k].textContent:''); k++; later(step,4200); })();
-};
-
-
-/* ---- chapter 12: eight tokens ---- */
-const c12words=['The','cat','sat','on','the','warm','mat','and'];
-const c12steps=[
- {lit:[],strip:['','','','','','','',''],pass:0,mtp:0,o:['','',''],i:['in: the prompt','','']},
- {lit:['c12m_col','c12m_b1','c12m_b2','c12m_b3','c12m_b4'],w:['c12m_reuse'],strip:['','','','','','','',''],pass:1,mtp:0,o:['working…','',''],i:['in: the prompt','','']},
- {lit:['c12m_head'],strip:['main','','','','','','',''],pass:1,mtp:0,o:['out: The','',''],i:['in: the prompt','','']},
- {lit:['c12p1_h','c12p1_e','c12p1_lin'],w:['c12w1'],strip:['main','','','','','','',''],pass:1,mtp:0,o:['out: The','',''],i:['in: the prompt','in: The','']},
- {lit:['c12p1_dsa','c12kv'],strip:['main','','','','','','',''],pass:1,mtp:1,o:['out: The','skimming…',''],i:['in: the prompt','in: The','']},
- {lit:['c12p1_head'],strip:['main','draft','','','','','',''],pass:1,mtp:1,o:['out: The','draft: cat',''],i:['in: the prompt','in: The','']},
- {lit:['c12p2_col','c12p2_dsa','c12kv'],w:['c12r_arrow','c12w2'],strip:['main','draft','draft','','','','',''],pass:1,mtp:2,o:['out: The','draft: cat','draft: sat'],i:['in: the prompt','in: The','in: cat']},
- {lit:['c12p2_dsa','c12p2_head'],w:['c12r_arrow'],strip:['main','draft','draft','draft','draft','','',''],pass:1,mtp:4,o:['out: The','draft: cat','drafts: on, a'],i:['in: the prompt','in: The','in: sat, then on']},
- {lit:['c12m_col','c12m_b1','c12m_b2','c12m_b3','c12m_b4'],strip:['main','draft','draft','draft','draft','','',''],pass:2,mtp:4,o:['checking 4 drafts','',''],i:['in: cat sat on a','','']},
- {lit:['c12m_head'],strip:['main','ok','ok','ok','fix','','',''],pass:2,mtp:4,o:['3 accepted, 1 fixed','',''],i:['in: cat sat on a','','']},
- {lit:[],strip:['main','ok','ok','ok','fix','','',''],pass:2,mtp:4,o:['5 tokens confirmed','',''],i:['','','']},
- {lit:['c12p1_col','c12p1_dsa','c12p2_col','c12p2_dsa'],w:['c12r_arrow'],strip:['main','ok','ok','ok','fix','draft','draft','draft'],pass:2,mtp:8,o:['','draft: warm','drafts: mat, and, purred'],i:['','in: the','in: warm, mat, and']},
- {lit:['c12m_col','c12m_head'],strip:['main','ok','ok','ok','fix','ok','ok','ok'],pass:3,mtp:8,o:['3 accepted','',''],i:['in: warm mat and purred','','']},
- {lit:[],strip:['main','ok','ok','ok','fix','ok','ok','ok'],pass:3,mtp:8,o:['8 tokens, 3 passes','',''],i:['','','']}
-];
-(function(){const g=$('#c12strip');if(!g)return;let h='';for(let i=0;i<8;i++){const x=30+i*80;h+='<rect id="c12s'+i+'" class="slot" x="'+x+'" y="594" width="72" height="36" rx="6"/><text id="c12t'+i+'" x="'+(x+36)+'" y="617" text-anchor="middle" class="bold"></text>';}g.innerHTML=h;})();
-const c12allLit=['c12m_col','c12m_b1','c12m_b2','c12m_b3','c12m_b4','c12m_head','c12p1_col','c12p1_dsa','c12p1_lin','c12p1_h','c12p1_e','c12p1_head','c12p2_col','c12p2_dsa','c12p2_lin','c12p2_h','c12p2_e','c12p2_head','c12kv'];
-const c12wires=['c12m_reuse','c12w1','c12w2','c12r_arrow'];
-function c12step(k,text){ const st=c12steps[Math.min(k,c12steps.length-1)];
-  c12allLit.forEach(id=>{const b=$('#'+id+' .box');if(b)b.classList.toggle('on',st.lit.includes(id));});
-  c12wires.forEach(id=>{const w=$('#'+id);if(w)w.classList.toggle('wlit',!!(st.w&&st.w.includes(id)));});
-  st.strip.forEach((s,i)=>{const r=$('#c12s'+i),t=$('#c12t'+i);r.setAttribute('class','slot'+(s?' '+s:''));t.textContent=s?c12words[i]:'';});
-  $('#c12count').textContent='main-model passes: '+st.pass+' · MTP draft steps: '+st.mtp;
-  if(typeof modelLight==='function'){ const mtp=st.lit.some(id=>/^c12p/.test(id)); modelLight(mtp?['n14']:(st.lit.length?['n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13']:[])); }
-  const ph=['','phase: PREFILL','phase: PREFILL → token 1','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (MTP drafting)','phase: DECODE (wide verify pass)','phase: DECODE (wide verify pass)','phase: DECODE','phase: DECODE (MTP drafting)','phase: DECODE (wide verify pass)','1 prefill + 2 decode passes'];
-  $('#c12phase').textContent=ph[Math.min(k,ph.length-1)];
-  ['c12o_m','c12o_p1','c12o_p2'].forEach((id,i)=>{$('#'+id).textContent=st.o[i];});
-  ['c12i_m','c12i_p1','c12i_p2'].forEach((id,i)=>{$('#'+id).textContent=st.i[i];});
-  const live=$('#ch12live'); if(live)live.textContent=(text||'');
-  const stage=$('#ch12 .stage'); if(stage){const r=stage.getBoundingClientRect(); if(r.top<60||r.bottom>window.innerHeight)stage.scrollIntoView({behavior:'smooth',block:'start'});}
-}
-A.ch12=function(){ const my=RUN; const spans=$$('#ch12 .say .s'); let k=0;
-  (function step(){ if(my!==RUN)return; if(k>=c12steps.length)return; spans.forEach((s,j)=>{s.classList.toggle('on',j===k);s.classList.toggle('did',j<k);}); c12step(k,spans[k]?spans[k].textContent:''); k++; later(step,4200); })();
-};
-
-/* ---- chapter 12 (no MTP): eight tokens, eight passes ---- */
-const nmwords=['The','cat','sat','on','the','warm','mat','and'];
-(function(){const g=$('#nmstrip');if(!g)return;let h='';for(let i=0;i<8;i++){const x=30+i*80;h+='<rect id="nms'+i+'" class="slot" x="'+x+'" y="594" width="72" height="36" rx="6"/><text id="nmt'+i+'" x="'+(x+36)+'" y="617" text-anchor="middle" class="bold"></text>';}g.innerHTML=h;})();
-function nmstep(k,text){ const pass=(k>=1&&k<=8)?k:(k>8?8:0); const running=(k>=1&&k<=8);
-  ['nmm_col','nmm_b1','nmm_b2','nmm_b3','nmm_b4','nmm_head','nmm_emb'].forEach(id=>{const b=$('#'+id+' .box');if(b)b.classList.toggle('on',running);});
-  const loop=$('#nmloop'); if(loop)loop.classList.toggle('wlit',k>=2&&k<=8);
-  for(let i=0;i<8;i++){const done=i<pass;$('#nms'+i).setAttribute('class','slot'+(done?' main':''));$('#nmt'+i).textContent=done?nmwords[i]:'';}
-  $('#nmcount').textContent='main-model passes: '+pass+(k>8?' — one word each':'');
-  $('#nmphase').textContent=k===1?'phase: PREFILL':(running?('phase: DECODE step '+(k-1)):(k>8?'1 prefill + 7 decode':''));
-  $('#nmo_m').textContent=running?('out: '+nmwords[k-1]):(k>8?'8 tokens, 8 passes':'');
-  $('#nmi_m').textContent=k===1?'in: the prompt':(running?('in: '+nmwords[k-2]):(k>8?'':'in: the prompt'));
-  const live=$('#chnmlive'); if(live)live.textContent=(text||'');
-  const stage=$('#chnm .stage'); if(stage){const r=stage.getBoundingClientRect(); if(r.top<60||r.bottom>window.innerHeight)stage.scrollIntoView({behavior:'smooth',block:'start'});}
-}
-A.chnm=function(){ const my=RUN; const spans=$$('#chnm .say .s'); let k=0;
-  (function step(){ if(my!==RUN)return; if(k>=spans.length)return; spans.forEach((s,j)=>{s.classList.toggle('on',j===k);s.classList.toggle('did',j<k);}); nmstep(k,spans[k].textContent); k++; later(step,k<=1?4200:3000); })();
-};
-
-/* ---- chapter 11b: prefill and decode ---- */
-(function(){ let h1='',h2=''; for(let i=0;i<8;i++){h1+='<rect id="pdn1_'+i+'" class="slot" x="272" y="'+(90+i*26)+'" width="46" height="20" rx="4"/>'; h2+='<rect id="pdn2_'+i+'" class="slot" x="602" y="'+(90+i*26)+'" width="46" height="20" rx="4"/>';} const a=$('#pdn1'),b=$('#pdn2'); if(a)a.innerHTML=h1; if(b)b.innerHTML=h2; })();
-let pdUp1=false,pdUp2=false;
-function pdstep(k,text){
-  const litT1=(k===2||k===3||k===9), litT2=(k===6||k===9);
-  [['pdt1',litT1],['pdt2',litT2],['pdh1',k===4],['pdh2',k===6]].forEach(([id,on])=>{const b=$('#'+id+' .box');if(b)b.classList.toggle('on',on);});
-  /* prefill tokens rise once, decode token rises once */
-  if(k>=2&&!pdUp1){pdUp1=true;const g=$('#pdtok1');tween(900,p=>g.setAttribute('transform','translate(0,'+(-160*ease(p)).toFixed(1)+')'));}
-  if(k<2){pdUp1=false;$('#pdtok1').removeAttribute('transform');}
-  if(k>=6&&!pdUp2){pdUp2=true;const g=$('#pdtok2');tween(900,p=>g.setAttribute('transform','translate(0,'+(-160*ease(p)).toFixed(1)+')'));}
-  if(k<6){pdUp2=false;$('#pdtok2').removeAttribute('transform');}
-  /* notebooks */
-  for(let i=0;i<8;i++){ $('#pdn1_'+i).setAttribute('class','slot'+((k>=3&&i<6)?' ok':'')); $('#pdn2_'+i).setAttribute('class','slot'+((k>=6&&i<6)?' main':'')+((k>=6&&i===6)?' ok':'')); }
-  /* decode reads the notebook */
-  const arr=$('#pdarr2'); if(k>=6){ if(!arr.children.length){let h='';for(let i=0;i<6;i++)h+='<line x1="602" y1="'+(100+i*26)+'" x2="516" y2="200" stroke="var(--att)" stroke-width="1.5" opacity="0.7"/>';arr.innerHTML=h;} } else arr.innerHTML='';
-  $('#pdo1').textContent=k>=4?'out: The (first token)':''; $('#pdo2').textContent=k>=6?'out: cat (next token)':'';
-  $('#pdb1').setAttribute('opacity',k>=5?1:0); $('#pdb2').setAttribute('opacity',k>=7?1:0);
-  $('#pdk1').setAttribute('opacity',k>=8?1:0); $('#pdk2').setAttribute('opacity',k>=8?1:0);
-  const live=$('#chpdlive'); if(live)live.textContent=(text||'');
-  const stage=$('#chpd .stage'); if(stage){const r=stage.getBoundingClientRect(); if(r.top<60||r.bottom>window.innerHeight)stage.scrollIntoView({behavior:'smooth',block:'start'});}
-}
-A.chpd=function(){ const my=RUN; const spans=$$('#chpd .say .s'); let k=0;
-  (function step(){ if(my!==RUN)return; if(k>=spans.length)return; spans.forEach((s,j)=>{s.classList.toggle('on',j===k);s.classList.toggle('did',j<k);}); pdstep(k,spans[k].textContent); k++; later(step,4200); })();
-};
-const SYNC={ch11:c11step,ch12:c12step,chnm:nmstep,chpd:pdstep};
-
-
-/* ---- side panel: the end-to-end model, highlighted per chapter ---- */
-const MODEL_ALL=['n0','n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13','n14'];
-const CH2MODEL={
-  ch0:MODEL_ALL, ch1:MODEL_ALL, ch2:['n5','n4'], ch3:['n0','n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13'],
-  ch4:['n3','n4','n5','n8','n9','n10'], ch5:['n8','n9','n10'], ch6:['n3'], ch7:['n4','n5'], ch8:['n4'],
-  ch9:['n2','n6','n7','n11','n12'], ch10:['n14'], ch11:[], chpd:['n0','n1','n3','n4','n5','n8','n9','n13'],
-  chnm:['n1','n2','n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13'], ch12:['n13','n14'], ch13:[] };
-const NODE2CH={n0:'ch3',n1:'ch3',n2:'ch9',n3:'ch6',n4:'ch7',n5:'ch7',n6:'ch9',n7:'ch9',n8:'ch5',n9:'ch5',n10:'ch5',n11:'ch9',n12:'ch9',n13:'ch3',n14:'ch10'};
-const CHNAME={ch0:'The whole model at a glance',ch1:'Chapter 1 · the whole model',ch2:'Chapter 2 · attention cost',ch3:'Chapter 3 · the whole flow',ch4:'Chapter 4 · the two rooms',ch5:'Chapter 5 · mixture of experts',ch6:'Chapter 6 · MLA',ch7:'Chapter 7 · the DSA indexer',ch8:'Chapter 8 · IndexShare',ch9:'Chapter 9 · glue parts',ch10:'Chapter 10 · MTP',ch11:'Chapter 11 · the blueprint',chpd:'Chapter 11b · prefill and decode',chnm:'Chapter 12 · 8 tokens, no MTP',ch12:'Chapter 13 · 8 tokens with MTP',ch13:'Chapter 14 · your talk'};
-let modelCh='';
-(function buildModelPanel(){ const src=$('#ch11 .stage svg'), host=$('#modelSvg'); if(!src||!host)return;
-  const c=src.cloneNode(true); c.removeAttribute('role'); c.setAttribute('aria-hidden','true');
-  c.querySelectorAll('[id]').forEach(el=>{el.id=el.id.replace(/^c11/,'mm_');});
-  c.querySelectorAll('.box').forEach(b=>b.classList.remove('on','done'));
-  MODEL_ALL.forEach(n=>{const g=c.querySelector('#mm_'+n); if(g){g.dataset.ch=NODE2CH[n]; g.addEventListener('click',()=>{const sec=$('#'+NODE2CH[n]); if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'}); modelFor(NODE2CH[n]);}});}});
-  host.appendChild(c);
+/* ---------- 03 before/after animation ---------- */
+(function(){
+const GAP=0.7;const K=[['rmsnorm','a',2,0.4,'input norm, 2 rows → 2 blocks'],['fused_qkv_a gemm','a',96,1.2,'skinny GEMM, 2 rows'],['q_norm / kv_norm','a',2,0.4,'two tiny norms'],['q_b gemm','a',64,1.0,'skinny GEMM'],['rope + kv write','a',4,0.5,'RoPE and cache insert'],['index q/k proj','i',16,0.6,'indexer projections'],['paged mqa logits','i',120,1.6,'score past tokens → logits to HBM'],['top-k','i',2,0.8,'read logits back, pick 2048'],['uk bmm','m',16,0.5,'q_nope · W_UK'],['sparse mla attn','m',64,1.5,'gather 2048 KV, softmax·V'],['uv bmm','m',16,0.5,'merge · W_UV'],['o_proj gemm','m',48,0.9,'skinny GEMM'],['rccl all-reduce','g',16,1.2,'separate kernel + stream sync'],['norm + residual','a',2,0.4,'post-attention norm'],['router + top-8','e',8,0.5,'gate GEMM and select'],['moe up/gate','e',144,1.6,'experts, 2 rows spread thin'],['moe down','e',96,1.0,'experts'],['rccl all-reduce','g',16,1.2,'separate kernel + stream sync'],['residual add','e',2,0.3,'elementwise']];
+let tt=0;const C=K.map(k=>{const t0=tt;tt+=k[3];const t1=tt;tt+=GAP;return {n:k[0],p:k[1],blocks:k[2],t0,t1,note:k[4]};});const T_CHAIN=tt-GAP;
+const grid=document.getElementById('grid');mkgrid(grid,null);
+let mode='chain',t=0,playing=false,speed=1,last=0,xsf=null;const T=()=>mode==='chain'?T_CHAIN:T_MONO;const W=620,L=70,RH=30;
+function legend(){const keys=mode==='chain'?['a','i','m','e','g','h']:['a','i','m','e','g'];document.getElementById('legend').innerHTML=keys.map(k=>`<span><i class="sw" style="background:${P[k].bg};border-color:${P[k].fg}"></i>${P[k].name}</span>`).join('');}
+function ganttChain(){const xs=x=>L+(W-14-L)*x/T();let s=`<svg viewBox="0 0 ${W} ${2*RH+44}" width="${W}" role="img" aria-label="Kernel chain">`;
+[0,10,20,30].forEach(x=>{if(x<=T())s+=`<line x1="${xs(x)}" y1="2" x2="${xs(x)}" y2="${2*RH+4}" stroke="#E6EAEE"/>`;});
+[['Kernels',0],['HBM',1]].forEach(([n,i])=>s+=`<text x="${L-8}" y="${i*RH+4+RH/2}" text-anchor="end" dominant-baseline="central" style="font:11px sans-serif;fill:#46525F">${n}</text>`);
+C.forEach((k,i)=>{const p=P[k.p],x=xs(k.t0),w=xs(k.t1)-x;s+=`<rect x="${x}" y="7" width="${w}" height="${RH-6}" rx="3" fill="${p.bg}" stroke="${p.fg}"/>`;if(i<C.length-1){const g=xs(k.t1),gw=xs(C[i+1].t0)-g;s+=`<rect x="${g}" y="${RH+7}" width="${gw}" height="${RH-6}" rx="3" fill="${P.h.bg}" stroke="${P.h.fg}"/>`;}});
+const y=2*RH+8;[0,10,20,30].forEach(x=>{if(x<=T())s+=`<text x="${xs(x)}" y="${y+12}" text-anchor="middle" style="font:11px sans-serif;fill:#46525F">${x}</text>`;});
+s+=`<text x="${L}" y="${y+32}" style="font:11px sans-serif;fill:#46525F">19 launches · 18 writes to HBM and back · relative time</text><line id="cur_gantt" x1="${L}" y1="2" x2="${L}" y2="${2*RH+4}" stroke="#1F2A37" stroke-width="2"/></svg>`;document.getElementById('gantt').innerHTML=s;return xs;}
+const notes={chain:'Each box is a separate kernel. With only 2 tokens, most kernels launch far fewer blocks than there are CUs, so the chip is mostly empty even while a kernel runs. Between kernels nothing runs at all. Durations and block counts are illustrative.',mono:'One launch holds all 256 CTAs for the whole layer. A CTA moves to its next stage as soon as the mailbox values it needs carry the current epoch tag. Same relative time units as the chain view.'};
+function setMode(m){mode=m;t=0;stop();document.getElementById('mChain').setAttribute('aria-pressed',m==='chain');document.getElementById('mMono').setAttribute('aria-pressed',m==='mono');document.getElementById('t').max=T();document.getElementById('gTitle').textContent=m==='chain'?'Kernel stream':'Stages by CTA band';document.getElementById('animNotes').textContent=notes[m];legend();xsf=m==='chain'?ganttChain():ganttMono('gantt',T_MONO,W,L,RH);render();}
+function chainState(){for(let i=0;i<C.length;i++){const k=C[i];if(t>=k.t0&&t<k.t1){const f=(t-k.t0)/(k.t1-k.t0);const ramp=Math.min(1,f/0.15);const tail=f>0.8?1-(f-0.8)/0.2:1;return {k,gap:false,n:Math.round(k.blocks*Math.min(ramp,tail))};}if(i<C.length-1&&t>=k.t1&&t<C[i+1].t0)return {k,gap:true,n:0};}return null;}
+function render(){document.getElementById('t').value=t;document.getElementById('tv').textContent='t = '+t.toFixed(1);const cur=document.getElementById('cur_gantt');if(cur&&xsf){cur.setAttribute('x1',xsf(t));cur.setAttribute('x2',xsf(t));}
+const cells=grid.childNodes;let busy=0,launches=0,hbm=0,msg='';
+if(mode==='chain'){const st=chainState();cells.forEach(d=>{d.style.background='transparent';d.style.borderColor='#C6D0DA';});if(st&&!st.gap){const p=P[st.k.p];for(let j=0;j<st.n;j++){const d=cells[perm[j]];d.style.background=p.bg;d.style.borderColor=p.fg;}busy=st.n;msg=`<b>${st.k.n}</b> on ${st.k.blocks} of 256 CUs — ${st.k.note}`;}else if(st&&st.gap){msg=`<b>Gap</b> after ${st.k.n}: result written to HBM, next kernel launching — every CU idle`;}else if(t>=T()-0.05){msg='<b>Layer done</b> after 19 launches.';}launches=C.filter(k=>t>=k.t0).length;hbm=C.filter((k,i)=>i<C.length-1&&t>=k.t1).length;}
+else{const act=new Map();cells.forEach((d,i)=>{const e=E.find(e=>cov(e,i)&&t>=e[3]&&t<e[4]);if(e){const p=P[e[1]];d.style.background=p.bg;d.style.borderColor=p.fg;busy++;act.set(e[0],(act.get(e[0])||0)+1);}else{d.style.background='transparent';d.style.borderColor='#C6D0DA';}});if(t>=T()-0.05)msg='<b>Layer done</b> after 1 launch.';else if(act.size){const e=E.find(e=>act.has(e[0])&&t>=e[3]&&t<e[4]);msg=[...act].map(([n,c])=>`<b>${n}</b> on ${c} CTAs`).join(', ')+(e?` — ${e[5]}`:'');}launches=t>0?1:0;hbm=0;}
+document.getElementById('now').innerHTML=msg;document.getElementById('sLaunch').textContent=launches;document.getElementById('sHbm').textContent=hbm;document.getElementById('sUtil').textContent=Math.round(100*busy/256)+'%';}
+function tick(ts){if(!playing)return;const dt=(ts-last)/1000;last=ts;t=Math.min(T(),t+dt*2.2*speed);render();if(t>=T())stop();else requestAnimationFrame(tick);}
+function play(){if(t>=T())t=0;playing=true;last=performance.now();document.getElementById('play').textContent='Pause';requestAnimationFrame(tick);}
+function stop(){playing=false;document.getElementById('play').textContent=t>=T()?'Replay':'Play';}
+document.getElementById('play').addEventListener('click',()=>playing?stop():play());document.getElementById('back').addEventListener('click',()=>{t=Math.max(0,t-0.5);render();});document.getElementById('fwd').addEventListener('click',()=>{t=Math.min(T(),t+0.5);render();});
+document.getElementById('t').addEventListener('input',e=>{t=+e.target.value;if(playing)stop();render();});
+document.querySelectorAll('#animation [data-s]').forEach(b=>b.addEventListener('click',()=>{speed=+b.dataset.s;document.querySelectorAll('#animation [data-s]').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));}));
+document.getElementById('mChain').addEventListener('click',()=>setMode('chain'));document.getElementById('mMono').addEventListener('click',()=>setMode('mono'));
+setMode('chain');
+if(!reduced){const io=new IntersectionObserver(en=>{if(en[0].isIntersecting&&t===0&&!playing){play();io.disconnect();}},{threshold:.4});io.observe(document.getElementById('animation'));}
 })();
-function modelLight(nodes){ MODEL_ALL.forEach(n=>{const b=$('#mm_'+n+' .box'); if(b)b.classList.toggle('on',nodes.includes(n));}); }
-function modelFor(chId){ if(!CH2MODEL[chId])return; modelCh=chId; modelLight(CH2MODEL[chId]); const l=$('#modelChap'); if(l)l.textContent=CHNAME[chId]||''; }
 
-/* ---- controls ---- */
-let paused=false;
-function resetHighlights(){ $$('.say .s').forEach(s=>s.classList.remove('on')); }
-function stopAll(){ RUN++; clearTimers(); if(synth){synth.cancel();try{synth.resume();}catch(e){}} paused=false; $('#pauseBtn').textContent='Pause'; resetHighlights(); }
-function show(id){ stopAll(); modelFor(id); const my=RUN; const sec=$('#'+id); if(!SYNC[id])sec.scrollIntoView({behavior:'smooth',block:'start'}); if(A[id])later(()=>{if(my===RUN)A[id]();},400); }
-function listen(id){ stopAll(); unlock(); modelFor(id); const sec=$('#'+id); if(SYNC[id]){ SYNC[id](0,''); speakSection(sec,(k,t)=>SYNC[id](k,t)); } else { speakSection(sec); } }
-async function playFilm(){ stopAll(); unlock(); const my=RUN;
-  for(const sec of sections){ if(my!==RUN)return; modelFor(sec.id); sec.scrollIntoView({behavior:'smooth',block:'start'}); await new Promise(r=>later(r,900)); if(my!==RUN)return;
-    if(SYNC[sec.id]){ SYNC[sec.id](0,''); await speakSection(sec,(k,t)=>SYNC[sec.id](k,t)); } else { if(A[sec.id])A[sec.id](); await speakSection(sec); }
-    if(my!==RUN)return; await new Promise(r=>later(r,1200)); }
-}
-$('#playAll').onclick=playFilm; $('#stopBtn').onclick=stopAll;
-$('#pauseBtn').onclick=()=>{ if(!synth)return; if(!paused){synth.pause();paused=true;$('#pauseBtn').textContent='Resume';} else {synth.resume();paused=false;$('#pauseBtn').textContent='Pause';} };
-const sizes=['','big','huge']; let si=0; $('#sizeBtn').onclick=()=>{si=(si+1)%3;document.body.className=sizes[si];};
-const speeds=[['normal',0.92],['slow',0.78],['fast',1.1]]; let spi=0; $('#speedBtn').onclick=()=>{spi=(spi+1)%3;rate=speeds[spi][1];$('#speedBtn').textContent='Speed: '+speeds[spi][0];};
-window.show=show; window.listen=listen; window.stopAll=stopAll; window.playFilm=playFilm;
+/* ---------- 05 task map ---------- */
+(function(){
+const S=[['qkv_a',164,0,'a'],['q_norm',2,164,'a'],['cache',1,166,'a'],['q_b',256,167,'a'],['index_q',0,167,'i'],['uk',64,39,'m'],['index_score',1920,101,'i'],['index_select',2,100,'i'],['split',128,167,'m'],['uv',128,103,'m'],['o',192,231,'m'],['router',64,167,'e'],['ug',1024,231,'e'],['down',256,231,'e']];
+let cur=6,cta=101;const tasks=(st,b)=>{const [n,c,base]=st;const out=[];for(let t=(b-base+256)%256;t<c;t+=256)out.push(t);return out;};
+const chips=document.getElementById('chips'),grid=document.getElementById('tgrid');
+S.forEach((s,k)=>{const b=document.createElement('button');b.textContent=s[0];const p=P[s[3]];b.style.cssText=`background:${p.bg};color:${p.ink};border-color:${p.fg}`;b.addEventListener('click',()=>{cur=k;draw();});chips.appendChild(b);});
+mkgrid(grid,i=>{cta=i;draw();});
+function draw(){[...chips.children].forEach((b,k)=>b.style.outline=k===cur?'3px solid #1F2A37':'none');const s=S[cur],p=P[s[3]];let busy=0;
+[...grid.children].forEach((d,i)=>{const t=tasks(s,i);if(t.length){busy++;d.style.background=p.bg;d.style.borderColor=p.fg;d.style.color=p.ink;d.textContent=t.length>1?'×'+t.length:t[0];}else{d.style.background='transparent';d.style.borderColor='#C6D0DA';d.textContent='';}d.setAttribute('aria-pressed',i===cta?'true':'false');});
+document.getElementById('tnote').textContent=s[1]===0?'index_q has no extra tasks here: at TP4 all 256 index-Q tiles ride on the q_b CTAs.':`${s[1]} tasks on ${busy} CTAs, starting at CTA ${s[2]}. Number = task id; ×n = several tasks.`;
+document.getElementById('ctaT').textContent=`CTA ${cta}: its walk, in stage order`;const w=document.getElementById('walk');w.innerHTML='';
+S.forEach(st=>{const t=tasks(st,cta);if(!t.length)return;const q=P[st[3]];w.insertAdjacentHTML('beforeend',`<span class="tk" style="background:${q.bg};border-color:${q.fg};color:${q.ink}">${st[0]+(t.length>1?' ×'+t.length:' #'+t[0])}</span><span style="color:#7D8A98">›</span>`);});if(w.lastElementChild)w.lastElementChild.remove();
+document.getElementById('anat').innerHTML=['L','L','L'].map(x=>`<span class="tk" style="background:${P.m.bg};border-color:${P.m.fg};color:${P.m.ink}">${x}</span>`).join('')+`<span class="tk" style="background:#F1EFE8;border-color:#888780;color:#444441">wait tag</span>`+['TC','TC','TC'].map(x=>`<span class="tk" style="background:#E6F1FB;border-color:#185FA5;color:#0C447C">${x}</span>`).join('')+`<span class="tk" style="background:${P.e.bg};border-color:${P.e.fg};color:${P.e.ink}">S (value, tag)</span><div style="width:100%;color:#46525F;margin-top:.3em">L = weight loads issued early · wait tag = poll mailbox · TC = MFMA per 64-k chunk · S = tagged store</div>`;}
+draw();
+})();
+
+/* ---------- 06 timeline scrubber ---------- */
+(function(){
+const grid=document.getElementById('tlgrid');mkgrid(grid,null);const xs=ganttMono('tlgantt',T_MONO,620,70,30);
+function draw(){const t=+document.getElementById('tl').value;document.getElementById('tlv').textContent=t.toFixed(1);const c=document.getElementById('cur_tlgantt');c.setAttribute('x1',xs(t));c.setAttribute('x2',xs(t));
+const act={};[...grid.children].forEach((d,i)=>{const e=E.find(e=>cov(e,i)&&t>=e[3]&&t<e[4]);if(e){const p=P[e[1]];d.style.background=p.bg;d.style.borderColor=p.fg;act[e[0]]=(act[e[0]]||0)+1;}else{d.style.background='transparent';d.style.borderColor='#C6D0DA';}});
+const k=Object.keys(act);document.getElementById('tlnow').innerHTML=k.length?k.map(n=>`<b>${n}</b> on ${act[n]} CTAs`).join(' · '):'launch done';}
+document.getElementById('tl').addEventListener('input',draw);draw();
+})();
+
+/* ---------- 07 memory map ---------- */
+(function(){
+const C={a:['#EEEDFE','#534AB7','Attention in'],i:['#FAEEDA','#BA7517','Indexer'],m:['#E1F5EE','#0F6E56','Sparse MLA'],e:['#FAECE7','#D85A30','MoE']};
+const st={rows:8,tp:4,idx:1,ctx:64};const al=n=>Math.ceil(n/256)*256;const fmt=b=>b>=1048576?(b/1048576).toFixed(b>=10485760?0:1)+' MB':b>=1024?Math.round(b/1024)+' KB':Math.round(b)+' B';
+function regions(){const S=st.rows,h=st.tp==4?16:8,inter=st.tp==4?512:256,sc=32,L=st.ctx*1024,p=8;
+let r=[['q_a','a',S*2048*p,'qkv_a → q_norm'],['q_an','a',S*1024*p,'q_norm → q_b, index_q'],['kv_a','a',S*576*p,'qkv_a → cache'],['kvnew','a',S*512*p,'cache → split'],['penew','a',S*64*p,'cache → split'],['q_nope','m',S*h*192*p,'q_b → uk'],['q_pe','m',S*h*64*p,'q_b → split'],['q_lat','m',S*h*512*p,'uk → split'],['sp_acc','m',S*sc*h*512*p,'split → uv (partial softmax·V)'],['sp_m, sp_l','m',2*al(S*sc*h*p),'split → uv (max, sum)'],['o','m',S*h*256*p,'uv → o'],['a','m',S*6144*p,'o + all-reduce → router, down'],['scores','e',S*256*p,'router → top-8'],['xq, xqs','e',S*1536*p+al(S*192*p),'router (act quant) → ug'],['sel, prob','e',2*al(S*9*p),'router → ug, down'],['ugp','e',256*S*2*16*p,'ug partials → ug'],['mid','e',S*9*inter*p,'ug → down'],['xqd','e',S*6144*4,'router → experts']];
+if(st.idx)r.push(['index_k, k_new','i',al(S*128*p)+al(S*64*p),'qkv_a → cache → score'],['index_w','i',S*32*p,'qkv_a → score'],['index_q','i',S*2048*p,'index_q → score'],['index_scores','i',S*L*p,'score → select'],['indices','i',S*2048*4,'select → split + vLLM'],['ready flags','i',2*al(S*p),'cache / select → waiters']);
+return r.map(x=>[x[0],x[1],al(x[2]),x[3]]);}
+function draw(){const r=regions(),tot=r.reduce((s,x)=>s+x[2],0);document.getElementById('scrT').textContent=fmt(tot);const part=st.tp*st.rows*6144*8;document.getElementById('symT').textContent=fmt(4*part);
+const bar=document.getElementById('mbar');bar.innerHTML='';r.forEach(x=>{const d=document.createElement('div');d.style.cssText=`width:${100*x[2]/tot}%;background:${C[x[1]][0]};border-right:1px solid ${C[x[1]][1]}`;d.title=x[0]+' '+fmt(x[2]);bar.appendChild(d);});
+document.getElementById('mleg').innerHTML=Object.keys(C).filter(k=>k!='i'||st.idx).map(k=>`<span><i class="sw" style="background:${C[k][0]};border-color:${C[k][1]}"></i>${C[k][2]}</span>`).join('');
+const L=document.getElementById('mlist');L.innerHTML='';['a','i','m','e'].forEach(k=>{const g=r.filter(x=>x[1]==k);if(!g.length)return;const gs=g.reduce((s,x)=>s+x[2],0);L.insertAdjacentHTML('beforeend',`<div class="ph">${C[k][2]} · ${fmt(gs)}</div>`+g.map(x=>`<div class="mrow"><span style="width:12px;height:12px;border-radius:3px;background:${C[k][0]};border:1.5px solid ${C[k][1]}"></span><div><div class="nm">${x[0]}</div><div class="fl">${x[3]}</div></div><div class="sz" style="${x[2]>=4194304?'color:#B23A3A;font-weight:700':''}">${fmt(x[2])}</div></div>`).join(''));});
+const s=document.getElementById('msym');const slot=fmt(st.rows*6144*8);s.innerHTML=[['attn',fmt(0),'o stage pushes partials → peer reduce + residual',C.m],['ffn',fmt(2*part),'down stage pushes partials → peer reduce + residual',C.e]].map(([n,o,f,c])=>`<div style="margin:.5em 0"><div style="display:flex;justify-content:space-between;font-size:.78em;color:#46525F"><span class="nm" style="font-family:ui-monospace,Menlo,monospace">${n}</span><span>offset ${o} · ${fmt(2*part)}</span></div><div style="display:flex;gap:3px;margin:4px 0">${Array.from({length:2*st.tp},(_,i)=>`<div style="flex:1;height:24px;border-radius:4px;background:${c[0]};border:1.5px solid ${c[1]};${i==st.tp?'margin-left:8px':''};font-size:11px;display:flex;align-items:center;justify-content:center;color:#1F2A37">r${i%st.tp}</div>`).join('')}</div><div class="fl" style="font-size:.75em;color:#46525F">${f}. One slot per source rank (${slot} each), two copies.</div></div>`).join('');}
+function seg(id,key){document.querySelectorAll('#'+id+' button').forEach(b=>b.addEventListener('click',()=>{st[key]=+b.dataset.v;document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));draw();}));}
+seg('mrows','rows');seg('mtp','tp');seg('midx','idx');document.getElementById('mctx').addEventListener('input',e=>{st.ctx=+e.target.value;document.getElementById('mctxo').textContent=st.ctx+'k';draw();});draw();
+})();
+
+
+/* ---------- rail highlight ---------- */
+(function(){const links=[...document.querySelectorAll('nav.rail a')];const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+const io=new IntersectionObserver(en=>{en.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('now',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});secs.forEach(s=>s&&io.observe(s));})();
 })();
 </script>
-<script data-root="./" data-here="home">
+<script data-root="../" data-here="mono">
 /* Shared side-panel navigation: burger button + slide-in panel. */
 (function(){
   var sc=document.currentScript, root=(sc&&sc.dataset.root)||'./', here=(sc&&sc.dataset.here)||'';
@@ -975,7 +760,6 @@ window.show=show; window.listen=listen; window.stopAll=stopAll; window.playFilm=
   ov.addEventListener('click',close); panel.querySelector('.gnav-close').addEventListener('click',close);
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.documentElement.classList.contains('gnav-open'))close(); });
 })();
-
 </script>
 </body>
 </html>
