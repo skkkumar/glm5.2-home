@@ -104,6 +104,24 @@ Thread count = 2 waves per SIMD x 4 SIMDs per CUs x 64 threads for the 64 lanes 
 
 Gif animations? Ok 
 
+How is it different from kernel fusion?
+
+Classic kernel fusion merges ops that already share the same parallel shape
+The fused kernel is still one grid, launched once, with a plain data-parallel mapping, and it ends when it hits a global dependency: anything where an output element needs inputs that other blocks produced.
+
+The MonoKernel crosses those boundaries. It fuses ops with different parallel shapes and real global dependencies by replacing the kernel boundary with something inside the launch:
+
+|                       |                Kernel fusion                |                         MonoKernel                         |
+|:---------------------:|:-------------------------------------------:|:----------------------------------------------------------:|
+| What's fused          | ops with the same thread→data mapping       | a whole layer, ops with different mappings                 |
+| Hand-off between ops  | registers, same thread                      | mailboxes in global memory, different CTAs                 |
+| Global dependency     | ends the kernel                             | tagged-pair wait, point to point                           |
+| Scheduling            | hardware grid, one decomposition            | persistent 256-CTA grid, per-stage task lists              |
+| Cross-GPU             | separate collective kernel                  | pushed into peer buffers inside the launch                 |
+| Typically produced by | compilers (Triton, torch.compile, XLA)      | hand-written (FlyDSL, CUDA)                                |
+| Payoff                | fewer HBM round trips for elementwise tails | removal of launch, drain and sync cost between every stage |
+
+
 What is a mailbox? How does it help to schedule LDS read/write for the threads?
 
 Mailbox in the L2 scratch, an extension of HBM memory
